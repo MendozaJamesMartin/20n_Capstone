@@ -11,11 +11,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/home', function () {
-    return view('common.home');
-});
-
 Route::group(['prefix' => 'admin'], function () {
+    Route::get('/home', function () {
+        return view('common.home');
+    });
+
     //Items List
     Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('FeesList');
     //Add Items
@@ -67,4 +67,16 @@ Route::group(['prefix' => 'student'], function () {
 
     //Items List
     Route::get('fees/list', [StudentsController::class, 'StudentFeesList'])->name('StudentFeesList');
+});
+
+Route::group(['prefix' => 'guest'], function () {
+
+    Route::get('/register', function () {
+        return view('login.register');
+    });
+
+    Route::get('/login', function () {
+        return view('login.login');
+    });
+
 });

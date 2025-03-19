@@ -1,45 +1,52 @@
-<html>
-    <head>
+@extends('layout.main-master')
+@section('content')
 
-    </head>
+<main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
 
-    <body style="background-image:url(bgpup5.jpg); background-position: center; background-repeat:no-repeat; background-size:cover;">
-        @extends('layout.main-master')
-        @section('content')
-        <main class="container-fluid">
-            <div class="row" style="height: auto;">
-                <div class="col-lg-4 bg-secondary">
-                    <div style="margin-top: 50%; margin-bottom:50%; margin-left:1%; margin-right:1%;">
-                    @if($errors->any())
-                        @foreach ($errors->all() as $error)
-                            <div class = "alert alert-danger">{{$error}}</div>
-                        @endforeach
-                    @endif
-
-                    <form method="POST" action = "{{route('login.submit')}}">
-                    @csrf
-                    <div class="mb-4">
-                        <label for="username" class="form-label">Username/Email</label>
-                        <input type="text" class="form-control" id="username" name = "username" />
-                    </div>
-                    <div class="mb-4">
-                        <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name = "password"/>
-                    </div>
-                    <div class="mb-4">
-                        <input type="checkbox" class="form-check-input" id="remember" name = "remember" />
-                        <label for="remember" class="form-label">Remember Me</label>
-                    </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary text-light main-bg">Login</button>
-                    </div>
-                    </form>
-                    </div>
+    <div class="container" style="width:50%">
+        <div class="bg-light" style="padding:5%">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="card-title">Login</h1>
                 </div>
-                <div class="col-lg-8 col-md-0">
+                <div class="card-body">
+                    @if(Session::has('success'))
+                    <div class="alert alert-success" role="alert">
+                        {{ Session::get('success') }}
+                    </div>
+                    @elseif (Session::has('error'))
+                    <div class="alert alert-danger" role="alert">
+                        {{ Session::get('error') }}
+                    </div>
+                    @endif
+                    <form method="POST" action="#">
+                        @csrf
+                        <div class="mb-4">
+                            <label for="username" class="form-label">Username/Email</label>
+                            <input type="text" class="form-control" id="username" name="username" />
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" />
+                        </div>
+                        <div class="mb-4">
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember" />
+                            <label for="remember" class="form-label">Remember Me</label>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary text-light main-bg">Login</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </main>
-        @endsection
-    </body>
-</html>
+        </div>
+    </div>
+    <div class="col-lg-8 col-md-0">
+    </div>
+
+    </div>
+    </div>
+
+</main>
+
+@endsection
