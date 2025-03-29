@@ -1,4 +1,4 @@
-@extends('layout.main-user')
+@extends('layout.main-master')
 @section('content')
 
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
@@ -19,15 +19,11 @@
                         {{ Session::get('error') }}
                     </div>
                     @endif
-                    <form method="POST" action=" {{ route('login.submit') }} ">
+                    <form method="POST" action=" {{ route('login.admin.submit') }} ">
                         @csrf
                         <div class="mb-4">
                             <label for="email" class="form-label">Username/Email</label>
                             <input type="text" class="form-control" id="email" name="email" />
-                        </div>
-                        <div class="mb-4">
-                            <label for="student_id" class="form-label">Student ID</label>
-                            <input type="text" class="form-control" id="student_id" name="student_id" />
                         </div>
                         <div class="mb-4">
                             <label for="password" class="form-label">Password</label>
@@ -43,7 +39,7 @@
                     </form>
                 </div>
                 <div>
-                    <h6>Don't have an account yet? <a href="{{ url('/register') }}">Register Now</a></h6>
+                    <h6>Don't have an account yet? <a href="{{ url('/register/admin') }}">Register Now</a></h6>
                 </div>
             </div>
         </div>

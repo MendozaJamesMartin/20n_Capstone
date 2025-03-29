@@ -4,7 +4,7 @@
 
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
 
-    <div class="container" style="width:75%">
+    <div class="container" style="width:50%">
         <div class="bg-light" style="padding:5%">
             <h1>Student Payment Form</h1>
 
@@ -16,21 +16,19 @@
 
             <form method="POST" action="{{ route('NewStudentTransaction') }}">
                 @csrf
+
+                <!-- Student Information -->
                 <div class="row mb-3">
                     <div class="col-md-12">
-                        <label for="student_id">Select Student:</label>
-                        <select class="form-control" name="student_id" id="student_id" required>
-                            <option value="">-- Select Student --</option>
-                            @foreach($students as $student)
-                            <option value="{{ $student->id }}">
-                                {{ $student->first_name }}
-                                {{ $student->middle_name ? $student->middle_name . ' ' : '' }}
-                                {{ $student->last_name }}
-                                {{ $student->suffix ? $student->suffix : '' }}
-                            </option>
-                            @endforeach
-                        </select>
-                        @error('student_id') <p style="color: red;">{{ $message }}</p> @enderror
+                        <label>Student Information:</label>
+                        <table class="table">
+                            <tr>
+                                <td><p>{{ $student->first_name }}</p></td>
+                                <td><p>{{ $student->middle_name ? $student->middle_name . ' ' : '' }}</p></td>
+                                <td><p>{{ $student->last_name }}</p></td>
+                                <td><p>{{ $student->suffix ? $student->suffix : '' }}</p></td>
+                            </tr>
+                        </table>
                     </div>
                 </div>
 

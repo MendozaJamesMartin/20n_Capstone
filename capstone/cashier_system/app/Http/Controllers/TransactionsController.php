@@ -149,7 +149,7 @@ class TransactionsController extends Controller
             $feeIds = implode(',', array_keys($fees));
             $quantities = implode(',', array_values($fees));
     
-            DB::statement("CALL StudentPayFees2(?, ?, ?)", [
+            DB::statement("CALL StudentPayment(?, ?, ?)", [
                 $validated['student_id'],
                 $feeIds,
                 $quantities,

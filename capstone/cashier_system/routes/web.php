@@ -2,19 +2,22 @@
 
 use App\Http\Controllers\ConcessionairesController;
 use App\Http\Controllers\FeesController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ReceiptsController;
 use App\Http\Controllers\StudentsController;
 use App\Http\Controllers\TransactionsController;
 use Illuminate\Support\Facades\Route;
 
+use function Pest\Laravel\get;
+
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::group(['prefix' => 'admin'], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['admin.auth']], function () {
     Route::get('/home', function () {
         return view('common.home');
-    });
+    })->name('admin.home');
 
     //Items List
     Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('FeesList');
@@ -52,11 +55,11 @@ Route::group(['prefix' => 'admin'], function () {
     Route::get('/receipts/concessionaire/details/{id}', [ReceiptsController::class, 'GetConcessionaireReceiptDetails'])->name('ConcessionairetReceiptDetails');
 });
 
-Route::group(['prefix' => 'student'], function () {
+Route::group(['prefix' => 'student', 'middleware' => ['user.auth']], function () {
 
     Route::get('/home', function () {
         return view('user.home');
-    });
+    })->name('student.home');
 
     //Transactions History
     Route::get('/transactions/history', [StudentsController::class, 'StudentTransactionHistory'])->name('TransactionsHistory');
@@ -69,14 +72,22 @@ Route::group(['prefix' => 'student'], function () {
     Route::get('fees/list', [StudentsController::class, 'StudentFeesList'])->name('StudentFeesList');
 });
 
-Route::group(['prefix' => 'guest'], function () {
+Route::group(['middleware' => ['user.auth']], function() {
+    Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+});
 
-    Route::get('/register', function () {
-        return view('login.register');
-    });
+Route::group(['middleware' => 'guest', 'prefix' => '/'], function () {
 
-    Route::get('/login', function () {
-        return view('login.login');
-    });
+    Route::get('/register', [LoginController::class, 'register'])->name('register');
+    Route::post('/register', [LoginController::class, 'registerPost'])->name('register');
+
+    Route::get('/register/admin', [LoginController::class, 'registerAdmin'])->name('register.admin');
+    Route::post('/register/admin', [LoginController::class, 'registerPostAdmin'])->name('register.admin');
+
+    Route::get('/admin/login', [LoginController::class, 'loginAdmin'])->name('login.admin');
+    Route::post('/admin/login', [LoginController::class, 'loginPostAdmin'])->name('login.admin.submit');
+
+    Route::get('/', [LoginController::class, 'login'])->name('login');
+    Route::post('/', [LoginController::class, 'loginPost'])->name('login.submit');
 
 });

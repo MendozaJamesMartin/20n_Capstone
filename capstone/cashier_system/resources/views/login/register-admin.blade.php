@@ -1,4 +1,4 @@
-@extends('layout.main-user')
+@extends('layout.main-master')
 @section('content')
 
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
@@ -18,27 +18,19 @@
                         {{ Session::get('error') }}
                     </div>
                     @endif
-                    <form action=" {{ route('register') }} " method="POST">
+                    <form action=" {{ route('register.admin') }} " method="POST">
                         @csrf
                         <div class="mb-3">
-                            <label for="first_name" class="form-label">First Name</label>
-                            <input type="text" name="first_name" class="form-control" id="first_name" placeholder="First Name" required>
+                            <label for="first_name" class="form-label">Name</label>
+                            <input type="text" name="name" class="form-control" id="name" placeholder="Name" required>
                         </div>
                         <div class="mb-3">
-                            <label for="middle_name" class="form-label">Middle Name</label>
-                            <input type="text" name="middle_name" class="form-control" id="middle_name" placeholder="Middle Name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="last_name" class="form-label">Last Name</label>
-                            <input type="text" name="last_name" class="form-control" id="last_name" placeholder="Last Name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="suffix" class="form-label">Suffix</label>
-                            <input type="text" name="suffix" class="form-control" id="suffix" placeholder="Suffix">
-                        </div>
-                        <div class="mb-3">
-                            <label for="student_id" class="form-label">Student ID:</label>
-                            <input type="student_id" name="student_id" class="form-control" id="student_id" placeholder="XXXX-XXXXX-XX-X" required>
+                            <label for="Role" class="form-label">Role</label>
+                            <select class="form-select" aria-label="Default select example" name="role" id="role" required>
+                                <option selected>Open this select menu</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Super Admin">Super Admin</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email address</label>

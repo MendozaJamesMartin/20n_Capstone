@@ -6,20 +6,30 @@ use App\Models\Fee;
 use App\Models\Receipt;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class StudentsController extends Controller
 {
     public function NewStudentTransaction(Request $request) {
-        if ($request->isMethod('get')) {
-            // Display the form for creating a transaction
-            $students = DB::table('students')->select('id', 'first_name', 'middle_name', 'last_name', 'suffix')->get();
-            $fees = DB::table('fees')->get();
-            return view('user.transaction-form', compact('students','fees'));
-        } elseif ($request->isMethod('post')) {
+        $user = Auth::user();
 
+        // Ensure the logged-in user is a student
+        $student = DB::table('students')->where('user_id', $user->id)->first();
+    
+        if (!$student) {
+            return back()->with('error', 'Unauthorized access.');
+        }
+    
+        if ($request->isMethod('get')) {
+            // Fetch fees
+            $fees = DB::table('fees')->get();
+    
+            return view('user.transaction-form', compact('student', 'fees'));
+    
+        } elseif ($request->isMethod('post')) {
+    
             $validated = $request->validate([
-                'student_id' => 'required|exists:students,id',
                 'quantities' => 'required|array',
             ]);
     
@@ -37,13 +47,13 @@ class StudentsController extends Controller
             $quantities = implode(',', array_values($fees));
     
             DB::statement("CALL StudentPayFees_Unpaid(?, ?, ?)", [
-                $validated['student_id'],
+                $student->id,
                 $feeIds,
                 $quantities,
-            ]);    
-
-        //have to fetch the transaction id first before redirecting
-        return back()->with('success', 'Transaction submitted successfully!');
+            ]);
+    
+            // Redirect with success message
+            return back()->with('success', 'Transaction submitted successfully!');
         }
     }
 
