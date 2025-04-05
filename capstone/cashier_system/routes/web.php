@@ -14,7 +14,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['user.auth', 'admin.auth:admin']], function () {
     Route::get('/home', function () {
         return view('common.home');
     })->name('admin.home');

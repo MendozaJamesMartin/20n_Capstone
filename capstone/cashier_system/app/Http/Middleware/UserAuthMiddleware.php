@@ -19,7 +19,7 @@ class UserAuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        Log::info('ENTER MIDDLEWARE HANDLE=====>');
+        Log::info('ENTER USER AUTH MIDDLEWARE HANDLE=====>');
         if(Auth::check()) {
             $user = $request->session()->get('user');
             if ($user) {
@@ -55,7 +55,7 @@ class UserAuthMiddleware
             }
 
         }
-        Log::info('EXIT MIDDLEWARE HANDLE=====>');
+        Log::info('EXIT USER AUTH MIDDLEWARE HANDLE=====>');
 
         return $next($request);
     }
