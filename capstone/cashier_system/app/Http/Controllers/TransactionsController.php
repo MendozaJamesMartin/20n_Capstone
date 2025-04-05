@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TransactionsController extends Controller
 {
@@ -35,7 +36,8 @@ class TransactionsController extends Controller
                     WHEN transactions.entity_type = 'concessionaire' THEN concessionaires.name
                     ELSE 'Unknown'
                 END AS entity_name")
-            );
+            )
+            ->where('balance_due', '>', '0');
             
         // Apply timeframe filter
         if ($timeframe === 'today') {
@@ -120,7 +122,8 @@ class TransactionsController extends Controller
         ->get();
 
         // Return the result to a view to display the details
-        return view('common.transactions.conc-trans-details', compact('TransactionDetails'));
+        $receipt = Receipt::where('transaction_id', $id)->first();
+        return view('common.transactions.conc-trans-details', compact('TransactionDetails','receipt'));
     }
 
     public function InsertNewStudentTransaction(Request $request) {
@@ -156,49 +159,74 @@ class TransactionsController extends Controller
             ]);    
 
         //have to fetch the transaction id first before redirecting
-        return redirect()->route('TransactionsList')->with('success', 'Transaction marked as paid successfully, and email notification sent!');
+        return redirect()->route('transactions.list')->with('success', 'Transaction marked as paid successfully, and email notification sent!');
         }
     }
 
     public function InsertNewConcessionaireTransaction(Request $request)
     {
         if ($request->isMethod('get')) {
+            Log::info('Displaying concessionaire billing');
+    
             // Fetch all concessionaires
             $concessionaires = Concessionaire::all();
-            $bills = DB::table('concessionaire_bills')->where('balance_due', '>', '0')->get();
+    
+            // Fetch only unpaid bills, filtered by concessionaire if selected
+            $billsQuery = DB::table('concessionaire_bills')
+                ->join('concessionaires', 'concessionaire_bills.concessionaire_id', '=', 'concessionaires.id')
+                ->select(
+                    'concessionaire_bills.id',
+                    'concessionaire_bills.utility_type',
+                    'concessionaire_bills.bill_amount',
+                    'concessionaire_bills.balance_due',
+                    'concessionaire_bills.due_date',
+                    'concessionaires.name as concessionaire_name'
+                )
+                ->where('concessionaire_bills.balance_due', '>', 0);
+    
+            if ($request->has('concessionaire_id') && $request->concessionaire_id) {
+                $billsQuery->where('concessionaire_bills.concessionaire_id', $request->concessionaire_id);
+            }
+    
+            $bills = $billsQuery->get();
+
             return view('common.forms.transaction-form-concessionaire', compact('concessionaires', 'bills'));
+            Log::info('display concessionaire billing');
         } 
         
         elseif ($request->isMethod('post')) {
-            // Validate the input
+            Log::info('Processing concessionaire transaction request');
+        
+            // Validate input
             $validated = $request->validate([
-                'concessionaire_id' => 'required|exists:concessionaires,id',
                 'bill_id' => 'required|array',
                 'amount' => 'required|array',
             ]);
-
+            Log::info('Validation passed');
+        
             // Filter out bills with zero or negative payments
-            $bills = array_filter($validated['bill_payments'], function ($amount) {
-                return $amount > 0;
-            });
-
-            if (empty($bills)) {
-                return back()->with('error', 'Please enter payment for at least one bill.');
+            $filteredBills = [];
+            foreach ($validated['bill_id'] as $billId) {
+                if (!empty($validated['amount'][$billId]) && $validated['amount'][$billId] > 0) {
+                    $filteredBills[$billId] = $validated['amount'][$billId];
+                }
             }
-
-            // Extract Bill IDs & Payment Amounts as comma-separated strings
-            $billIds = implode(',', array_keys($bills));
-            $paymentAmounts = implode(',', array_values($bills));
-
-            // Call Stored Procedure
-            DB::statement("CALL ConcessionairePayMultipleBills(?, ?, ?)", [
-                $validated['concessionaire_id'],
-                $billIds,
-                $paymentAmounts,
-            ]);
-
-            // Redirect with success message
-            return redirect()->route('ConcessionaireTransactionDetails')->with('success', 'Bills paid successfully!');
+            Log::info('Filtered valid payments', ['bills' => $filteredBills]);
+        
+            if (empty($filteredBills)) {
+                return back()->with('error', 'Please enter a valid payment amount for at least one bill.');
+            }
+        
+            // Convert filtered bill IDs and amounts into comma-separated strings
+            $billIds = implode(',', array_keys($filteredBills));
+            $amounts = implode(',', array_values($filteredBills));
+            Log::info('Formatted data for stored procedure', ['bill_ids' => $billIds, 'amounts' => $amounts]);
+        
+            // Call the stored procedure
+            DB::statement("CALL ConcessionairePayBills(?, ?)", [$billIds, $amounts]);
+            Log::info('Stored procedure executed successfully');
+        
+            return redirect()->route('receipts.list')->with('success', 'Bills paid successfully!');
         }
     }
 

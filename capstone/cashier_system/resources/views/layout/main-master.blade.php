@@ -29,15 +29,15 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link active text-light" aria-current="page" href="{{ url('/admin/home') }}">Home</a>
+                            <a class="nav-link active text-light" aria-current="page" href="{{ route('admin.home') }}">Home</a>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Forms
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('InsertNewConcessionaireTransaction') }} ">Concessionaire Payment Form</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('InsertNewStudentTransaction') }} ">Student Payment Form</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('concessionaire.transaction.new') }} ">Concessionaire Payment Form</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('student.transaction.new') }} ">Student Payment Form</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
@@ -45,12 +45,12 @@
                                 Concessionaires
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('ConcessionairesList') }} ">List of Concessionaires</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('ConcessionaireBilling') }} ">Concessionaire Billing List</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('concessionaires.list') }} ">List of Concessionaires</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('concessionaires.billing') }} ">Concessionaire Billing List</a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
-                                <li><a class="dropdown-item" href=" {{ route('AddConcessionaireBilling') }} ">Create Billing Statement</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('concessionaires.add.billing') }} ">Create Billing Statement</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
@@ -58,12 +58,12 @@
                                 Transactions
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('FeesList') }} ">List of Student Fees</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('fees.list') }} ">List of Student Fees</a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
-                                <li><a class="dropdown-item" href=" {{ route('TransactionsList') }} ">Transaction History</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('ReceiptsList') }} ">Receipts</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('transactions.list') }} ">Pending Transactions</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('receipts.list') }} ">Transaction History and Receipts</a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>

@@ -28,28 +28,32 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active text-light" aria-current="page" href="{{ url('student/home') }}">Home</a>
+                        <a class="nav-link active text-light" aria-current="page" href="{{ route('student.home') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active text-light" href=" {{ route('NewStudentTransaction') }} ">
+                        <a class="nav-link active text-light" href=" {{ route('transaction.form') }} ">
                             Payment Form
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link active text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Student Profile
                         </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href=" {{ route('student.fees.list') }} ">Profile</a></li>
+                            <li><a class="dropdown-item" href=" {{ route('logout') }} ">Logout</a></li>
+                        </ul>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Transactions
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href=" {{ route('StudentFeesList') }} ">List of Student Fees</a></li>
+                            <li><a class="dropdown-item" href=" {{ route('student.fees.list') }} ">List of Student Fees</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href=" {{ route('TransactionsHistory') }} ">Transaction History</a></li>
+                            <li><a class="dropdown-item" href=" {{ route('transactions.history') }} ">Transaction History</a></li>
                         </ul>
                     </li>
                 </ul>

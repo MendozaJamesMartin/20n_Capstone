@@ -59,6 +59,8 @@ class StudentsController extends Controller
 
     public function StudentTransactionHistory(Request $request)
     {
+        $user = Auth::user(); // Get logged-in user
+
         $timeframe = $request->input('timeframe', 'all');
         $search = $request->input('search', '');
         
@@ -78,7 +80,8 @@ class StudentsController extends Controller
                     WHEN transactions.entity_type = 'concessionaire' THEN concessionaires.name
                     ELSE 'Unknown'
                 END AS entity_name")
-            );
+            )
+            ->where('transactions.entity_id', $user->student->id); // Show only logged-in student's transactions
             
         // Apply timeframe filter
         if ($timeframe === 'today') {

@@ -7,6 +7,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Session;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserAuthMiddleware
@@ -33,14 +34,14 @@ class UserAuthMiddleware
             return $next($request);
 
         } else {
-            $email = $request->input('email');
+            $username = $request->input('username');
             $password = $request->input('password');
-            $user = User::where('email', $email)->first();
+            $user = User::where('email', $username)->first();
 
             $remember = $request->has('remember');
 
             if ($user) {
-                if (Auth::attempt(['email' => $email, 'password' => $password], $remember)) {
+                if (Auth::attempt(['email' => $username, 'password' => $password], $remember)) {
                     Log::info("Logged In");
                     $request->session()->put('user', $user);
                     $request->session()->put('loginId', $user->id);

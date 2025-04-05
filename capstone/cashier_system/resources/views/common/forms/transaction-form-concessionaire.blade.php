@@ -13,23 +13,31 @@
             <p style="color: red;">{{ session('error') }}</p>
             @endif
 
-            <form method="POST" action="{{ route('InsertNewConcessionaireTransaction') }}">
+            <form method="GET" action="{{ route('concessionaire.transaction.new') }}">
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="concessionaire">Select Concessionaire:</label>
+                        <select class="form-control" name="concessionaire_id" id="concessionaire" onchange="this.form.submit()">
+                            <option value="">-- All Concessionaires --</option>
+                            @foreach($concessionaires as $concessionaire)
+                            <option value="{{ $concessionaire->id }}" {{ request('concessionaire_id') == $concessionaire->id ? 'selected' : '' }}>
+                                {{ $concessionaire->name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </form>
+
+            @if(isset($bills) && count($bills) > 0)
+            <form method="POST" action="{{ route('concessionaire.transaction.new') }}">
                 @csrf
-
-                <!-- Concessionaire Selection -->
-                <label for="concessionaire">Select Concessionaire:</label>
-                <select id="concessionaire" name="concessionaire_id" class="form-control">
-                    <option value="">-- Select Concessionaire --</option>
-                    @foreach($concessionaires as $concessionaire)
-                    <option value="{{ $concessionaire->id }}">{{ $concessionaire->name }}</option>
-                    @endforeach
-                </select>
-
                 <!-- Unpaid Bills Table (Initially Hidden) -->
                 <h4 class="mt-3">Unpaid Bills</h4>
                 <table class="table table-striped" id="bills-table">
                     <thead>
                         <tr>
+                            <th></th>
                             <th>Utility Type</th>
                             <th>Bill Amount (₱)</th>
                             <th>Balance Due (₱)</th>
@@ -40,12 +48,15 @@
                     <tbody>
                         @foreach($bills as $bill)
                         <tr>
+                            <td>
+                                <input type="checkbox" name="bill_id[]" value="{{ $bill->id }}">
+                            </td>
                             <td>{{ $bill->utility_type }}</td>
                             <td>{{ $bill->bill_amount }}</td>
                             <td>{{ $bill->balance_due }}</td>
                             <td>{{ $bill->due_date }}</td>
                             <td>
-                                <input type="number" class="form-control quantity-input" name="amount" min="0" value="0">
+                                <input type="number" name="amount[{{ $bill->id }}]" step="0.01" min="0" max="{{ $bill->balance_due }}">
                             </td>
                         </tr>
                         @endforeach
@@ -54,6 +65,9 @@
 
                 <button type="submit" class="btn btn-primary mt-3">Submit Payment</button>
             </form>
+            @else
+            <p>No unpaid bills found.</p>
+            @endif
         </div>
     </div>
 </main>

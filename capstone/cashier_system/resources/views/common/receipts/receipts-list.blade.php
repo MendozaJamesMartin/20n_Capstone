@@ -55,6 +55,7 @@
                         <th>Receipt ID</th>
                         <th>Receipt Number</th>
                         <th>Transaction ID</th>
+                        <th>Name</th>
                         <th>Entity Type</th>
                         <th>Date of Print</th>
                         <th>Total Amount</th>
@@ -67,14 +68,15 @@
                         <td>{{ $receipts->id }}</td>
                         <td>{{ $receipts->receipt_number }}</td>
                         <td>{{ $receipts->transaction_id }}</td>
+                        <td>{{ $receipts->entity_name }}</td>
                         <td>{{ $receipts->entity_type }}</td>
                         <td>{{ $receipts->printed_at }}</td>
                         <td>{{ $receipts->total_amount }}</td>
                         <td>
                             @if($receipts->entity_type === 'Student')
-                                <a href="{{ url('/receipts/student/details/' . $receipts->id) }}" class="btn btn-danger btn-sm">View Details</a>
+                                <a href="{{ route('student.receipt.details', ['id' => $receipts->id]) }}" class="btn btn-danger btn-sm">View Details</a>
                             @elseif($receipts->entity_type === 'Concessionaire')
-                                <a href="{{ url('/receipts/concessionaire/details/' . $receipts->id) }}" class="btn btn-danger btn-sm">View Details</a>
+                                <a href="{{ route('concessionaire.receipt.details', ['id' => $receipts->id]) }}" class="btn btn-danger btn-sm">View Details</a>
                             @endif
                         </td>
                     </tr>

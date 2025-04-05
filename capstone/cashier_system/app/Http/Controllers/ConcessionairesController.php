@@ -31,7 +31,7 @@ class ConcessionairesController extends Controller
         $sortBy = $request->input('sort_by', 'id'); // Default sorting by due date
         $sortOrder = $request->input('sort_order', 'Desc'); // Default descending order
 
-        $billings = ConcessionaireBill::with('concessionaire');
+        $billings = ConcessionaireBill::with('concessionaire')->where('balance_due', '=', '0');
 
         // Apply utility_type filter if provided
         if (!empty($utilityType)) {

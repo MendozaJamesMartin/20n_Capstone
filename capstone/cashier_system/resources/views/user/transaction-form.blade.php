@@ -14,7 +14,7 @@
             <p style="color: red;">{{ session('error') }}</p>
             @endif
 
-            <form method="POST" action="{{ route('NewStudentTransaction') }}">
+            <form method="POST" action="{{ route('transaction.form') }}">
                 @csrf
 
                 <!-- Student Information -->

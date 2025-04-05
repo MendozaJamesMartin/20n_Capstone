@@ -29,7 +29,7 @@ class FeesController extends Controller
             Fee::create($fees);
         }
     
-        return redirect()->route('FeesList')->with('success', 'fees added successfully!');
+        return redirect()->route('fees.list')->with('success', 'fees added successfully!');
     }    
 
     public function UpdateFees(Request $request, $fees_id)
@@ -54,7 +54,7 @@ class FeesController extends Controller
             'amount' => $validated['amount'],
         ]);
     
-        return redirect()->route('FeesList')->with('success', 'Item updated successfully!');
+        return redirect()->route('fees.list')->with('success', 'Item updated successfully!');
     }    
 
     public function deleteItem() {

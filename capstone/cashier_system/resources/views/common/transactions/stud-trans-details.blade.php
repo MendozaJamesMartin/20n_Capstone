@@ -81,7 +81,7 @@
             <div>
                 <!-- Pay Now Button -->
                 @if($TransactionDetails[0]->amount_paid == 0)
-                    <a href="{{ route('PayStudentTransaction', ['id' => $TransactionDetails[0]->id]) }}" class="btn btn-primary">
+                    <a href="{{ route('student.transaction.pay', ['id' => $TransactionDetails[0]->id]) }}" class="btn btn-primary">
                         Pay Now
                     </a>
                 @elseif($TransactionDetails[0]->balance_due == 0)
@@ -91,11 +91,11 @@
                 @endif
 
                 @if(!$receipt) 
-                    <a href="{{ route('GenerateStudentReceipt', ['id' => $TransactionDetails[0]->id]) }}" class="btn btn-primary">
+                    <a href="{{ route('student.generate.receipt', ['id' => $TransactionDetails[0]->id]) }}" class="btn btn-primary">
                         Generate Receipt
                     </a>
                 @else
-                    <a href="{{ route('StudentReceiptDetails', ['id'=>$receipt->id]) }}" class="btn btn-danger" onclick="printTransaction()">
+                    <a href="{{ route('student.receipt.details', ['id'=>$receipt->id]) }}" class="btn btn-danger" onclick="printTransaction()">
                         Print Receipt
                     </a>
                 @endif
@@ -111,7 +111,7 @@
 <script>
         function payTransaction(transactionId) {
         if (confirm("Are you sure you want to mark this transaction as paid?")) {
-            fetch("{{ route('PayStudentTransaction') }}", {
+            fetch("{{ route('student.transaction.pay') }}", {
                 method: "POST",
                 headers: {
                     "X-CSRF-TOKEN": "{{ csrf_token() }}",

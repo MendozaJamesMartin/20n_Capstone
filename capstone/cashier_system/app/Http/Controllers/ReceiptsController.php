@@ -14,11 +14,24 @@ class ReceiptsController extends Controller
 
         $query = DB::table('receipts as r')
         ->join('transactions as t', 't.id', '=', 'r.transaction_id')
+        ->leftJoin('students as s', function ($join) {
+            $join->on('t.entity_id', '=', 's.id')
+                 ->where('t.entity_type', '=', 'student');
+        })
+        ->leftJoin('concessionaires as c', function ($join) {
+            $join->on('t.entity_id', '=', 'c.id')
+                 ->where('t.entity_type', '=', 'concessionaire');
+        })
         ->select(
             'r.id',
             'r.receipt_number',
             'r.transaction_id',
             't.entity_type',
+            DB::raw("CASE 
+                WHEN t.entity_type = 'student' THEN CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name, s.suffix)
+                WHEN t.entity_type = 'concessionaire' THEN c.name
+                ELSE 'Unknown'
+            END AS entity_name"),
             'r.printed_at',
             't.total_amount'
         );

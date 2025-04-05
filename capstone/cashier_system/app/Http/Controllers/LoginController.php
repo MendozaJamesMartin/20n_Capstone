@@ -130,45 +130,34 @@ class LoginController extends Controller
         return view('login.login-admin');
     }
 
-    public function loginPostAdmin(Request $request) {
+    public function loginPost(Request $request)
+    {
         Log::info('loginPost');
-
+    
+        // Validate input
         $request->validate([
-            'email' => 'required|string',
+            'email' => 'required|string|email',
             'password' => 'required|string|min:4',
         ]);
-
-        $middleware = new AdminMiddleware();
-
-        $response = $middleware->handle($request, function($request) {
-            Log::info("Nakapasok");
-            return redirect()->route('admin.home');
-        });
-
-        Log::info("loginPost EXIT");
-
-        return $response;
-    }
-
-    public function loginPost(Request $request) {
-        Log::info('loginPost');
-
-        $request->validate([
-            'email' => 'required|string',
-            'student_id' => 'required|string',
-            'password' => 'required|string|min:4',
-        ]);
-
-        $middleware = new UserAuthMiddleware();
-
-        $response = $middleware->handle($request, function($request) {
-            Log::info("Nakapasok");
-            return redirect()->route('student.home');
-        });
-
-        Log::info("loginPost EXIT");
-
-        return $response;
+    
+        // Attempt authentication
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            $user = Auth::user();
+            Log::info("User authenticated: {$user->email}, Type: {$user->user_type}");
+            
+            // Check user type and redirect accordingly
+            if ($user->user_type === 'student') {
+                return redirect()->route('student.home');
+            } elseif ($user->user_type === 'admin') {
+                return redirect()->route('admin.home');
+            } else {
+                Auth::logout();
+                return redirect()->route('login')->withErrors(['email' => 'Unauthorized user type.']);
+            }
+        }
+        
+        // Authentication failed
+        return redirect()->route('login')->withErrors(['email' => 'Invalid credentials.']);
     }
     
     public function logout(Request $request) {

@@ -41,7 +41,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <form action="{{ route('UpdateFees', $fee->id) }}" method="POST">
+                                <form action="{{ route('fees.update', $fee->id) }}" method="POST">
                                     @csrf
                                     @method('POST')
                                     <div class="mb-3">
@@ -74,7 +74,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="{{ route('AddFees') }}" method="POST">
+                <form action="{{ route('fees.add') }}" method="POST">
                     @csrf
                         <table class="table table-bordered">
                         <thead>

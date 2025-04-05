@@ -14,45 +14,45 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::group(['prefix' => 'admin', 'middleware' => ['admin.auth']], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
     Route::get('/home', function () {
         return view('common.home');
     })->name('admin.home');
 
     //Items List
-    Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('FeesList');
+    Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('fees.list');
     //Add Items
-    Route::post('fees/add', [FeesController::class, 'AddFees'])->name('AddFees');
+    Route::post('fees/add', [FeesController::class, 'AddFees'])->name('fees.add');
     //Update Items
-    Route::post('fees/{id}/update', [FeesController::class, 'UpdateFees'])->name('UpdateFees');
+    Route::post('fees/{id}/update', [FeesController::class, 'UpdateFees'])->name('fees.update');
 
     //Concessionaires
-    Route::get('concessionaires/list', [ConcessionairesController::class, 'GetConcessionairesList'])->name('ConcessionairesList');
-    Route::post('concessionaires/add', [ConcessionairesController::class, 'AddNewConcessionaire'])->name('AddConcessionaires');
-    Route::get('concessionaires/billing/list', [ConcessionairesController::class, 'GetConcessionaireBillingList'])->name('ConcessionaireBilling');
+    Route::get('concessionaires/list', [ConcessionairesController::class, 'GetConcessionairesList'])->name('concessionaires.list');
+    Route::post('concessionaires/add', [ConcessionairesController::class, 'AddNewConcessionaire'])->name('concessionaires.add');
+    Route::get('concessionaires/billing/list', [ConcessionairesController::class, 'GetConcessionaireBillingList'])->name('concessionaires.billing');
     //Billing Statement
-    Route::match(['get', 'post'], 'concessionaires/billing/new', [ConcessionairesController::class, 'CreateNewBilling'])->name('AddConcessionaireBilling');
+    Route::match(['get', 'post'], 'concessionaires/billing/new', [ConcessionairesController::class, 'CreateNewBilling'])->name('concessionaires.add.billing');
     Route::get('/concessionaires/billing/details', function () {
         return view('common.concessionaires.billing-details');
     });
 
     //Transactions History
-    Route::get('/transactions/list', [TransactionsController::class, 'GetTransactionsList'])->name('TransactionsList');
-    Route::get('/transactions/student/details/{id}', [TransactionsController::class, 'GetStudentTransactionDetails'])->name('StudentTransactionDetails');
-    Route::get('/transactions/concessionaire/details/{id}', [TransactionsController::class, 'GetConcessionaireTransactionDetails'])->name('ConcessionaireTransactionDetails');
+    Route::get('/transactions/list', [TransactionsController::class, 'GetTransactionsList'])->name('transactions.list');
+    Route::get('/transactions/student/details/{id}', [TransactionsController::class, 'GetStudentTransactionDetails'])->name('student.transaction.details');
+    Route::get('/transactions/concessionaire/details/{id}', [TransactionsController::class, 'GetConcessionaireTransactionDetails'])->name('concessionaire.transaction.details');
 
     //Insert Transactions
-    Route::match(['get', 'post'], '/transactions/student/new', [TransactionsController::class, 'InsertNewStudentTransaction'])->name('InsertNewStudentTransaction');
-    Route::match(['get', 'post'], '/transactions/concessionaire/new', [TransactionsController::class, 'InsertNewConcessionaireTransaction'])->name('InsertNewConcessionaireTransaction');
-
+    Route::match(['get', 'post'], '/transactions/student/new', [TransactionsController::class, 'InsertNewStudentTransaction'])->name('student.transaction.new');
+    Route::match(['get', 'post'], '/transactions/concessionaire/new', [TransactionsController::class, 'InsertNewConcessionaireTransaction'])->name('concessionaire.transaction.new');
+    
     //Pay and Generate Receipt for Student Transaction
-    Route::get('/pay-student-transaction', [TransactionsController::class, 'PayStudentTransaction'])->name('PayStudentTransaction');
-    Route::get('/generate-student-receipt/{id}', [TransactionsController::class, 'GenerateReceipt'])->name('GenerateStudentReceipt');
+    Route::get('/pay-student-transaction', [TransactionsController::class, 'PayStudentTransaction'])->name('student.transaction.pay');
+    Route::get('/generate-student-receipt/{id}', [TransactionsController::class, 'GenerateReceipt'])->name('student.generate.receipt');
 
     //Receipts
-    Route::get('/receipts/list', [ReceiptsController::class, 'GetReceiptList'])->name('ReceiptsList');
-    Route::get('/receipts/student/details/{id}', [ReceiptsController::class, 'GetStudentReceiptDetails'])->name('StudentReceiptDetails');
-    Route::get('/receipts/concessionaire/details/{id}', [ReceiptsController::class, 'GetConcessionaireReceiptDetails'])->name('ConcessionairetReceiptDetails');
+    Route::get('/receipts/list', [ReceiptsController::class, 'GetReceiptList'])->name('receipts.list');
+    Route::get('/receipts/student/details/{id}', [ReceiptsController::class, 'GetStudentReceiptDetails'])->name('student.receipt.details');
+    Route::get('/receipts/concessionaire/details/{id}', [ReceiptsController::class, 'GetConcessionaireReceiptDetails'])->name('concessionaire.receipt.details');
 });
 
 Route::group(['prefix' => 'student', 'middleware' => ['user.auth']], function () {
@@ -62,14 +62,14 @@ Route::group(['prefix' => 'student', 'middleware' => ['user.auth']], function ()
     })->name('student.home');
 
     //Transactions History
-    Route::get('/transactions/history', [StudentsController::class, 'StudentTransactionHistory'])->name('TransactionsHistory');
-    Route::get('/transactions/details/{id}', [StudentsController::class, 'StudentTransactionDetails'])->name('StudentTransactionDetails');
+    Route::get('/transactions/history', [StudentsController::class, 'StudentTransactionHistory'])->name('transactions.history');
+    Route::get('/transactions/details/{id}', [StudentsController::class, 'StudentTransactionDetails'])->name('transaction.details');
 
     //Transaction Form
-    Route::match(['get', 'post'], '/transactions/new/form', [StudentsController::class, 'NewStudentTransaction'])->name('NewStudentTransaction');
+    Route::match(['get', 'post'], '/transactions/new/form', [StudentsController::class, 'NewStudentTransaction'])->name('transaction.form');
 
     //Items List
-    Route::get('fees/list', [StudentsController::class, 'StudentFeesList'])->name('StudentFeesList');
+    Route::get('fees/list', [StudentsController::class, 'StudentFeesList'])->name('student.fees.list');
 });
 
 Route::group(['middleware' => ['user.auth']], function() {
@@ -83,9 +83,6 @@ Route::group(['middleware' => 'guest', 'prefix' => '/'], function () {
 
     Route::get('/register/admin', [LoginController::class, 'registerAdmin'])->name('register.admin');
     Route::post('/register/admin', [LoginController::class, 'registerPostAdmin'])->name('register.admin');
-
-    Route::get('/admin/login', [LoginController::class, 'loginAdmin'])->name('login.admin');
-    Route::post('/admin/login', [LoginController::class, 'loginPostAdmin'])->name('login.admin.submit');
 
     Route::get('/', [LoginController::class, 'login'])->name('login');
     Route::post('/', [LoginController::class, 'loginPost'])->name('login.submit');

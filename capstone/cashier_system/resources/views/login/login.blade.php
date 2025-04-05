@@ -26,10 +26,6 @@
                             <input type="text" class="form-control" id="email" name="email" />
                         </div>
                         <div class="mb-4">
-                            <label for="student_id" class="form-label">Student ID</label>
-                            <input type="text" class="form-control" id="student_id" name="student_id" />
-                        </div>
-                        <div class="mb-4">
                             <label for="password" class="form-label">Password</label>
                             <input type="password" class="form-control" id="password" name="password" />
                         </div>
@@ -43,7 +39,7 @@
                     </form>
                 </div>
                 <div>
-                    <h6>Don't have an account yet? <a href="{{ url('/register') }}">Register Now</a></h6>
+                    <h6>Don't have an account yet? <a href="{{ route('register') }}">Register Now</a></h6>
                 </div>
             </div>
         </div>

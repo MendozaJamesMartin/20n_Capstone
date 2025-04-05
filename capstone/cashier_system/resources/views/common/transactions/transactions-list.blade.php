@@ -10,7 +10,7 @@
                 <thead>
                     <tr>
                         <td colspan="8">
-                            <h2>TRANSACTIONS HISTORY</h2>
+                            <h2>PENDING TRANSACTIONS</h2>
                         </td>
                     </tr>
                 </thead>
@@ -81,9 +81,9 @@
                         <td>{{ $transaction->transaction_date }}</td>
                         <td>
                             @if($transaction->entity_type === 'Student')
-                                <a href="{{ url('admin/transactions/student/details/' . $transaction->id) }}" class="btn btn-danger btn-sm">View Details</a>
+                                <a href="{{ route('student.transaction.details', ['id' => $transaction->id]) }}" class="btn btn-danger btn-sm">View Details</a>
                             @elseif($transaction->entity_type === 'Concessionaire')
-                                <a href="{{ url('admin/transactions/concessionaire/details/' . $transaction->id) }}" class="btn btn-danger btn-sm">View Details</a>
+                                <a href="{{ route('concessionaire.transaction.details', ['id' => $transaction->id]) }}" class="btn btn-danger btn-sm">View Details</a>
                             @endif
                         </td>
                     </tr>
