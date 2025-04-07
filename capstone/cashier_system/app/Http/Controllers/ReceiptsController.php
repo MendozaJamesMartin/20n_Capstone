@@ -22,6 +22,10 @@ class ReceiptsController extends Controller
             $join->on('t.entity_id', '=', 'c.id')
                  ->where('t.entity_type', '=', 'concessionaire');
         })
+        ->leftJoin('outsiders as o', function ($join) {
+            $join->on('t.entity_id', '=', 'o.id')
+                ->where('t.entity_type', '=', 'outsider');
+        })
         ->select(
             'r.id',
             'r.receipt_number',
@@ -30,6 +34,7 @@ class ReceiptsController extends Controller
             DB::raw("CASE 
                 WHEN t.entity_type = 'student' THEN CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name, s.suffix)
                 WHEN t.entity_type = 'concessionaire' THEN c.name
+                WHEN t.entity_type = 'outsider' THEN o.name
                 ELSE 'Unknown'
             END AS entity_name"),
             'r.printed_at',
@@ -109,6 +114,33 @@ class ReceiptsController extends Controller
 
         // Return the result to a view to display the details
         return view('common.receipts.receipts-details-concessionaire', compact('ReceiptDetails'));
+    }
+
+    public function GetOutsiderReceiptDetails($id) {
+        $ReceiptDetails = DB::table('receipts as r')
+        ->join('transactions as t', 't.id', '=', 'r.transaction_id')
+        ->join('outsider_transaction_details as otd', 't.id', '=', 'otd.transaction_id')
+        ->join('outsiders as o', 'otd.outsider_id', '=', 'o.id')
+        ->join('fees as f', 'otd.fee_id', '=', 'f.id')
+        ->select(
+            'r.id',
+            'r.receipt_number',
+            'r.transaction_id',
+            'otd.outsider_id',
+            'o.name',
+            'r.printed_at',
+            'otd.fee_id',
+            'f.fee_name',
+            'f.amount',
+            'otd.quantity',
+            'otd.amount as subtotal',
+            't.total_amount'
+        )
+        ->where('r.id', $id)
+        ->get();
+
+        // Return the result to a view to display the details
+        return view('common.receipts.receipts-details-outsider', compact('ReceiptDetails'));
     }
 
 }

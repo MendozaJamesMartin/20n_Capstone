@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Fee;
 use App\Models\Receipt;
+use App\Models\Student;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,11 @@ use Illuminate\Support\Facades\DB;
 
 class StudentsController extends Controller
 {
+    public function GetStudentsList() {
+        $students = Student::all();
+        return view('common.users.students-list', compact('students'));
+    }
+
     public function NewStudentTransaction(Request $request) {
         $user = Auth::user();
 
@@ -25,7 +31,7 @@ class StudentsController extends Controller
             // Fetch fees
             $fees = DB::table('fees')->get();
     
-            return view('user.transaction-form', compact('student', 'fees'));
+            return view('student.transaction-form', compact('student', 'fees'));
     
         } elseif ($request->isMethod('post')) {
     
@@ -53,7 +59,7 @@ class StudentsController extends Controller
             ]);
     
             // Redirect with success message
-            return back()->with('success', 'Transaction submitted successfully!');
+            return redirect()->route('transactions.history')->with('success', 'Transaction submitted successfully!');
         }
     }
 
@@ -114,7 +120,7 @@ class StudentsController extends Controller
         $result = $query->paginate(10);
 
         // Return the view with sorted and filtered results
-        return view('user.transaction-history', compact('result'));
+        return view('student.transaction-history', compact('result'));
     }    
 
     public function StudentTransactionDetails($id) {
@@ -144,11 +150,17 @@ class StudentsController extends Controller
 
         // Return the result to a view to display the details
         $receipt = Receipt::where('transaction_id', $id)->first();
-        return view('user.transaction-details', compact('TransactionDetails','receipt'));
+        return view('student.transaction-details', compact('TransactionDetails','receipt'));
     }
 
     public function StudentFeesList() {
         $fees = Fee::all();
-        return view('user.student-fees', compact('fees'));
+        return view('student.student-fees', compact('fees'));
+    }
+
+    public function StudentProfile() {
+        $user = Auth::user(); // Logged-in user
+        $student = Student::where('user_id', $user->id)->first(); // Get student details
+        return view('student.profile', compact('user', 'student'));
     }
 }

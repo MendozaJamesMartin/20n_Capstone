@@ -40,7 +40,7 @@
                             Student Profile
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href=" {{ route('student.fees.list') }} ">Profile</a></li>
+                            <li><a class="dropdown-item" href=" {{ route('student.profile') }} ">Profile</a></li>
                             <li><a class="dropdown-item" href=" {{ route('logout') }} ">Logout</a></li>
                         </ul>
                     </li>

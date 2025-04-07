@@ -77,6 +77,8 @@
                                 <a href="{{ route('student.receipt.details', ['id' => $receipts->id]) }}" class="btn btn-danger btn-sm">View Details</a>
                             @elseif($receipts->entity_type === 'Concessionaire')
                                 <a href="{{ route('concessionaire.receipt.details', ['id' => $receipts->id]) }}" class="btn btn-danger btn-sm">View Details</a>
+                            @elseif($receipts->entity_type === 'Outsider')
+                                <a href="{{ route('outsider.receipt.details', ['id' => $receipts->id]) }}" class="btn btn-danger btn-sm">View Details</a>
                             @endif
                         </td>
                     </tr>

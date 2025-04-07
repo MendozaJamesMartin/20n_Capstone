@@ -29,11 +29,10 @@
                                     <option value="this_month" {{ request('timeframe') == 'this_month' ? 'selected' : '' }}>This Month</option>
                                 </select>
 
-                                <label class="block mb-2">Entity Type</label>
+                                <label class="block mb-2">Payment Status</label>
                                 <select name="entity_type" class="w-full p-2 border rounded mb-4">
-                                    <option value="">All Entities</option>
-                                    <option value="student" {{ request('entity_type') == 'student' ? 'selected' : '' }}>Student</option>
-                                    <option value="concessionaire" {{ request('entity_type') == 'concessionaire' ? 'selected' : '' }}>Concessionaire</option>
+                                    <option value="student" {{ request('entity_type') == 'student' ? 'selected' : '' }}>Paid</option>
+                                    <option value="concessionaire" {{ request('entity_type') == 'concessionaire' ? 'selected' : '' }}>Unpaid</option>
                                 </select>
 
                                 <label class="block mb-2">Sort By</label>

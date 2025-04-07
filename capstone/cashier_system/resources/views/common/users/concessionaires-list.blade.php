@@ -27,7 +27,7 @@
 
                                 <label class="block mb-2">Sort By</label>
                                 <select name="sort_by" class="w-full p-2 border rounded mb-4">
-                                    <option value="transaction_date" {{ request('sort_by') == 'id' ? 'selected' : '' }}>ID</option>
+                                    <option value="id" {{ request('sort_by') == 'id' ? 'selected' : '' }}>ID</option>
                                     <option value="entity_name" {{ request('sort_by') == 'name' ? 'selected' : '' }}>Name</option>
                                 </select>
 
@@ -83,7 +83,7 @@
 
 </main>
 
-<!-- Add Fee Modal -->
+<!-- Add Concessionaire Modal -->
 <div class="modal fade" id="addConcessionaireModal" tabindex="-1" aria-labelledby="addConcessionaireModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

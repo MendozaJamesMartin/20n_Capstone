@@ -84,6 +84,8 @@
                                 <a href="{{ route('student.transaction.details', ['id' => $transaction->id]) }}" class="btn btn-danger btn-sm">View Details</a>
                             @elseif($transaction->entity_type === 'Concessionaire')
                                 <a href="{{ route('concessionaire.transaction.details', ['id' => $transaction->id]) }}" class="btn btn-danger btn-sm">View Details</a>
+                            @elseif($transaction->entity_type === 'Outsider')
+                                <a href="{{ route('outsider.transaction.details', ['id' => $transaction->id]) }}" class="btn btn-danger btn-sm">View Details</a>
                             @endif
                         </td>
                     </tr>

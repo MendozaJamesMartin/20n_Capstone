@@ -12,7 +12,7 @@ class ConcessionairesController extends Controller
 {
     public function GetConcessionairesList() {
         $concessionaires = Concessionaire::all();
-        return view('common.concessionaires.concessionaires-list', compact('concessionaires'));
+        return view('common.users.concessionaires-list', compact('concessionaires'));
     }
 
     public function AddNewConcessionaire(Request $request) {

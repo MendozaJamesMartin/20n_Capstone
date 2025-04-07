@@ -36,20 +36,26 @@
                                 Forms
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('concessionaire.transaction.new') }} ">Concessionaire Payment Form</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('student.transaction.new') }} ">Student Payment Form</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('concessionaire.transaction.new') }} ">Payment Form for Concessionaires</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('student.transaction.new') }} ">Payment Form for Registered Students</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('outsider.transaction.new') }} ">Payment Form for Unregistered Users</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Concessionaires
+                                Registered Users
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('concessionaires.list') }} ">List of Concessionaires</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('concessionaires.list') }} ">Concessionaires</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('students.list') }} ">Students</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Concessionaire Billings
+                            </a>
+                            <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href=" {{ route('concessionaires.billing') }} ">Concessionaire Billing List</a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
                                 <li><a class="dropdown-item" href=" {{ route('concessionaires.add.billing') }} ">Create Billing Statement</a></li>
                             </ul>
                         </li>
@@ -58,7 +64,7 @@
                                 Transactions
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('fees.list') }} ">List of Student Fees</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('fees.list') }} ">List of Fees</a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
