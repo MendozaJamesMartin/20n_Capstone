@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Concessionaire;
 use App\Models\ConcessionaireBill;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ConcessionairesController extends Controller 
 {
@@ -25,13 +27,13 @@ class ConcessionairesController extends Controller
         return back();
     }
 
-    public function GetConcessionaireBillingList(Request $request) {
+    public function GetBillingList(Request $request) {
         $utilityType = $request->input('utility_type');
         $paymentStatus = $request->input('status');
         $sortBy = $request->input('sort_by', 'id'); // Default sorting by due date
         $sortOrder = $request->input('sort_order', 'Desc'); // Default descending order
 
-        $billings = ConcessionaireBill::with('concessionaire')->where('balance_due', '=', '0');
+        $billings = ConcessionaireBill::with('concessionaire');
 
         // Apply utility_type filter if provided
         if (!empty($utilityType)) {
@@ -76,6 +78,80 @@ class ConcessionairesController extends Controller
             ]);
 
             return redirect()->back()->with('success', 'Billing created successfully!');
+        }
+    }
+
+    public function BillsPayment(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            if ($request->isMethod('get')) {
+                Log::info('Displaying concessionaire billing');
+    
+                // Fetch all concessionaires
+                $concessionaires = Concessionaire::all();
+    
+                // Fetch only unpaid bills, filtered by concessionaire if selected
+                $billsQuery = DB::table('concessionaire_bills')
+                    ->join('concessionaires', 'concessionaire_bills.concessionaire_id', '=', 'concessionaires.id')
+                    ->select(
+                        'concessionaire_bills.id',
+                        'concessionaire_bills.utility_type',
+                        'concessionaire_bills.bill_amount',
+                        'concessionaire_bills.balance_due',
+                        'concessionaire_bills.due_date',
+                        'concessionaires.name as concessionaire_name'
+                    )
+                    ->where('concessionaire_bills.balance_due', '>', 0);
+    
+                if ($request->has('concessionaire_id') && $request->concessionaire_id) {
+                    $billsQuery->where('concessionaire_bills.concessionaire_id', $request->concessionaire_id);
+                }
+    
+                $bills = $billsQuery->get();
+    
+                return view('common.concessionaires.bills-payment', compact('concessionaires', 'bills'));
+                Log::info('display concessionaire billing');
+            } elseif ($request->isMethod('post')) {
+                Log::info('Processing concessionaire transaction request');
+    
+                // Validate input
+                $validated = $request->validate([
+                    'bill_id' => 'required|array',
+                    'amount' => 'required|array',
+                    'receipt_number' => 'required|string',
+                ]);
+                Log::info('Validation passed');
+    
+                // Filter out bills with zero or negative payments
+                $filteredBills = [];
+                foreach ($validated['bill_id'] as $billId) {
+                    if (!empty($validated['amount'][$billId]) && $validated['amount'][$billId] > 0) {
+                        $filteredBills[$billId] = $validated['amount'][$billId];
+                    }
+                }
+                Log::info('Filtered valid payments', ['bills' => $filteredBills]);
+    
+                if (empty($filteredBills)) {
+                    return back()->with('error', 'Please enter a valid payment amount for at least one bill.');
+                }
+    
+                // Convert filtered bill IDs and amounts into comma-separated strings
+                $billIds = implode(',', array_keys($filteredBills));
+                $amounts = implode(',', array_values($filteredBills));
+                Log::info('Formatted data for stored procedure', ['bill_ids' => $billIds, 'amounts' => $amounts]);
+    
+                // Call the stored procedure
+                DB::statement("CALL ConcessionairePayBills(?, ?, ?)", [$billIds, $amounts, $validated['receipt_number']]);
+                Log::info('Stored procedure executed successfully');
+    
+                DB::commit();
+                return redirect()->route('receipts.list')->with('success', 'Bills paid successfully!');
+            }
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::info("Concessionaire Payment unsuccessful");
+            return back();
         }
     }
 }

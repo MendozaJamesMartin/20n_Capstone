@@ -1,10 +1,10 @@
-@extends('layout.main-user')
+@extends('layout.main-master')
 
 @section('content')
 
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
 
-    <div class="container" style="width:50%">
+    <div class="container" style="width:75%">
         <div class="bg-light" style="padding:5%">
             <h1>Student Payment Form</h1>
 
@@ -14,21 +14,18 @@
             <p style="color: red;">{{ session('error') }}</p>
             @endif
 
-            <form method="POST" action="{{ route('transaction.form') }}">
+            <form method="POST" action="{{ route('payments.outsider.new') }}" id="paymentForm">
                 @csrf
-
-                <!-- Student Information -->
                 <div class="row mb-3">
                     <div class="col-md-12">
-                        <label>Student Information:</label>
-                        <table class="table">
-                            <tr>
-                                <td><p>{{ $student->first_name }}</p></td>
-                                <td><p>{{ $student->middle_name ? $student->middle_name . ' ' : '' }}</p></td>
-                                <td><p>{{ $student->last_name }}</p></td>
-                                <td><p>{{ $student->suffix ? $student->suffix : '' }}</p></td>
-                            </tr>
-                        </table>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="name" class="form-control" id="name" name="name" placeholder="First Name M.I. Last Name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="contact" class="form-label">Contact</label>
+                            <input type="contact" class="form-control" id="contact" name="contact" placeholder="example@email.com">
+                        </div>
                     </div>
                 </div>
 
@@ -70,10 +67,35 @@
                     <h3>Total Amount: <span id="total-amount">0.00</span></h3>
                 </div>
 
-                <div style="padding: 2%">
-                    <button class="btn btn-danger btn-lg" type="submit">Submit</button>
-                </div>
+                <!-- Hidden input for receipt number -->
+                <input type="hidden" name="receipt_number" id="receipt_number">
+
+                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#receiptModal">
+                    Submit Payment
+                </button>
             </form>
+
+            <!-- Modal -->
+            <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="receiptModalLabel">Enter Receipt Number</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="modal_receipt_number" class="form-label">Receipt Number</label>
+                                <input type="text" class="form-control" id="modal_receipt_number" placeholder="Enter Receipt Number">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="confirmPaymentButton">Submit Payment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -101,6 +123,15 @@
 
             totalAmountElement.textContent = total.toFixed(2);
         }
+    });
+
+    document.getElementById('confirmPaymentButton').addEventListener('click', function() {
+        // Copy receipt number from modal input to hidden input
+        const receiptNumber = document.getElementById('modal_receipt_number').value;
+        document.getElementById('receipt_number').value = receiptNumber;
+
+        // Submit the form
+        document.getElementById('paymentForm').submit();
     });
 </script>
 

@@ -13,7 +13,7 @@
             <p style="color: red;">{{ session('error') }}</p>
             @endif
 
-            <form method="GET" action="{{ route('concessionaire.transaction.new') }}">
+            <form method="GET" action="{{ route('concessionaires.billing.payment') }}">
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label for="concessionaire">Select Concessionaire:</label>
@@ -30,7 +30,7 @@
             </form>
 
             @if(isset($bills) && count($bills) > 0)
-            <form method="POST" action="{{ route('concessionaire.transaction.new') }}">
+            <form method="POST" action="{{ route('concessionaires.billing.payment') }}" id="paymentForm">
                 @csrf
                 <!-- Unpaid Bills Table (Initially Hidden) -->
                 <h4 class="mt-3">Unpaid Bills</h4>
@@ -63,13 +63,52 @@
                     </tbody>
                 </table>
 
-                <button type="submit" class="btn btn-primary mt-3">Submit Payment</button>
+                <!-- Hidden input for receipt number -->
+                <input type="hidden" name="receipt_number" id="receipt_number">
+
+                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#receiptModal">
+                    Submit Payment
+                </button>
             </form>
+
+            <!-- Modal -->
+            <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="receiptModalLabel">Enter Receipt Number</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="modal_receipt_number" class="form-label">Receipt Number</label>
+                                <input type="text" class="form-control" id="modal_receipt_number" placeholder="Enter Receipt Number">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="confirmPaymentButton">Submit Payment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             @else
             <p>No unpaid bills found.</p>
             @endif
         </div>
     </div>
 </main>
+
+<script>
+document.getElementById('confirmPaymentButton').addEventListener('click', function () {
+    // Copy receipt number from modal input to hidden input
+    const receiptNumber = document.getElementById('modal_receipt_number').value;
+    document.getElementById('receipt_number').value = receiptNumber;
+
+    // Submit the form
+    document.getElementById('paymentForm').submit();
+});
+</script>
 
 @endsection

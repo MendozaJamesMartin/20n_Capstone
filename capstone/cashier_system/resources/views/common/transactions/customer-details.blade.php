@@ -1,4 +1,4 @@
-@extends('layout.main-user')
+@extends('layout.main-master')
 @section('content')
 
 <div style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
@@ -18,13 +18,16 @@
                             <p><strong>Transaction ID:</strong></p>
                         </td>
                         <td>
-                            <p>{{ $TransactionDetails[0]->id }}</p>
+                            <p>{{ $TransactionDetails[0]->transaction_id }}</p>
                         </td>
                         <td>
                             <p><strong>Transaction Date:</strong></p>
                         </td>
                         <td>
                             <p>{{ $TransactionDetails[0]->transaction_date }}</p>
+                        </td>
+                        <td>
+                            <p>{{ $TransactionDetails[0]->receipt_number }}</p>
                         </td>
                     </tr>
                 </table>
@@ -33,16 +36,7 @@
                 <table class="table">
                     <tr>
                         <td>
-                            <p> {{ $TransactionDetails[0]->first_name }}</p>
-                        </td>
-                        <td>
-                            <p> {{ $TransactionDetails[0]->middle_name }}</p>
-                        </td>
-                        <td>
-                            <p> {{ $TransactionDetails[0]->last_name }}</p>
-                        </td>
-                        <td>
-                            <p> {{ $TransactionDetails[0]->suffix }}</p>
+                            <p> {{ $TransactionDetails[0]->customer_name }}</p>
                         </td>
                     </tr>
                 </table>
@@ -52,7 +46,6 @@
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Name</th>
                         <th>Amount</th>
                         <th>Quantity</th>
@@ -62,9 +55,8 @@
                 <tbody>
                     @foreach($TransactionDetails as $fees)
                     <tr>
-                        <td>{{ $fees->fee_id }}</td>
                         <td>{{ $fees->fee_name }}</td>
-                        <td>{{ $fees->amount }}</td>
+                        <td>{{ $fees->fee_amount }}</td>
                         <td>{{ $fees->quantity }}</td>
                         <td>{{ $fees->subtotal }}</td>
                     </tr>

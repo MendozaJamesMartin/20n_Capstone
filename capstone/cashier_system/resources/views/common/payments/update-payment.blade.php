@@ -14,26 +14,10 @@
             <p style="color: red;">{{ session('error') }}</p>
             @endif
 
-            <form method="POST" action="{{ route('student.transaction.new') }}">
+            <form method="POST" action="{{ route('payments.update', ['transactionId' => $transactionId]) }}" id="paymentForm">
                 @csrf
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label for="student_id">Select Student:</label>
-                        <select class="form-control" name="student_id" id="student_id" required>
-                            <option value="">-- Select Student --</option>
-                            @foreach($students as $student)
-                            <option value="{{ $student->id }}">
-                                {{ $student->first_name }}
-                                {{ $student->middle_name ? $student->middle_name . ' ' : '' }}
-                                {{ $student->last_name }}
-                                {{ $student->suffix ? $student->suffix : '' }}
-                            </option>
-                            @endforeach
-                        </select>
-                        @error('student_id') <p style="color: red;">{{ $message }}</p> @enderror
-                    </div>
-                </div>
-
+                @method('PUT')
+                
                 <!-- Fees Table -->
                 <table class="table">
                     <tr>
@@ -59,8 +43,9 @@
                                 <td>{{ number_format($fee->amount, 2) }}</td>
                                 <td>
                                     <input type="number" class="form-control quantity-input"
-                                        name="quantities[{{ $fee->id }}]"
-                                        data-price="{{ $fee->amount }}" min="0" value="0">
+                                    name="quantities[{{ $fee->id }}]"
+                                    data-price="{{ $fee->amount }}" min="0"
+                                    value="{{ $selectedFees[$fee->id] ?? 0 }}">
                                 </td>
                             </tr>
                             @endforeach
@@ -72,10 +57,35 @@
                     <h3>Total Amount: <span id="total-amount">0.00</span></h3>
                 </div>
 
-                <div style="padding: 2%">
-                    <button class="btn btn-danger btn-lg" type="submit">Submit</button>
-                </div>
+                <!-- Hidden input for receipt number -->
+                <input type="hidden" name="receipt_number" id="receipt_number">
+
+                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#receiptModal">
+                    Submit Payment
+                </button>
             </form>
+
+            <!-- Modal -->
+            <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="receiptModalLabel">Enter Receipt Number</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="modal_receipt_number" class="form-label">Receipt Number</label>
+                                <input type="text" class="form-control" id="modal_receipt_number" placeholder="Enter Receipt Number">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="confirmPaymentButton">Submit Payment</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -87,22 +97,30 @@
         const quantityInputs = document.querySelectorAll('.quantity-input');
         const totalAmountElement = document.getElementById('total-amount');
 
+        function calculateTotal() {
+            let total = 0;
+            quantityInputs.forEach(input => {
+                const price = parseFloat(input.dataset.price);
+                const quantity = parseFloat(input.value) || 0;
+                total += price * quantity;
+            });
+            totalAmountElement.textContent = total.toFixed(2);
+        }
+
         quantityInputs.forEach(input => {
             input.addEventListener('input', calculateTotal);
         });
 
-        function calculateTotal() {
-            let total = 0;
+        calculateTotal(); // <-- This is key!
+    });
 
-            quantityInputs.forEach(input => {
-                const price = parseFloat(input.dataset.price);
-                const quantity = parseFloat(input.value) || 0;
+    document.getElementById('confirmPaymentButton').addEventListener('click', function() {
+        // Copy receipt number from modal input to hidden input
+        const receiptNumber = document.getElementById('modal_receipt_number').value;
+        document.getElementById('receipt_number').value = receiptNumber;
 
-                total += price * quantity;
-            });
-
-            totalAmountElement.textContent = total.toFixed(2);
-        }
+        // Submit the form
+        document.getElementById('paymentForm').submit();
     });
 </script>
 

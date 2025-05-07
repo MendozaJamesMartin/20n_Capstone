@@ -22,8 +22,8 @@ class AdminMiddleware
         Log::info('ENTER ADMIN MIDDLEWARE HANDLE=====>');
 
         $user = $request->session()->get('user');
-        $type = $user->user_type;
-        if ($type != 'admin') {
+        $type = $user->role;
+        if ($type != 'Superadmin') {
             Log::info('Access Attempt by non-admin');
             abort(403, 'You do not have permission to view this page');
         } else {

@@ -40,14 +40,17 @@
                                 <label class="block mb-2">Sort By</label>
                                 <select name="sort_by" class="w-full p-2 border rounded mb-4">
                                     <option value="due_date" {{ request('sort_by') == 'due_date' ? 'selected' : '' }}>Due Date</option>
-                                    <option value="name" {{ request('sort_by') == 'concessionaire_name' ? 'selected' : '' }}>Name</option>
                                     <option value="bill_amount" {{ request('sort_by') == 'bill_amount' ? 'selected' : '' }}>Bill Amount</option>
                                     <option value="balance_due" {{ request('sort_by') == 'balance_due' ? 'selected' : '' }}>Balance Due</option>
                                 </select>
 
                                 <button type="button" class="btn btn-secondary ms-2" id="sortToggleBtn">
                                     <span id="sortIcon">
-                                        {{ request('sort_order', 'desc') == 'desc' ? '🔽' : '🔼' }}
+                                        @if(request('sort_order', 'desc') == 'desc')
+                                            <i class="fa-solid fa-arrow-down-wide-short"></i>
+                                        @else
+                                            <i class="fa-solid fa-arrow-up-short-wide"></i>
+                                        @endif
                                     </span>
                                 </button>
 

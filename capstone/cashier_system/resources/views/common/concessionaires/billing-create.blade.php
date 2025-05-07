@@ -14,7 +14,7 @@
                 <p style="color: red;">{{ session('error') }}</p>
             @endif
 
-            <form method="POST" action="{{ route('concessionaires.add.billing') }}">
+            <form method="POST" action="{{ route('concessionaires.billing.new') }}">
                 @csrf
 
                 <div class="mb-3">

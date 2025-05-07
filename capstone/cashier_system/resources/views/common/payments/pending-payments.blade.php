@@ -9,14 +9,14 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <td colspan="8">
-                            <h2>PENDING TRANSACTIONS</h2>
+                        <td colspan="9">
+                            <h2>TRANSACTIONS HISTORY</h2>
                         </td>
                     </tr>
                 </thead>
                 <tbody>
                 <tr>
-                    <th colspan="8" class="text-center">
+                    <th colspan="9" class="text-center">
                         <div class="d-flex justify-content-center align-items-center flex-wrap">
                             <form action="{{ url()->current() }}" method="GET">
                                 <input type="text" id="search" style="width:15%" class="border p-2 w-1/3 rounded" placeholder="🔍 Search " onkeyup="filterTable()">
@@ -32,20 +32,24 @@
                                 <label class="block mb-2">Entity Type</label>
                                 <select name="entity_type" class="w-full p-2 border rounded mb-4">
                                     <option value="">All Entities</option>
-                                    <option value="student" {{ request('entity_type') == 'student' ? 'selected' : '' }}>Student</option>
-                                    <option value="concessionaire" {{ request('entity_type') == 'concessionaire' ? 'selected' : '' }}>Concessionaire</option>
+                                    <option value="student" {{ request('customer_type') == 'student' ? 'selected' : '' }}>Student</option>
+                                    <option value="concessionaire" {{ request('customer_type') == 'concessionaire' ? 'selected' : '' }}>Concessionaire</option>
                                 </select>
 
                                 <label class="block mb-2">Sort By</label>
                                 <select name="sort_by" class="w-full p-2 border rounded mb-4">
                                     <option value="transaction_date" {{ request('sort_by') == 'transaction_date' ? 'selected' : '' }}>Date</option>
-                                    <option value="entity_name" {{ request('sort_by') == 'entity_name' ? 'selected' : '' }}>Name</option>
+                                    <option value="customer_name" {{ request('sort_by') == 'customer_name' ? 'selected' : '' }}>Name</option>
                                     <option value="total_amount" {{ request('sort_by') == 'total_amount' ? 'selected' : '' }}>Total Amount</option>
                                 </select>
 
                                 <button type="button" class="btn btn-secondary ms-2" id="sortToggleBtn">
                                     <span id="sortIcon">
-                                        {{ request('sort_order', 'desc') == 'desc' ? '🔽' : '🔼' }}
+                                        @if(request('sort_order', 'desc') == 'desc')
+                                            <i class="fa-solid fa-arrow-down-wide-short"></i>
+                                        @else
+                                            <i class="fa-solid fa-arrow-up-short-wide"></i>
+                                        @endif
                                     </span>
                                 </button>
 
@@ -60,8 +64,8 @@
 
                     <tr>
                         <th>Transaction ID</th>
-                        <th>Name</th>
-                        <th>Type</th>
+                        <th>Student ID</th>
+                        <th>Full Name</th>
                         <th>Total Amount</th>
                         <th>Amount Paid</th>
                         <th>Balance Due</th>
@@ -72,32 +76,30 @@
                 <tbody>
                 @forelse($result as $transaction)
                     <tr>
-                        <td>{{ $transaction->id }}</td>
-                        <td>{{ $transaction->entity_name }}</td>
-                        <td>{{ $transaction->entity_type }}</td>
+                        <td>{{ $transaction->transaction_id }}</td>
+                        <td>{{ $transaction->student_id }}</td>
+                        <td>{{ $transaction->full_name }}</td>
                         <td>{{ $transaction->total_amount }}</td>
                         <td>{{ $transaction->amount_paid }}</td>
                         <td>{{ $transaction->balance_due }}</td>
                         <td>{{ $transaction->transaction_date }}</td>
                         <td>
-                            @if($transaction->entity_type === 'Student')
-                                <a href="{{ route('student.transaction.details', ['id' => $transaction->id]) }}" class="btn btn-danger btn-sm">View Details</a>
-                            @elseif($transaction->entity_type === 'Concessionaire')
-                                <a href="{{ route('concessionaire.transaction.details', ['id' => $transaction->id]) }}" class="btn btn-danger btn-sm">View Details</a>
-                            @elseif($transaction->entity_type === 'Outsider')
-                                <a href="{{ route('outsider.transaction.details', ['id' => $transaction->id]) }}" class="btn btn-danger btn-sm">View Details</a>
-                            @endif
+                            <div class="d-flex gap-2">
+                                <a href=" {{ route('payments.update', ['transactionId' => $transaction->transaction_id]) }} " type="button" class="btn btn-danger" title="View and Edit Payment"><i class="fa-solid fa-pen-to-square"></i></a>
+                                <a href=" {{ route('customer.receipt', ['id' => $transaction->transaction_id ]) }} " type="button" class="btn btn-danger" title="View Receipt"><i class="fa-solid fa-receipt text-light"></i></a>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center">No transactions found</td>
+                        <td colspan="9" class="text-center">No transactions found</td>
                     </tr>
                 @endforelse
 
                 <!-- Add empty rows to fill up to 10 rows -->
                 @for ($i = $result->count(); $i < 10; $i++)
                     <tr>
+                        <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
