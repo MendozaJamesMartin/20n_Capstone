@@ -28,10 +28,10 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link active text-light" aria-current="page" href="{{ route('student.home') }}">Home</a>
+                        <a class="nav-link active text-light" aria-current="page" href="#">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active text-light" href=" {{ route('transaction.form') }} ">
+                        <a class="nav-link active text-light" href="#">
                             Payment Form
                         </a>
                     </li>
@@ -40,8 +40,8 @@
                             Student Profile
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href=" {{ route('student.profile') }} ">Profile</a></li>
-                            <li><a class="dropdown-item" href=" {{ route('logout') }} ">Logout</a></li>
+                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><a class="dropdown-item" href="#">Logout</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
@@ -49,11 +49,11 @@
                             Transactions
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href=" {{ route('student.fees.list') }} ">List of Student Fees</a></li>
+                            <li><a class="dropdown-item" href=" # ">List of Student Fees</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href=" {{ route('transactions.history') }} ">Transaction History</a></li>
+                            <li><a class="dropdown-item" href=" # ">Transaction History</a></li>
                         </ul>
                     </li>
                 </ul>

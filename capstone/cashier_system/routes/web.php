@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ConcessionairesController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeesController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PaymentsController;
@@ -17,9 +18,8 @@ Route::get('/', function () {
 });
 
 Route::group(['prefix' => 'admin', 'middleware' => ['user.auth', 'admin.auth:Superadmin']], function () {
-    Route::get('/home', function () {
-        return view('common.home');
-    })->name('admin.dashboard');
+    //Admin Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
     //Customer Payments
     Route::match(['get', 'post'], '/payments/student/new', [PaymentsController::class, 'StudentPayment'])->name('payments.student.new');
@@ -56,17 +56,32 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth', 'admin.auth:Sup
     
 });
 
-Route::group(['middleware' => 'guest', 'prefix' => '/customer'], function () {
-    Route::match(['get', 'post'], '/student/payment/form', [PaymentsController::class, 'selfServiceStudentPayment'])->name('student.payment.form');
-    Route::get('/student/payment/submitted/{transactionId}', function ($transactionId) {
-        return view('students.submitted', compact('transactionId'));
-    })->name('students.submitted');
-    Route::get('/transaction/history', [])->name('customer.transaction.history');
+Route::group(['middleware' => 'guest', 'prefix' > '/admin'], function() {
+    Route::get('/login', [LoginController::class, 'login'])->name('login');
+    Route::post('/login', [LoginController::class, 'loginPost'])->name('login.submit');
 });
 
-Route::group(['middleware' => 'guest', 'prefix' => '/concessionaire'], function () {
-    Route::get('/payment/form', [])->name('customer.payment.form');
-    Route::get('/transaction/history', [])->name('customer.transaction.history');
+Route::group(['middleware' => 'guest', 'prefix' => '/customer'], function () {
+    //Student-side Webpages
+    Route::group(['prefix' => '/student'], function(){
+        //Student Home Page
+        Route::get('/dashboard', function () {
+            return view('students.student-dashboard');
+        })->name('student.dashboard');
+        Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('student.fees.list');
+        //Self-Service Student Payment Form
+        Route::match(['get', 'post'], '/payment/form', [PaymentsController::class, 'selfServiceStudentPayment'])->name('student.payment.form');
+        //Payment Form Success
+        Route::get('/payment/submitted/{transactionId}', function ($transactionId) {
+            return view('students.submitted', compact('transactionId'));
+        })->name('students.submitted');
+    });
+    
+
+    //Concessionaire Webpages
+    Route::group(['prefix' => '/concessionaire'], function() {
+
+    });
 });
 
 Route::group(['middleware' => ['user.auth']], function() {
@@ -75,7 +90,8 @@ Route::group(['middleware' => ['user.auth']], function() {
 
 Route::group(['middleware' => 'guest', 'prefix' => '/'], function () {
 
-    Route::get('/', [LoginController::class, 'login'])->name('login');
-    Route::post('/', [LoginController::class, 'loginPost'])->name('login.submit');
+    Route::get('/', function () {
+        return view('common.home');
+    })->name('home');
 
 });
