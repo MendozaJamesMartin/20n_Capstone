@@ -18,13 +18,51 @@ class ConcessionairesController extends Controller
     }
 
     public function AddNewConcessionaire(Request $request) {
-        $validated = $request->validate([
+        DB::beginTransaction();
+        try {
+            $validated = $request->validate([
             'name' => 'required|string|max:45',
             'contact' => 'required|numeric',
         ]);
 
-        $concessionaires = Concessionaire::create($validated);
-        return back();
+        Concessionaire::create($validated);
+
+        DB::commit();
+        return redirect()->route('concessionaires.list')->with('success','concessionaire added successfully');
+        
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::info("New Concessionaire unsuccessfully registered");
+            return back()->with('error', 'Concessionaire registration failed');
+        }
+    }
+
+    public function updateConcessionaire(Request $request, $concessionaires_id) {
+        DB::beginTransaction();
+        try {
+            $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'contact' => 'required|string|max:100',
+            'status' => 'required|in:Active,Inactive'
+        ]);
+    
+        $concessionaires = Concessionaire::findOrFail($concessionaires_id);
+
+        $concessionaires->update([
+            'name' => $validated['name'],
+            'contact' => $validated['contact'],
+            'status' => $validated['status'],
+        ]);
+    
+        DB::commit();
+        return redirect()->route('concessionaires.list')->with('success', 'Concessionaire updated successfully!');
+
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::info("Concessionaire update failed");
+            return back()->with('error', 'Concessionaire update failed');
+        }
+        
     }
 
     public function GetBillingList(Request $request) {
@@ -56,29 +94,38 @@ class ConcessionairesController extends Controller
 
     public function CreateNewBilling(Request $request)
     {
-        if ($request->isMethod('get')) {
-            $concessionaires = DB::table('concessionaires')->get();
-            return view('common.concessionaires.billing-create', compact('concessionaires'));
+        DB::beginTransaction();
+        try {
+            if ($request->isMethod('get')) {
+                $concessionaires = DB::table('concessionaires')->where('status', 'Active')->get();
+                return view('common.concessionaires.billing-create', compact('concessionaires'));
 
-            // Check if the request is a POST (form submission)
-        } elseif ($request->isMethod('post')) {
-            $validated = $request->validate([
-                'concessionaire_id' => 'required|exists:concessionaires,id',
-                'utility_type' => 'required|in:Water,Electricity',
-                'bill_amount' => 'required|numeric|min:0',
-                'due_date' => 'required|date',
-            ]);
+                // Check if the request is a POST (form submission)
+            } elseif ($request->isMethod('post')) {
+                $validated = $request->validate([
+                    'concessionaire_id' => 'required|exists:concessionaires,id',
+                    'utility_type' => 'required|in:Water,Electricity',
+                    'bill_amount' => 'required|numeric|min:0',
+                    'due_date' => 'required|date',
+                ]);
 
-            // Call stored procedure
-            DB::statement("CALL CreateConcessionaireBilling(?, ?, ?, ?)", [
-                $validated['concessionaire_id'],
-                $validated['utility_type'],
-                $validated['bill_amount'],
-                $validated['due_date']
-            ]);
+                // Call stored procedure
+                DB::statement("CALL CreateConcessionaireBilling(?, ?, ?, ?)", [
+                    $validated['concessionaire_id'],
+                    $validated['utility_type'],
+                    $validated['bill_amount'],
+                    $validated['due_date']
+                ]);
 
-            return redirect()->back()->with('success', 'Billing created successfully!');
+                DB::commit();
+                return redirect()->back()->with('success', 'Billing created successfully!');
+            }
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::info("Concessionaire New Billing unsuccessful");
+            return back()->with('error', 'Bill creation unsuccessful!');
         }
+        
     }
 
     public function BillsPayment(Request $request)
@@ -92,24 +139,15 @@ class ConcessionairesController extends Controller
                 $concessionaires = Concessionaire::all();
     
                 // Fetch only unpaid bills, filtered by concessionaire if selected
-                $billsQuery = DB::table('concessionaire_bills')
-                    ->join('concessionaires', 'concessionaire_bills.concessionaire_id', '=', 'concessionaires.id')
-                    ->select(
-                        'concessionaire_bills.id',
-                        'concessionaire_bills.utility_type',
-                        'concessionaire_bills.bill_amount',
-                        'concessionaire_bills.balance_due',
-                        'concessionaire_bills.due_date',
-                        'concessionaires.name as concessionaire_name'
-                    )
+                $billings = ConcessionaireBill::with('concessionaire')
                     ->where('concessionaire_bills.balance_due', '>', 0);
     
                 if ($request->has('concessionaire_id') && $request->concessionaire_id) {
-                    $billsQuery->where('concessionaire_bills.concessionaire_id', $request->concessionaire_id);
+                    $billings->where('concessionaire_bills.concessionaire_id', $request->concessionaire_id);
                 }
     
-                $bills = $billsQuery->get();
-    
+                $bills = $billings->get();
+                
                 return view('common.concessionaires.bills-payment', compact('concessionaires', 'bills'));
                 Log::info('display concessionaire billing');
             } elseif ($request->isMethod('post')) {
@@ -151,7 +189,7 @@ class ConcessionairesController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
             Log::info("Concessionaire Payment unsuccessful");
-            return back();
+            return back()->with('error', 'Bills payment not successful');
         }
     }
 }

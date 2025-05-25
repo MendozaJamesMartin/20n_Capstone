@@ -29,8 +29,12 @@ class LoginController extends Controller
             // Create and save User first
             $user = new User();
             $user->email = $request->email;
+            $user->first_name = $request->first_name;
+            $user->middle_name = $request->middle_name;
+            $user->last_name = $request->last_name;
+            $user->suffix = $request->suffix;
             $user->password = Hash::make($request->password); // Hash the password
-            $user->role = 'Superadmin';
+            $user->role = 'Admin';
             $user->save();
     
             Log::info("User created with ID: " . $user->id);

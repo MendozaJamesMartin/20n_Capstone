@@ -166,10 +166,8 @@
         // Toggle between 'asc' and 'desc'
         if (sortOrderInput.value === 'asc') {
             sortOrderInput.value = 'desc';
-            sortIcon.innerHTML = '🔽'; // Descending
         } else {
             sortOrderInput.value = 'asc';
-            sortIcon.innerHTML = '🔼'; // Ascending
         }
 
         // Submit the form

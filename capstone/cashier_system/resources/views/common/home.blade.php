@@ -6,7 +6,6 @@
     <div class="hero">
         <h1>Welcome to PUP-T Cashier System</h1>
         <p>Secure, fast, and convenient payment solutions for students.</p>
-        <a href="#quick-actions" class="btn btn-primary btn-lg mt-3">Get Started</a>
     </div>
 
     <!-- Quick Actions Section -->
@@ -14,27 +13,19 @@
         <div class="container">
             <h2 class="text-center mb-4">Quick Actions</h2>
             <div class="row g-4">
-                <div class="col-md-4">
-                    <a href=" {{ route('student.dashboard') }} " class="text-decoration-none text-reset">
-                        <div class="card text-center p-4 bg-danger">
+                <div class="col-md-6">
+                    <a href=" {{ route('student.payment.form') }} " class="text-decoration-none text-reset">
+                        <div class="card text-center p-4 bg-danger text-light">
                             <h4>Students</h4>
-                            <p>Students go here</p>
+                            <p>Access Student Payment Form</p>
                         </div>
                     </a>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <a href=" {{ route('login') }} " class="text-decoration-none text-reset">
-                        <div class="card text-center p-4 bg-primary">
+                        <div class="card text-center p-4 bg-primary text-light">
                             <h4>Cashier Personnel</h4>
                             <p>Cashier personnel go here</p>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="#" class="text-decoration-none text-reset">
-                        <div class="card text-center p-4 bg-warning">
-                            <h4>Concessionaires</h4>
-                            <p>Settle tuition and other university fees conveniently.</p>
                         </div>
                     </a>
                 </div>

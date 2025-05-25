@@ -68,12 +68,29 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <form action="{{ route('users.update', $user->id) }}" method="POST">
+                                    <form action="{{ route('users.update.role', $user->id) }}" method="POST">
                                         @csrf
                                         @method('POST')
 
-                                        <div class="mb-3">
-                                            <label for="email" class="form-label">Email</label>
+                                        <label for="name" class="form-label">User Details</label>
+
+                                        <div class="mb-3 d-flex gap-2">
+                                            <input type="text" name="first_name" class="form-control" value="{{ $user->first_name }}" disabled>
+                                        </div>
+
+                                        <div class="mb-3 d-flex gap-2">
+                                            <input type="text" name="middle_name" class="form-control" value="{{ $user->middle_name }}" disabled>
+                                        </div>
+
+                                        <div class="mb-3 d-flex gap-2">
+                                            <input type="text" name="last_name" class="form-control" value="{{ $user->last_name }}" disabled>
+                                        </div>
+
+                                        <div class="mb-3 d-flex gap-2">
+                                            <input type="text" name="suffix" class="form-control" value="{{ $user->suffix }}" disabled>
+                                        </div>
+
+                                        <div class="mb-3 d-flex gap-2">
                                             <input type="text" name="email" class="form-control" value="{{ $user->email }}" disabled>
                                         </div>
 
@@ -84,23 +101,35 @@
                                                 <option value="Admin">Admin</option>
                                             </select>
                                         </div>
-                                        <button type="submit" class="btn btn-danger">Update User Role</button>
+                                        
+                                        <div class="mb-3 d-flex gap-2">
+                                            <button type="submit" class="btn btn-danger">Update User</button>
+                                        </div>
                                     </form>
                                 </div>
+                                
                             </div>
                         </div>
                     </div>
-
                     @endforeach
-
                 </tbody>
-
-
             </table>
+                    
         </div>
 
     </div>
 
 </main>
+
+<script>
+    function toggleField(button) {
+        const input = button.previousElementSibling;
+        const isDisabled = input.disabled;
+
+        input.disabled = !isDisabled;
+        button.classList.toggle('btn-danger', isDisabled);
+        button.classList.toggle('btn-primary', !isDisabled);
+    }
+</script>
 
 @endsection

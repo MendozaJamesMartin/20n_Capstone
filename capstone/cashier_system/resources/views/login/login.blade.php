@@ -1,4 +1,4 @@
-@extends('layout.main-master')
+@extends('layout.main-user')
 @section('content')
 
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
@@ -38,16 +38,8 @@
                         </div>
                     </form>
                 </div>
-                <div>
-                    <h6>Don't have an account yet? <a href="{{ route('register') }}">Register Now</a></h6>
-                </div>
             </div>
         </div>
-    </div>
-    <div class="col-lg-8 col-md-0">
-    </div>
-
-    </div>
     </div>
 
 </main>

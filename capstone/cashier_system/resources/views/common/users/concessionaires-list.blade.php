@@ -9,7 +9,7 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th colspan="3">
+                        <th colspan="4">
                             <h2>CONCESSIONAIRES LIST</h2>
                         </th>
                         <th>
@@ -19,7 +19,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <th colspan="4">
+                        <th colspan="5">
                         <div>
                         <form action="{{ url()->current() }}" method="GET">
 
@@ -45,39 +45,62 @@
                         <th>Concessionaire ID</th>
                         <th>Name</th>
                         <th>Contact</th>
+                        <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </tbody>
                 <tbody>
-                @forelse($concessionaires as $concessionaire)
+                @foreach($concessionaires as $concessionaire)
                     <tr>
                         <td>{{ $concessionaire->id }}</td>
                         <td>{{ $concessionaire->name }}</td>
                         <td>{{ $concessionaire->contact }}</td>
+                        <td>{{ $concessionaire->status }}</td>
                         <td>
-                            <a href="#" class="btn btn-info btn-sm btn-danger">View Details</a>
+                            <!-- Update Fee Button (Triggers Modal) -->
+                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#updateConcessionaireModal{{ $concessionaire->id }}">Update</button>
                         </td>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="text-center">No Concessionaires found</td>
-                    </tr>
-                @endforelse
 
-                <!-- Add empty rows to fill up to 10 rows -->
-                @for ($i = $concessionaires->count(); $i < 10; $i++)
-                    <tr>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                    </tr>
-                @endfor
+                <!-- Update Concessionaire Modal -->
+                <div class="modal fade" id="updateConcessionaireModal{{ $concessionaire->id }}" tabindex="-1" aria-labelledby="updateConcessionaireModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="updateConcessionaireModalLabel">Update Concessionaire</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{{ route('concessionaires.update', $concessionaire->id) }}" method="POST">
+                                    @csrf
+                                    @method('POST')
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">Name</label>
+                                        <input type="text" name="name" class="form-control" value="{{ $concessionaire->name }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="contact" class="form-label">Contact</label>
+                                        <input type="text" name="contact" class="form-control" value="{{ $concessionaire->contact }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="status" class="form-label">Status</label>
+                                        <select class="form-select" name="status" value="{{ $concessionaire->status }}" aria-label="Default select example">
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger">Save</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+
+
                 </tbody>
             </table>
         </div>
-
-    </div>
 
     </div>
 

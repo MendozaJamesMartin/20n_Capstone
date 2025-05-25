@@ -20,6 +20,13 @@
                     @endif
                     <form action=" {{ route('register') }} " method="POST">
                         @csrf
+                        <label for="full_name" class="form-label">Full Name:</label>
+                        <div class="mb-3 d-flex gap-2">
+                            <input type="first_name" class="form-control" id="first_name" name="first_name" placeholder="First Name">
+                            <input type="middle_name" class="form-control" id="middle_name" name="middle_name" placeholder="Middle Name">
+                            <input type="last_name" class="form-control" id="last_name" name="last_name" placeholder="Last Name">
+                            <input type="suffix" class="form-control" id="suffix" name="suffix" placeholder="Suffix">
+                        </div>
                         <div class="mb-3">
                             <label for="email" class="form-label">Email address</label>
                             <input type="email" name="email" class="form-control" id="email" placeholder="name@example.com" required>

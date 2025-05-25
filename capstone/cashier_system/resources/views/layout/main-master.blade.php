@@ -39,15 +39,19 @@
                                 Payments
                             </a>
                             <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href=" {{ route('payments.pending') }} ">Pending Payments</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('payments.pending') }} ">Pending Payments</a></li>
                                 <li><a class="dropdown-item" href=" {{ route('payments.student.new') }} ">Student Payment Form</a></li>
                                 <li><a class="dropdown-item" href=" {{ route('payments.outsider.new') }} ">Outsider Payment Form</a></li>
                             </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link active text-light" aria-current="page" href=" {{ route('fees.list') }} ">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 Fees
-                            </a>
+                            </a>    
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href=" {{ route('fees.list') }} ">Accepted Fees</a></li>
+                                <li><a class="dropdown-item" href=" {{ route('fees.list.deleted') }} ">Deleted Fees</a></li>
+                            </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -76,6 +80,10 @@
                                 User Management
                             </a>
                             <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href=" {{ route('user.profile') }} ">User Profile</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li><a class="dropdown-item" href=" {{ route('users.list') }} ">List of Users</a></li>
                                 <li><a class="dropdown-item" href=" {{ route('register') }} ">Register User</a></li>
                                 <li>
@@ -96,7 +104,7 @@
                     </ul>
                     <form class="d-flex" role="search">
                         <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
+                        <button class="btn btn-outline-dark text-light" type="submit">Search</button>
                     </form>
                 </div>
             </div>
@@ -104,6 +112,7 @@
     </div>
 
     @yield('content')
+    @include('layout.flash-toast')
     @extends('layout.footer')
 
 </body>

@@ -6,6 +6,7 @@
 
         <div>
             <table class="table table-striped border">
+
                 <tr>
                     <th colspan="3">
                         <h1>List of Fees</h1>
@@ -27,8 +28,11 @@
                     <td>{{ $fee->fee_name }}</td>
                     <td>{{ $fee->amount }}</td>
                     <td>
-                        <!-- Update Fee Button (Triggers Modal) -->
-                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#updateFeeModal{{ $fee->id }}">Update</button>
+                        <div class="d-flex gap-2">
+                            <!-- Update Fee Button (Triggers Modal) -->
+                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#updateFeeModal{{ $fee->id }}">Update</button>
+                            <a href=" {{ route('fees.delete', $fee->id) }} " class="btn btn-warning btn-sm">Delete</a>
+                        </div>
                     </td>
                 </tr>
 

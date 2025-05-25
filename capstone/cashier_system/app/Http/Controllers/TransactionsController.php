@@ -26,20 +26,20 @@ class TransactionsController extends Controller
 
         // Apply transaction date filter
         if ($timeframe === 'today') {
-            $query->where('transactions.transaction_date', '>=', Carbon::now()->subDay());
+            $query->where('universal_transaction_history.transaction_date', '>=', Carbon::now()->subDay());
         } elseif ($timeframe === 'this_week') {
-            $query->where('transactions.transaction_date', '>=', Carbon::now()->subWeek());
+            $query->where('universal_transaction_history.transaction_date', '>=', Carbon::now()->subWeek());
         } elseif ($timeframe === 'this_month') {
-            $query->where('transactions.transaction_date', '>=', Carbon::now()->subMonth());
+            $query->where('universal_transaction_history.transaction_date', '>=', Carbon::now()->subMonth());
         }
 
         // Apply date of receipt printing filter
         if ($timeframe === 'today') {
-            $query->where('receipts.receipt_print_date', '>=', Carbon::now()->subDay());
+            $query->where('universal_transaction_history.receipt_print_date', '>=', Carbon::now()->subDay());
         } elseif ($timeframe === 'this_week') {
-            $query->where('receipts.receipt_print_date', '>=', Carbon::now()->subWeek());
+            $query->where('universal_transaction_history.receipt_print_date', '>=', Carbon::now()->subWeek());
         } elseif ($timeframe === 'this_month') {
-            $query->where('receipts.receipt_print_date', '>=', Carbon::now()->subMonth());
+            $query->where('universal_transaction_history.receipt_print_date', '>=', Carbon::now()->subMonth());
         }
 
         // Apply entity_type filter if provided

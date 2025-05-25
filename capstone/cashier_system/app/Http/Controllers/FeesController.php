@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Fee;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class FeesController extends Controller
 {
@@ -12,8 +15,15 @@ class FeesController extends Controller
         return view('common.fees.list-of-fees', compact('fees'));
     }
 
+    public function deletedFeesList() {
+        $fees = Fee::onlyTrashed()->get();
+        return view('common.fees.list-deleted', compact('fees'));
+    }
+
     public function AddFees(Request $request) {
-        $validated = $request->validate([
+        DB::beginTransaction();
+        try {
+            $validated = $request->validate([
             'fees.*.fee_name' => 'required|string|max:100',
             'fees.*.amount' => 'required|numeric',
         ]);
@@ -28,13 +38,21 @@ class FeesController extends Controller
     
             Fee::create($fees);
         }
-    
+        DB::commit();
         return redirect()->route('fees.list')->with('success', 'fees added successfully!');
+
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::info("Adding new fees unsuccessful");
+            return back()->with('error', 'Failed to add fees');
+        }
     }    
 
-    public function UpdateFees(Request $request, $fees_id)
-    {
-        $validated = $request->validate([
+    public function UpdateFees(Request $request, $fees_id) {
+
+        DB::beginTransaction();
+        try {
+            $validated = $request->validate([
             'fee_name' => 'required|string|max:100',
             'amount' => 'required|numeric'
         ]);
@@ -45,7 +63,7 @@ class FeesController extends Controller
     
         if ($existingFee) {
             session()->flash('duplicate_item', 'Item "' . $validated['fee_name'] . '" already exists. Do you still want to proceed?');
-            return back();
+            return back()->with('error', 'Failed to update fee');
         }
     
         $fees = Fee::findOrFail($fees_id);
@@ -53,11 +71,24 @@ class FeesController extends Controller
             'fee_name' => $validated['fee_name'],
             'amount' => $validated['amount'],
         ]);
-    
-        return redirect()->route('fees.list')->with('success', 'Item updated successfully!');
+        
+        DB::commit();
+        return redirect()->route('fees.list')->with('success', 'Fee updated successfully!');
+
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::info("Adding new fees unsuccessful");
+            return back()->with('error', 'Failed to update fees');
+        }
     }    
 
-    public function deleteItem() {
+    public function deleteFees($id) {
+        $fees = Fee::find($id)->delete();
+        return redirect()->route('fees.list')->with('success', 'Item deleted successfully!');
+    }
 
+    public function restoreFees($id) {
+        $fees = Fee::withTrashed()->find($id)->restore();
+        return redirect()->route('fees.list')->with('success', 'Item restored successfully!');
     }
 }

@@ -38,6 +38,7 @@
                     <thead>
                         <tr>
                             <th></th>
+                            <th>Concessionaire</th>
                             <th>Utility Type</th>
                             <th>Bill Amount (₱)</th>
                             <th>Balance Due (₱)</th>
@@ -51,6 +52,7 @@
                             <td>
                                 <input type="checkbox" name="bill_id[]" value="{{ $bill->id }}">
                             </td>
+                            <td>{{ optional($bill->concessionaire)->name ?? 'N/A' }}</td>
                             <td>{{ $bill->utility_type }}</td>
                             <td>{{ $bill->bill_amount }}</td>
                             <td>{{ $bill->balance_due }}</td>

@@ -10,7 +10,7 @@
                 <thead>
                     <tr>
                         <td colspan="9">
-                            <h2>TRANSACTIONS HISTORY</h2>
+                            <h2>PENDING PAYMENTS</h2>
                         </td>
                     </tr>
                 </thead>
@@ -170,10 +170,8 @@
         // Toggle between 'asc' and 'desc'
         if (sortOrderInput.value === 'asc') {
             sortOrderInput.value = 'desc';
-            sortIcon.innerHTML = '🔽'; // Descending
         } else {
             sortOrderInput.value = 'asc';
-            sortIcon.innerHTML = '🔼'; // Ascending
         }
 
         // Submit the form

@@ -17,9 +17,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::group(['prefix' => 'admin', 'middleware' => ['user.auth', 'admin.auth:Superadmin']], function () {
+Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
+    
     //Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+
+    //Fees Management
+    Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('fees.list');
+    Route::get('fees/list/deleted', [FeesController::class, 'deletedFeesList'])->name('fees.list.deleted');
 
     //Customer Payments
     Route::match(['get', 'post'], '/payments/student/new', [PaymentsController::class, 'StudentPayment'])->name('payments.student.new');
@@ -28,11 +33,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth', 'admin.auth:Sup
     Route::get('/payments/pending', [PaymentsController::class, 'GetPendingPaymentsList'])->name('payments.pending');
     //View Details of Pending Payments and Edit them before approving payment
     Route::match(['get', 'put'], '/payments/pending/{transactionId}', [PaymentsController::class, 'updateUnpaidTransaction'])->name('payments.update');
-
-    //Fees Management
-    Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('fees.list');
-    Route::post('fees/add', [FeesController::class, 'AddFees'])->name('fees.add');
-    Route::post('fees/{id}/update', [FeesController::class, 'UpdateFees'])->name('fees.update');
     
     //Transaction Managements
     Route::get('/transactions/history', [TransactionsController::class, 'GetTransactionsHistory'])->name('receipts.list');
@@ -41,19 +41,39 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth', 'admin.auth:Sup
 
     //Concessionaire Management
     Route::get('concessionaires/list', [ConcessionairesController::class, 'GetConcessionairesList'])->name('concessionaires.list');
-    Route::post('concessionaires/add', [ConcessionairesController::class, 'AddNewConcessionaire'])->name('concessionaires.add');
     Route::get('concessionaires/billing/list', [ConcessionairesController::class, 'GetBillingList'])->name('concessionaires.billing.list');
     Route::match(['get', 'post'], 'concessionaires/billing/new', [ConcessionairesController::class, 'CreateNewBilling'])->name('concessionaires.billing.new');
     Route::match(['get', 'post'], 'concessionaires/billing/payment', [ConcessionairesController::class, 'BillsPayment'])->name('concessionaires.billing.payment');
 
     //User Management
-    Route::get('/users/list', [UsersController::class, 'getUsersList'])->name('users.list');
-    Route::post('/users/update/{id}', [UsersController::class, 'updateUserRole'])->name('users.update');
-    Route::get('/register', [LoginController::class, 'register'])->name('register');
-    Route::post('/register', [LoginController::class, 'registerPost'])->name('register');
+    Route::get('/users/profile', [UsersController::class, 'showUserProfile'])->name('user.profile');
+    Route::post('/users/profile', [UsersController::class, 'updateUserProfile'])->name('user.profile.update');
+    Route::post('/users/profile', [UsersController::class, 'newPassword'])->name('user.new.password');
+    //Route::match(['get', 'post'], '/user/profile', [UsersController::class, 'updateUserProfile'])->name('user.profile');
 
     //Data Analysis and Reports
-    
+
+    //Superadmin only pages
+    Route::group(['prefix' => 'admin', 'middleware' => ['admin.auth:Superadmin']], function () {
+        
+        //Fees Maintenance
+        Route::post('fees/add', [FeesController::class, 'AddFees'])->name('fees.add');
+        Route::post('fees/{id}/update', [FeesController::class, 'UpdateFees'])->name('fees.update');
+        Route::get('fees/{id}/delete', [FeesController::class, 'deleteFees'])->name('fees.delete');
+        Route::get('fees/{id}/restore', [FeesController::class, 'restoreFees'])->name('fees.restore');
+
+        //User Management
+        Route::get('/users/list', [UsersController::class, 'getUsersList'])->name('users.list');
+        Route::post('/users/update/role/{id}', [UsersController::class, 'updateUserRole'])->name('users.update.role');
+        Route::get('/register', [LoginController::class, 'register'])->name('register');
+        Route::post('/register', [LoginController::class, 'registerPost'])->name('register');
+
+        //Concessionaires Management
+        Route::post('concessionaires/add', [ConcessionairesController::class, 'AddNewConcessionaire'])->name('concessionaires.add');
+        Route::post('concessionaires/update/{id}', [ConcessionairesController::class, 'updateConcessionaire'])->name('concessionaires.update');
+
+    });
+
 });
 
 Route::group(['middleware' => 'guest', 'prefix' > '/admin'], function() {
@@ -68,7 +88,6 @@ Route::group(['middleware' => 'guest', 'prefix' => '/customer'], function () {
         Route::get('/dashboard', function () {
             return view('students.student-dashboard');
         })->name('student.dashboard');
-        Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('student.fees.list');
         //Self-Service Student Payment Form
         Route::match(['get', 'post'], '/payment/form', [PaymentsController::class, 'selfServiceStudentPayment'])->name('student.payment.form');
         //Payment Form Success
@@ -77,7 +96,6 @@ Route::group(['middleware' => 'guest', 'prefix' => '/customer'], function () {
         })->name('students.submitted');
     });
     
-
     //Concessionaire Webpages
     Route::group(['prefix' => '/concessionaire'], function() {
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Fee;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -19,11 +20,11 @@ class PaymentsController extends Controller
 
         // Apply timeframe filter
         if ($timeframe === 'today') {
-            $query->where('transactions.transaction_date', '>=', Carbon::now()->subDay());
+            $query->where('student_unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subDay());
         } elseif ($timeframe === 'this_week') {
-            $query->where('transactions.transaction_date', '>=', Carbon::now()->subWeek());
+            $query->where('student_unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subWeek());
         } elseif ($timeframe === 'this_month') {
-            $query->where('transactions.transaction_date', '>=', Carbon::now()->subMonth());
+            $query->where('student_unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subMonth());
         }
 
         // Apply entity_type filter if provided
@@ -57,7 +58,7 @@ class PaymentsController extends Controller
         try {
             if ($request->isMethod('get')) {
                 // Display the form for creating a transaction
-                $fees = DB::table('fees')->get();
+                $fees = Fee::all();
                 Log::info("List of Fees");
                 return view('common.payments.student-payment-form', compact('fees'));
             } elseif ($request->isMethod('post')) {
@@ -112,7 +113,7 @@ class PaymentsController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
             Log::info("Payment form unsuccessful");
-            return back();
+            return back()->with('error', 'Student payment failed');
         }
     }
 
@@ -122,7 +123,7 @@ class PaymentsController extends Controller
         try {
             if ($request->isMethod('get')) {
                 // Display the form for creating a transaction
-                $fees = DB::table('fees')->get();
+                $fees = Fee::all();
                 Log::info("List of Fees");
                 return view('common.payments.outsider-payment-form', compact('fees'));
             } elseif ($request->isMethod('post')) {
@@ -171,7 +172,7 @@ class PaymentsController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
             Log::info("Payment form unsuccessful");
-            return back();
+            return back()->with('error', 'Outsider customer payment failed');
         }
     }
 
@@ -181,7 +182,7 @@ class PaymentsController extends Controller
         try {
             if ($request->isMethod('get')) {
                 // Display the form for creating a transaction
-                $fees = DB::table('fees')->get();
+                $fees = Fee::all();
                 Log::info("List of Fees");
                 return view('students.payment-form-unpaid', compact('fees'));
             } elseif ($request->isMethod('post')) {
@@ -229,7 +230,7 @@ class PaymentsController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
             Log::info("Payment form unsuccessful");
-            return back();
+            return back()->with('error', 'Student payment submission failed');
         }
     }
     
@@ -240,7 +241,7 @@ class PaymentsController extends Controller
         try {
             if ($request->isMethod('get')) {
                 // Get all fees
-                $fees = DB::table('fees')->get();
+                $fees = Fee::all();
     
                 // Get current fee selections (map: fee_id => quantity)
                 $selectedFees = DB::table('customer_transaction_details')
@@ -299,5 +300,5 @@ class PaymentsController extends Controller
             return back()->with('error', 'Transaction update failed.');
         }
     }
-
+    
 }

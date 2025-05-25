@@ -24,7 +24,6 @@
                         </div>
                         <label for="student_details" class="form-label">Student Full Name</label>
                         <div class="mb-3 d-flex gap-2">
-
                             <input type="first_name" class="form-control" id="first_name" name="first_name" placeholder="First Name">
                             <input type="middle_name" class="form-control" id="middle_name" name="middle_name" placeholder="Middle Name">
                             <input type="last_name" class="form-control" id="last_name" name="last_name" placeholder="Last Name">
