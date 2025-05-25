@@ -112,7 +112,6 @@
     </div>
 
     @yield('content')
-    @include('layout.flash-toast')
     @extends('layout.footer')
 
 </body>

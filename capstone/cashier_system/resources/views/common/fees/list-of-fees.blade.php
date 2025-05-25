@@ -7,6 +7,12 @@
         <div>
             <table class="table table-striped border">
 
+                @if(session('success'))
+                <p style="color: green;">{{ session('success') }}</p>
+                @elseif(session('error'))
+                <p style="color: red;">{{ session('error') }}</p>
+                @endif
+
                 <tr>
                     <th colspan="3">
                         <h1>List of Fees</h1>
