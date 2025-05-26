@@ -47,9 +47,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
 
     //User Management
     Route::get('/users/profile', [UsersController::class, 'showUserProfile'])->name('user.profile');
-    Route::post('/users/profile', [UsersController::class, 'updateUserProfile'])->name('user.profile.update');
-    Route::post('/users/profile', [UsersController::class, 'newPassword'])->name('user.new.password');
-    //Route::match(['get', 'post'], '/user/profile', [UsersController::class, 'updateUserProfile'])->name('user.profile');
+    Route::post('/users/profile', [UsersController::class, 'updateProfile'])->name('user.update');
+    Route::post('/users/new/password', [UsersController::class, 'newPassword'])->name('new.password.save');
 
     //Data Analysis and Reports
 

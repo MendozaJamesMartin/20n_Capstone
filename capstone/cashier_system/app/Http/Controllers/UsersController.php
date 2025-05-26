@@ -55,18 +55,15 @@ class UsersController extends Controller
         return view('common.users.user-profile', compact('userProfile'));
     }
 
-    public function updateUserProfile (Request $request) {
-        Log::info("User profile update initiated");
+    public function updateProfile (Request $request) {
+        Log::info("Update Profile start");
 
         /** @var \App\Models\User $userProfile */
         $userProfile = Auth::user();
 
-        if ($request->isMethod('get')) {
-            Log::info("Displaying user profile for editing");
-            return view('common.users.user-profile', compact('userProfile'));
-        } elseif ($request->isMethod('post')) {
-            // POST request – handle update
-            Log::info("Validating user profile update data");
+        DB::beginTransaction();
+        try {
+            Log::info("input new profile validation");
 
             $validated = $request->validate([
                 'first_name'   => 'required|string|max:255',
@@ -75,18 +72,13 @@ class UsersController extends Controller
                 'suffix'       => 'nullable|string|max:10',
             ]);
 
-        }
-        
-        DB::beginTransaction();
-        try {
-            Log::info("Updating user profile in database", $validated);
-
             $userProfile->update($validated);
 
-            DB::commit();
+            Log::info("Saving new user details in database");
 
-            Log::info("User profile updated successfully");
+            DB::commit();
             return redirect()->route('user.profile')->with('success', 'Profile updated successfully!');
+
         } catch (QueryException $e) {
             DB::rollBack();
             Log::error("User profile update failed: " . $e->getMessage());
@@ -119,7 +111,7 @@ class UsersController extends Controller
             Log::info("Credential created");
 
             DB::commit();
-            return redirect('user.profile')->with('success', 'Password changed successfully');
+            return redirect()->route('user.profile')->with('success', 'Password changed successfully');
         } catch (QueryException $e) {
             DB::rollBack();
             Log::info("Failed to change password");

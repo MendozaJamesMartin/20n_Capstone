@@ -64,7 +64,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <form action="{{ route('user.profile') }}" method="POST">
+                            <form action="{{ route('user.update') }}" method="POST">
                                 @csrf
                                 @method('POST')
 
@@ -104,7 +104,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <form action="{{ route('user.new.password') }}" method="POST">
+                            <form action="{{ route('new.password.save') }}" method="POST">
                                 @csrf
                                 @method('POST')
 
