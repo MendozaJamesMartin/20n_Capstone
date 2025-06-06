@@ -69,6 +69,7 @@ class PaymentsController extends Controller
                     'middle_name' => 'required|string',
                     'last_name' => 'required|string',
                     'suffix' => 'nullable|string',
+                    'email' => 'required|string|email',
                     'quantities' => 'required|array',
                     'receipt_number' => 'required|string',
                 ]);
@@ -89,12 +90,13 @@ class PaymentsController extends Controller
                 $quantities = implode(',', array_values($fees));
 
                 Log::info("Stored Procedure call");
-                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?)", [
+                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?, ?)", [
                     $validated['student_id'],
                     $validated['first_name'],
                     $validated['middle_name'],
                     $validated['last_name'],
                     $validated['suffix'],
+                    $validated['email'],
                     $feeIds,
                     $quantities
                 ]);
@@ -130,7 +132,7 @@ class PaymentsController extends Controller
                 Log::info("Input Validation");
                 $validated = $request->validate([
                     'name' => 'required|string',
-                    'contact' => 'required|string',
+                    'contact' => 'required|string|email',
                     'quantities' => 'required|array',
                     'receipt_number' => 'required|string',
                 ]);
@@ -193,6 +195,7 @@ class PaymentsController extends Controller
                     'middle_name' => 'required|string',
                     'last_name' => 'required|string',
                     'suffix' => 'nullable|string',
+                    'email' => 'required|string|email',
                     'quantities' => 'required|array',
                 ]);
 
@@ -212,12 +215,13 @@ class PaymentsController extends Controller
                 $quantities = implode(',', array_values($fees));
 
                 Log::info("Stored Procedure call");
-                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?)", [
+                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?, ?)", [
                     $validated['student_id'],
                     $validated['first_name'],
                     $validated['middle_name'],
                     $validated['last_name'],
                     $validated['suffix'],
+                    $validated['email'],
                     $feeIds,
                     $quantities
                 ]);

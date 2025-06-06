@@ -19,99 +19,211 @@
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- jQuery (required by Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1050;
+            height: 60px;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #dc3545;
+            color: white;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            padding: 1rem;
+            transition: width 0.3s ease;
+            z-index: 1040;
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+        }
+
+        .sidebar .toggle-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+            padding: 0;
+        }
+
+        .sidebar .nav-link {
+            color: white;
+            padding: 0.5rem 1rem;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar.collapsed h4,
+        .sidebar.collapsed .nav-link:not(.toggle-btn) {
+            display: none;
+        }
+
+        .content {
+            margin-left: 250px;
+            padding: 80px 20px 20px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.collapsed ~ .content {
+            margin-left: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.collapsed {
+                transform: translateX(0);
+            }
+
+            .content {
+                margin-left: 0;
+                padding-top: 80px;
+            }
+
+            .sidebar.collapsed ~ .content {
+                margin-left: 0;
+            }
+        }
+    </style>
+
 </head>
 
-<body style="min-height: 100vh; display: flex; flex-direction: column;">
-    <div>
-        <nav class="navbar navbar-expand-lg bg-danger bg-gradient">
-            <div class="container-fluid">
-                <a class="navbar-brand text-light" href="#">PUPTeC</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link active text-light" aria-current="page" href="{{ route('admin.dashboard') }}">Home</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Payments
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('payments.pending') }} ">Pending Payments</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('payments.student.new') }} ">Student Payment Form</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('payments.outsider.new') }} ">Outsider Payment Form</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Fees
-                            </a>    
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('fees.list') }} ">Accepted Fees</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('fees.list.deleted') }} ">Deleted Fees</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Transactions
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('receipts.list') }} ">Transaction History and Receipts</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Concessionaires
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('concessionaires.list') }} ">List of Concessionaires</a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href=" {{ route('concessionaires.billing.list') }} ">Concessionaire Billing List</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('concessionaires.billing.new') }} ">Create Billing Statement</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('concessionaires.billing.payment') }} ">Bills Payment</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                User Management
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href=" {{ route('user.profile') }} ">User Profile</a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href=" {{ route('users.list') }} ">List of Users</a></li>
-                                <li><a class="dropdown-item" href=" {{ route('register') }} ">Register User</a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href=" {{ route('logout') }} ">Logout</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Data Analysis and Reports
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#">Dropdown Option 1</a></li>
-                                <li><a class="dropdown-item" href="#">Dropdown Option 2</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                    <form class="d-flex" role="search">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                        <button class="btn btn-outline-dark text-light" type="submit">Search</button>
-                    </form>
+<body>
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-danger bg-danger px-3">
+
+        <button id="toggleSidebar" class="toggle-btn">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <span class="navbar-brand mb-0 h1 text-light" href="{{ route('admin.dashboard') }}">PUPTeC</span>
+    </nav>
+
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar collapsed d-flex flex-column">
+
+
+        <ul class="nav flex-column">
+
+            <!-- Home Button -->
+            <a href="{{ route('admin.dashboard') }}" class="nav-link">
+                <i class="fas fa-home me-2"></i> Home
+            </a>
+
+            <!-- Payments -->
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#paymentsSubmenu" role="button" aria-expanded="false" aria-controls="paymentsSubmenu">
+                    Payments
+                </a>
+                <div class="collapse ps-3" id="paymentsSubmenu">
+                    <a href="{{ route('payments.pending') }}" class="nav-link">Pending Payments</a>
+                    <a href="{{ route('payments.student.new') }}" class="nav-link">Student Payment Form</a>
+                    <a href="{{ route('payments.outsider.new') }}" class="nav-link">Outsider Payment Form</a>
+                    <a href="{{ route('concessionaires.billing.payment') }}" class="nav-link">Bills Payment</a>
                 </div>
-            </div>
-        </nav>
+            </li>
+
+            <!-- Transactions -->
+            <li class="nav-item mt-2">
+                <a class="nav-link" data-bs-toggle="collapse" href="#transactionsSubmenu" role="button" aria-expanded="false" aria-controls="transactionsSubmenu">
+                    Transactions
+                </a>
+                <div class="collapse ps-3" id="transactionsSubmenu">
+                    <a href="{{ route('receipts.list') }}" class="nav-link">View Receipts</a>
+                </div>
+            </li>
+
+            <!-- Billing -->
+            <li class="nav-item mt-2">
+                <a class="nav-link" data-bs-toggle="collapse" href="#billingSubmenu" role="button" aria-expanded="false" aria-controls="billingSubmenu">
+                    Billing
+                </a>
+                <div class="collapse ps-3" id="billingSubmenu">
+                    <a href="{{ route('concessionaires.billing.list') }}" class="nav-link">Concessionaire Billing List</a>
+                    <a href="{{ route('concessionaires.billing.new') }}" class="nav-link">Create Billing Statement</a>
+                </div>
+            </li>
+
+            <!-- Maintenance -->
+            <li class="nav-item mt-2">
+                <a class="nav-link" data-bs-toggle="collapse" href="#maintenanceSubmenu" role="button" aria-expanded="false" aria-controls="maintenanceSubmenu">
+                    Maintenance
+                </a>
+                <div class="collapse ps-3" id="maintenanceSubmenu">
+                    <a href="{{ route('fees.list') }}" class="nav-link">Manage Fees</a>
+                    <a href="{{ route('concessionaires.list') }}" class="nav-link">Manage Concessionaires</a>
+                    <a href="{{ route('users.list') }}" class="nav-link">Manage Users</a>
+                </div>
+            </li>
+
+            <!-- Data Analytics and Report -->
+            <li class="nav-item mt-2">
+                <a class="nav-link" data-bs-toggle="collapse" href="#reportSubmenu" role="button" aria-expanded="false" aria-controls="reportSubmenu">
+                    Data Analytics and Reports
+                </a>
+                <div class="collapse ps-3" id="reportSubmenu">
+                    <a href="#" class="nav-link">View Receipts</a>
+                </div>
+            </li>
+
+            <!-- Account -->
+            <li class="nav-item mt-2">
+                <a class="nav-link" data-bs-toggle="collapse" href="#accountSubmenu" role="button" aria-expanded="false" aria-controls="accountSubmenu">
+                    Account
+                </a>
+                <div class="collapse ps-3" id="accountSubmenu">
+                    <a href="{{ route('user.profile') }}" class="nav-link">User Profile</a>
+                    <a href="{{ route('logout') }}" class="nav-link">Sign out</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="content">
+        @yield('content')
+        @extends('layout.footer')
     </div>
 
-    @yield('content')
-    @extends('layout.footer')
+    <!-- Sidebar Toggle Script -->
+    <script>
+        document.getElementById('toggleSidebar').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+    </script>
 
 </body>
+
+</html>

@@ -9,8 +9,11 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th colspan="5">
+                        <th colspan="4">
                             <h2>REGISTERED USERS</h2>
+                        </th>
+                        <th>
+                            <a href="{{ route('register') }}" class="btn btn-danger btn-lg">Registration</button>
                         </th>
                     </tr>
                 </thead>

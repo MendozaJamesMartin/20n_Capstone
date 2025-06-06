@@ -22,7 +22,7 @@ class ConcessionairesController extends Controller
         try {
             $validated = $request->validate([
             'name' => 'required|string|max:45',
-            'contact' => 'required|numeric',
+            'contact' => 'required|string|email',
         ]);
 
         Concessionaire::create($validated);
@@ -42,7 +42,7 @@ class ConcessionairesController extends Controller
         try {
             $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'contact' => 'required|string|max:100',
+            'contact' => 'required|string|email',
             'status' => 'required|in:Active,Inactive'
         ]);
     
