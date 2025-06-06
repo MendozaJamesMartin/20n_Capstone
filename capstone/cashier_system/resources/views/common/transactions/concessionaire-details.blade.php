@@ -78,4 +78,12 @@
     </main>
 </div>
 
+@if(session('auto_print'))
+<script>
+    window.addEventListener('load', function () {
+        window.print();
+    });
+</script>
+@endif
+
 @endsection

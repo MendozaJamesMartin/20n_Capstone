@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ConcessionaireBillMail;
+use App\Mail\PaymentReceiptMail;
 use App\Models\Concessionaire;
 use App\Models\ConcessionaireBill;
+use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ConcessionairesController extends Controller 
 {
@@ -118,6 +122,13 @@ class ConcessionairesController extends Controller
                 ]);
 
                 DB::commit();
+
+                $concessionaire = Concessionaire::find($validated['concessionaire_id']);
+
+                Mail::to($concessionaire->contact)->send(
+                    new ConcessionaireBillMail($validated['bill_amount'], $validated['utility_type'], $validated['due_date'])
+                );
+
                 return redirect()->back()->with('success', 'Billing created successfully!');
             }
         } catch (QueryException $e) {
@@ -180,11 +191,24 @@ class ConcessionairesController extends Controller
                 Log::info('Formatted data for stored procedure', ['bill_ids' => $billIds, 'amounts' => $amounts]);
     
                 // Call the stored procedure
-                DB::statement("CALL ConcessionairePayBills(?, ?, ?)", [$billIds, $amounts, $validated['receipt_number']]);
+                $results = DB::select("CALL ConcessionairePayBills(?, ?, ?)", [$billIds, $amounts, $validated['receipt_number']]);
                 Log::info('Stored procedure executed successfully');
     
+                Log::info('Select Last insert ID from Stored Procedure');
+                $transactionId = $results[0]->transaction_id;
+                $concessionaireId = $results[0]->concessionaire_id;
+
                 DB::commit();
-                return redirect()->route('receipts.list')->with('success', 'Bills paid successfully!');
+
+                $transaction = Transaction::find($transactionId);
+                $concessionaire = Concessionaire::find($concessionaireId);
+
+                // Save the payment, then send the email
+                Mail::to($concessionaire->contact)->send(
+                    new PaymentReceiptMail($transaction->total_amount, $validated['receipt_number'])
+                );
+
+                return redirect()->route('concessionaire.receipt', ['id' => $transactionId])->with('auto_print', true);;
             }
         } catch (QueryException $e) {
             DB::rollBack();

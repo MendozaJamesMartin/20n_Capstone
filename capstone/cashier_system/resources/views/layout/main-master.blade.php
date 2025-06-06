@@ -122,7 +122,7 @@
 
 <body>
     <!-- Top Navbar -->
-    <nav class="navbar navbar-danger bg-danger px-3">
+    <nav class="navbar navbar-danger bg-danger px-3 no-print">
 
         <button id="toggleSidebar" class="toggle-btn">
             <i class="fas fa-bars"></i>
@@ -132,8 +132,7 @@
     </nav>
 
     <!-- Sidebar -->
-    <nav id="sidebar" class="sidebar collapsed d-flex flex-column">
-
+    <nav id="sidebar" class="sidebar collapsed d-flex flex-column no-print">
 
         <ul class="nav flex-column">
 
@@ -225,5 +224,13 @@
     </script>
 
 </body>
+
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
+</style>
 
 </html>

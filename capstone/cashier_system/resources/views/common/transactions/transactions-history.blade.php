@@ -3,7 +3,7 @@
 
 <main style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
 
-    <div class="container" style="width:80%">
+    <div class="container" style="width:90%">
 
         <div>
             <table class="table table-striped">

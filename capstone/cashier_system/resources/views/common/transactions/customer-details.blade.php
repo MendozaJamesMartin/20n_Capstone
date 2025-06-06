@@ -77,4 +77,20 @@
     </main>
 </div>
 
+@if(session('auto_print'))
+<script>
+    window.addEventListener('load', function () {
+        window.print();
+    });
+</script>
+@endif
+
+<style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
+</style>
+
 @endsection

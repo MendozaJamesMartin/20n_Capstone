@@ -10,10 +10,6 @@ class Transaction extends Model
     protected $primaryKey = 'id';
     protected $fillable = ['entity_type', 'total_amount', 'amount_paid', 'balance_due'];
 
-    public function student() {
-        return $this->hasOne(Student::class, 'entity_id', 'id');
-    }
-
     public function receipt() {
         return $this->hasOne(Receipt::class, 'transaction_id');
     }

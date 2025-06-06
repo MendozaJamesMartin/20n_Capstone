@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PaymentReceiptMail;
 use App\Models\Fee;
+use App\Models\Receipt;
+use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PaymentsController extends Controller
 {
@@ -110,7 +114,14 @@ class PaymentsController extends Controller
                 ]);
 
                 DB::commit();
-                return redirect()->route('receipts.list')->with('success', 'Transaction marked as paid successfully, and email notification sent!');
+
+                $transaction = Transaction::find($transactionId);
+                // Save the payment, then send the email
+                Mail::to($validated['email'])->send(
+                    new PaymentReceiptMail($transaction->total_amount, $validated['receipt_number'])
+                );
+
+                return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);;
             }
         } catch (QueryException $e) {
             DB::rollBack();
@@ -169,7 +180,14 @@ class PaymentsController extends Controller
                 ]);
 
                 DB::commit();
-                return redirect()->route('receipts.list')->with('success', 'Transaction marked as paid successfully, and email notification sent!');
+
+                $transaction = Transaction::find($transactionId);
+                // Save the payment, then send the email
+                Mail::to($validated['contact'])->send(
+                    new PaymentReceiptMail($transaction->total_amount, $validated['receipt_number'])
+                );
+
+                return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);
             }
         } catch (QueryException $e) {
             DB::rollBack();
@@ -295,7 +313,7 @@ class PaymentsController extends Controller
                 ]);
     
                 DB::commit();
-                return redirect()->route('receipts.list')->with('success', 'Transaction updated and marked as paid.');
+                return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);
             }
     
         } catch (QueryException $e) {

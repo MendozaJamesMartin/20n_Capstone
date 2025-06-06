@@ -79,7 +79,7 @@
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-primary" id="confirmPaymentButton">Submit Payment</button>
+                            <button class="btn btn-primary" id="confirmPaymentButton">Print Receipt</button>
                         </div>
                     </div>
                 </div>
