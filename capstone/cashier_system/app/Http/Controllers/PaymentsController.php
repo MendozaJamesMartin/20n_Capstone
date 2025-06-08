@@ -6,6 +6,7 @@ use App\Mail\PaymentReceiptMail;
 use App\Models\Fee;
 use App\Models\Receipt;
 use App\Models\Transaction;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -93,7 +94,7 @@ class PaymentsController extends Controller
                 $feeIds = implode(',', array_keys($fees));
                 $quantities = implode(',', array_values($fees));
 
-                Log::info("Stored Procedure call");
+                Log::info("Stored Procedure call StudentPayment");
                 $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?, ?)", [
                     $validated['student_id'],
                     $validated['first_name'],
@@ -108,6 +109,7 @@ class PaymentsController extends Controller
                 $transactionId = $results[0]->transaction_id;
                 
                 // Now finalize the transaction
+                Log::info("Stored Procedure call FinalizeTransaction");
                 DB::statement("CALL FinalizeTransaction(?, ?)", [
                     $transactionId,
                     $validated['receipt_number']
@@ -115,13 +117,38 @@ class PaymentsController extends Controller
 
                 DB::commit();
 
-                $transaction = Transaction::find($transactionId);
+                Log::info("Retrieve full_customer_transaction_details");
+
+                $TransactionDetails = collect();
+
+                $TransactionDetails = DB::table('full_customer_transaction_details')
+                    ->where('transaction_id', $transactionId)
+                    ->get();
+
+                Log::info("Transaction ID: {$transactionId}");
+                Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
+                
+                if ($TransactionDetails->isEmpty()) {
+                    abort(404, 'Transaction not found');
+                }
+
+                Log::info("generate PDF");
+                $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
+                    'TransactionDetails' => $TransactionDetails
+                ]);
+
+                $totalAmount = $TransactionDetails[0]->total_amount;
+
                 // Save the payment, then send the email
+                Log::info("generate email");
                 Mail::to($validated['email'])->send(
-                    new PaymentReceiptMail($transaction->total_amount, $validated['receipt_number'])
+                    new PaymentReceiptMail($totalAmount, $validated['receipt_number'], $TransactionDetails, $pdf->output())
                 );
 
-                return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);;
+                Log::info("return");
+                return redirect()->route('receipts.list');
+                //return $pdf->stream("Receipt_{$transactionId}.pdf"); // opens in browser
+                //return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);
             }
         } catch (QueryException $e) {
             DB::rollBack();
@@ -181,13 +208,34 @@ class PaymentsController extends Controller
 
                 DB::commit();
 
-                $transaction = Transaction::find($transactionId);
+                Log::info("Retrieve full_customer_transaction_details");
+
+                $TransactionDetails = collect();
+
+                $TransactionDetails = DB::table('full_customer_transaction_details')
+                    ->where('transaction_id', $transactionId)
+                    ->get();
+
+                Log::info("Transaction ID: {$transactionId}");
+                Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
+
+                Log::info("generate PDF");
+                $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
+                    'TransactionDetails' => $TransactionDetails
+                ]);
+
+                $totalAmount = $TransactionDetails[0]->total_amount;
+
                 // Save the payment, then send the email
+                Log::info("generate email");
                 Mail::to($validated['contact'])->send(
-                    new PaymentReceiptMail($transaction->total_amount, $validated['receipt_number'])
+                    new PaymentReceiptMail($totalAmount, $validated['receipt_number'], $TransactionDetails, $pdf->output())
                 );
 
-                return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);
+                Log::info("return");
+                return redirect()->route('receipts.list');
+
+                //return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);
             }
         } catch (QueryException $e) {
             DB::rollBack();

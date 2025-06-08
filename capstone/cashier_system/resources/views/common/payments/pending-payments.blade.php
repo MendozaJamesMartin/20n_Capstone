@@ -9,14 +9,14 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <td colspan="9">
+                        <td colspan="8">
                             <h2>PENDING PAYMENTS</h2>
                         </td>
                     </tr>
                 </thead>
                 <tbody>
                 <tr>
-                    <th colspan="9" class="text-center">
+                    <th colspan="8" class="text-center">
                         <div class="d-flex justify-content-center align-items-center flex-wrap">
                             <form action="{{ url()->current() }}" method="GET">
                                 <input type="text" id="search" style="width:15%" class="border p-2 w-1/3 rounded" placeholder="🔍 Search " onkeyup="filterTable()">
@@ -92,7 +92,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="text-center">No transactions found</td>
+                        <td colspan="8" class="text-center">No transactions found</td>
                     </tr>
                 @endforelse
 

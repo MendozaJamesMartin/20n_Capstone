@@ -89,6 +89,6 @@ class FeesController extends Controller
 
     public function restoreFees($id) {
         $fees = Fee::withTrashed()->find($id)->restore();
-        return redirect()->route('fees.list')->with('success', 'Item restored successfully!');
+        return redirect()->route('fees.list.deleted')->with('success', 'Item restored successfully!');
     }
 }

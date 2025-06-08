@@ -39,6 +39,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
     Route::get('/transactions/customer/receipt/{id}', [TransactionsController::class, 'GetCustomerReceipt'])->name('customer.receipt');
     Route::get('/transactions/concessionaire/receipt/{id}', [TransactionsController::class, 'GetConcessionaireReceipt'])->name('concessionaire.receipt');
 
+    //Receipt PDF Management
+    Route::get('/customer/receipt/{id}', [TransactionsController::class, 'customerReceiptPDF'])->name('customer.receipt.pdf');
+    Route::get('/concessionaire/receipt/{id}', [TransactionsController::class, 'concessionaireReceiptPDF'])->name('concessionaire.receipt.pdf');
+
     //Concessionaire Management
     Route::get('concessionaires/list', [ConcessionairesController::class, 'GetConcessionairesList'])->name('concessionaires.list');
     Route::get('concessionaires/billing/list', [ConcessionairesController::class, 'GetBillingList'])->name('concessionaires.billing.list');

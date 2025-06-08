@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Attachment;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -17,14 +18,18 @@ class PaymentReceiptMail extends Mailable
     public $receiptNumber;
     public $fee_name;
     public $quantity;
+    public $transactionDetails;
+    public $pdfContent;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($amount, $receiptNumber)
+    public function __construct($amount, $receiptNumber, $transactionDetails, $pdfContent)
     {
         $this->amount = $amount;
         $this->receiptNumber = $receiptNumber;
+        $this->transactionDetails = $transactionDetails;
+        $this->pdfContent = $pdfContent;
     }
 
     /**
@@ -58,6 +63,8 @@ class PaymentReceiptMail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        return [
+            Attachment::fromData(fn () => $this->pdfContent, 'receipt.pdf')->withMime('application/pdf'),
+        ];
     }
 }

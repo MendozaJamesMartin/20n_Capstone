@@ -2,32 +2,32 @@
 @section('content')
 
 <main style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
-    <div class="container" style="width:50%">
+    <div class="container bg-light" style="width:50%; padding:2%;">
 
-        <div>
-            <table class="table table-striped border">
+        @if(session('success'))
+            <p style="color: green;">{{ session('success') }}</p>
+        @elseif(session('error'))
+            <p style="color: red;">{{ session('error') }}</p>
+        @endif
 
-                @if(session('success'))
-                <p style="color: green;">{{ session('success') }}</p>
-                @elseif(session('error'))
-                <p style="color: red;">{{ session('error') }}</p>
-                @endif
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">List of Fees</h1>
+            <div class="d-flex gap-2">
+                <a href="{{ route('fees.list.deleted') }}" class="btn btn-danger">🗑 Deleted Fees</a>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addFeeModal">➕ Add Item</button>
+            </div>
+        </div>
 
-                <tr>
-                    <th colspan="3">
-                        <h1>List of Fees</h1>
-                    </th>
-                    <th>
-                        <!-- Add Fee Button (Triggers Modal) -->
-                        <button class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#addFeeModal">Add Item</button>
-                    </th>
-                </tr>
+        <table class="table table-striped border">
+            <thead>
                 <tr>
                     <th>Item ID</th>
                     <th>Item Name</th>
                     <th>Item Price</th>
                     <th>Actions</th>
                 </tr>
+            </thead>
+            <tbody>
                 @foreach($fees as $fee)
                 <tr>
                     <td>{{ $fee->id }}</td>
@@ -35,43 +35,41 @@
                     <td>{{ $fee->amount }}</td>
                     <td>
                         <div class="d-flex gap-2">
-                            <!-- Update Fee Button (Triggers Modal) -->
                             <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#updateFeeModal{{ $fee->id }}">Update</button>
-                            <a href=" {{ route('fees.delete', $fee->id) }} " class="btn btn-warning btn-sm">Delete</a>
+                            <a href="{{ route('fees.delete', $fee->id) }}" class="btn btn-warning btn-sm">Delete</a>
                         </div>
                     </td>
                 </tr>
 
-                <!-- Update Fee Modal -->
-                <div class="modal fade" id="updateFeeModal{{ $fee->id }}" tabindex="-1" aria-labelledby="updateFeeModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="updateFeeModalLabel">Update Fee</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form action="{{ route('fees.update', $fee->id) }}" method="POST">
-                                    @csrf
-                                    @method('POST')
-                                    <div class="mb-3">
-                                        <label for="fee_name" class="form-label">Fee Name</label>
-                                        <input type="text" name="fee_name" class="form-control" value="{{ $fee->fee_name }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="amount" class="form-label">Amount</label>
-                                        <input type="text" name="amount" class="form-control" value="{{ $fee->amount }}" required>
-                                    </div>
-                                    <button type="submit" class="btn btn-danger">Update Fee</button>
-                                </form>
+                    <!-- Update Fee Modal -->
+                    <div class="modal fade" id="updateFeeModal{{ $fee->id }}" tabindex="-1" aria-labelledby="updateFeeModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Update Fee</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="{{ route('fees.update', $fee->id) }}" method="POST">
+                                        @csrf
+                                        @method('POST')
+                                        <div class="mb-3">
+                                            <label class="form-label">Fee Name</label>
+                                            <input type="text" name="fee_name" class="form-control" value="{{ $fee->fee_name }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Amount</label>
+                                            <input type="text" name="amount" class="form-control" value="{{ $fee->amount }}" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-danger">Update Fee</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 @endforeach
-            </table>
-        </div>
-
+            </tbody>
+        </table>
     </div>
 </main>
 
@@ -80,13 +78,13 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addFeeModalLabel">Add New Fee</h5>
+                <h5 class="modal-title">Add New Fee</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form action="{{ route('fees.add') }}" method="POST">
                     @csrf
-                        <table class="table table-bordered">
+                    <table class="table table-bordered">
                         <thead>
                             <tr>
                                 <th>Item Name</th>

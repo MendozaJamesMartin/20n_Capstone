@@ -2,25 +2,31 @@
 @section('content')
 
 <main style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
-    <div class="container" style="width:50%">
+    <div class="container bg-light" style="width:50%; padding:2%;">
 
-        <div>
-            <table class="table table-striped border">
-                <tr>
-                    <th colspan="3">
-                        <h1>List of Retired Fees</h1>
-                    </th>
-                    <th>
-                        <!-- Add Fee Button (Triggers Modal) -->
-                        <button class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#addFeeModal">Add Item</button>
-                    </th>
-                </tr>
+        @if(session('success'))
+            <p style="color: green;">{{ session('success') }}</p>
+        @elseif(session('error'))
+            <p style="color: red;">{{ session('error') }}</p>
+        @endif
+
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <h1 class="mb-0">List of Deleted Fees</h1>
+            <div class="d-flex gap-2">
+                <a href="{{ route('fees.list') }}" class="btn btn-danger">View Active Fees</a>
+            </div>
+        </div>
+
+        <table class="table table-striped border">
+            <thead>
                 <tr>
                     <th>Item ID</th>
                     <th>Item Name</th>
                     <th>Item Price</th>
                     <th>Actions</th>
                 </tr>
+            </thead>
+            <tbody>
                 @foreach($fees as $fee)
                 <tr>
                     <td>{{ $fee->id }}</td>
@@ -28,16 +34,13 @@
                     <td>{{ $fee->amount }}</td>
                     <td>
                         <div class="d-flex gap-2">
-                            <!-- Update Fee Button (Triggers Modal) -->
                             <a href=" {{ route('fees.restore', $fee->id) }} " class="btn btn-warning btn-sm">Restore</a>
                         </div>
                     </td>
                 </tr>
-
                 @endforeach
-            </table>
-        </div>
-
+            </tbody>
+        </table>
     </div>
 </main>
 

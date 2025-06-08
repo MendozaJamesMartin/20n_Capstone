@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Attachment;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -16,15 +17,17 @@ class ConcessionaireBillMail extends Mailable
     public $bill_amount;
     public $utility_type;
     public $due_date;
+    public $pdfContent;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($bill_amount, $utility_type, $due_date)
+    public function __construct($bill_amount, $utility_type, $due_date, $pdfContent)
     {
         $this->bill_amount = $bill_amount;
         $this->utility_type = $utility_type;
         $this->due_date = $due_date;
+        $this->pdfContent = $pdfContent;
     }
 
     /**
@@ -59,6 +62,9 @@ class ConcessionaireBillMail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        return [
+            Attachment::fromData(fn () => $this->pdfContent, 'BillingStatement.pdf')
+            ->withMime('application/pdf'),
+        ];
     }
 }

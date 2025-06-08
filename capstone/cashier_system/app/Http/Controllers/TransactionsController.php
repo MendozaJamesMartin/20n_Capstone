@@ -8,6 +8,7 @@ use App\Models\Receipt;
 use App\Models\Student;
 use App\Models\StudentTransactionDetail;
 use App\Models\Transaction;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -82,4 +83,39 @@ class TransactionsController extends Controller
 
         return view('common.transactions.concessionaire-details', compact('TransactionDetails'));
     }
+
+    public function customerReceiptPDF ($id) {
+        $TransactionDetails = DB::table('full_customer_transaction_details')
+        ->where('transaction_id', $id)
+        ->get();
+
+        if ($TransactionDetails->isEmpty()) {
+            abort(404, 'Transaction not found');
+        }
+
+        $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
+            'TransactionDetails' => $TransactionDetails
+        ]);
+
+        // Stream the PDF so it opens in the browser (not downloaded unless user chooses to)
+        return $pdf->stream("Receipt_{$id}.pdf");
+    }
+
+        public function concessionaireReceiptPDF ($id) {
+        $TransactionDetails = DB::table('full_concessionaire_transaction_details')
+        ->where('transaction_id', $id)
+        ->get();
+
+        if ($TransactionDetails->isEmpty()) {
+            abort(404, 'Transaction not found');
+        }
+
+        $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
+            'TransactionDetails' => $TransactionDetails
+        ]);
+
+        // Stream the PDF so it opens in the browser (not downloaded unless user chooses to)
+        return $pdf->stream("Receipt_{$id}.pdf");
+    }
+
 }

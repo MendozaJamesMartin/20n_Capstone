@@ -7,6 +7,7 @@ use App\Mail\PaymentReceiptMail;
 use App\Models\Concessionaire;
 use App\Models\ConcessionaireBill;
 use App\Models\Transaction;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -114,7 +115,7 @@ class ConcessionairesController extends Controller
                 ]);
 
                 // Call stored procedure
-                DB::statement("CALL CreateConcessionaireBilling(?, ?, ?, ?)", [
+                $results = DB::select("CALL CreateConcessionaireBilling(?, ?, ?, ?)", [
                     $validated['concessionaire_id'],
                     $validated['utility_type'],
                     $validated['bill_amount'],
@@ -124,9 +125,19 @@ class ConcessionairesController extends Controller
                 DB::commit();
 
                 $concessionaire = Concessionaire::find($validated['concessionaire_id']);
+                $billId = $results[0]->concessionaire_bills;
+                $bills = ConcessionaireBill::find($billId);
+
+                $pdf = Pdf::loadView('pdfs.concessionaire-billing-pdf', [
+                    'bills' => $bills,
+                    'concessionaire' => $concessionaire,
+                    'due_date' => $validated['due_date']
+                ]);
+
+                $pdfContent = $pdf->output(); // Save to attach to mail
 
                 Mail::to($concessionaire->contact)->send(
-                    new ConcessionaireBillMail($validated['bill_amount'], $validated['utility_type'], $validated['due_date'])
+                    new ConcessionaireBillMail($validated['bill_amount'], $validated['utility_type'], $validated['due_date'], $pdfContent)
                 );
 
                 return redirect()->back()->with('success', 'Billing created successfully!');
@@ -200,15 +211,36 @@ class ConcessionairesController extends Controller
 
                 DB::commit();
 
-                $transaction = Transaction::find($transactionId);
+                Log::info("Retrieve full_concessionaire_transaction_details");
+
+                $TransactionDetails = collect();
+
+                $TransactionDetails = DB::table('full_concessionaire_transaction_details')
+                    ->where('transaction_id', $transactionId)
+                    ->get();
+
                 $concessionaire = Concessionaire::find($concessionaireId);
 
+                Log::info("Transaction ID: {$transactionId}");
+                Log::info("Concessionaire ID: {$concessionaireId}");
+                Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
+
+                Log::info("generate PDF");
+                $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
+                    'TransactionDetails' => $TransactionDetails
+                ]);
+
+                $totalAmount = $TransactionDetails[0]->total_amount;
+
                 // Save the payment, then send the email
+                Log::info("generate email");
                 Mail::to($concessionaire->contact)->send(
-                    new PaymentReceiptMail($transaction->total_amount, $validated['receipt_number'])
+                    new PaymentReceiptMail($totalAmount, $validated['receipt_number'], $TransactionDetails, $pdf->output())
                 );
 
-                return redirect()->route('concessionaire.receipt', ['id' => $transactionId])->with('auto_print', true);;
+                Log::info("return");
+                return redirect()->route('receipts.list');
+                //return redirect()->route('concessionaire.receipt', ['id' => $transactionId])->with('auto_print', true);;
             }
         } catch (QueryException $e) {
             DB::rollBack();

@@ -2,80 +2,74 @@
 
 @section('content')
 
-<main class="py-4 py-md-5" style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh;">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-12 col-md-10 col-lg-8">
-                <div class="bg-light p-4 p-md-5 rounded shadow">
-                    <h1 class="h3 h2-md">Student Payment Form</h1>
+<main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
 
-                    @if(session('success'))
-                        <p class="text-success">{{ session('success') }}</p>
-                    @elseif(session('error'))
-                        <p class="text-danger">{{ session('error') }}</p>
-                    @endif
+    <div class="container" style="width:75%">
+        <div class="bg-light p-5">
+            <h1>Student Payment Form</h1>
 
-                    <form method="POST" action="{{ route('student.payment.form') }}" id="paymentForm">
-                        @csrf
+            @if(session('success'))
+                <p class="text-success">{{ session('success') }}</p>
+            @elseif(session('error'))
+                <p class="text-danger">{{ session('error') }}</p>
+            @endif
 
-                        <div class="mb-3">
-                            <label for="student_id" class="form-label">Student ID</label>
-                            <input type="text" class="form-control" id="student_id" name="student_id" placeholder="XXXX-XXXXX-XX-X">
-                        </div>
+            <form method="POST" action="{{ route('student.payment.form') }}" id="paymentForm">
+                @csrf
 
-                        <label class="form-label">Student Full Name</label>
-                        <div class="row g-2 mb-3">
-                            <div class="col-md">
-                                <input type="text" class="form-control" name="first_name" placeholder="First Name">
-                            </div>
-                            <div class="col-md">
-                                <input type="text" class="form-control" name="middle_name" placeholder="Middle Name">
-                            </div>
-                            <div class="col-md">
-                                <input type="text" class="form-control" name="last_name" placeholder="Last Name">
-                            </div>
-                            <div class="col-md">
-                                <input type="text" class="form-control" name="suffix" placeholder="Suffix">
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="text" class="form-control" name="email" placeholder="email@example.com">
-                        </div>
-
-                        <h3>Fees</h3>
-                        <div class="table-responsive mb-3" style="max-height: 300px; overflow-y: auto;">
-                            <table class="table table-bordered align-middle text-center">
-                                <thead class="table-light sticky-top">
-                                    <tr>
-                                        <th>Fee Name</th>
-                                        <th>Amount</th>
-                                        <th>Quantity</th>
-                                        <th>Remove</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="fees-table-body">
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <button type="button" class="btn btn-success btn-sm mb-3 w-100" id="addFeeRow">+ Add Fee</button>
-
-                        <div class="mt-3">
-                            <h4>Total Amount: ₱<span id="total-amount">0.00</span></h4>
-                        </div>
-
-                        <button class="btn btn-danger btn-lg w-100 w-md-auto mt-3" type="submit">Submit</button>
-                    </form>
-
-                    <datalist id="feeSuggestions">
-                        @foreach($fees as $fee)
-                            <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
-                        @endforeach
-                    </datalist>
+                <!-- Student Info -->
+                <div class="mb-3">
+                    <label for="student_id" class="form-label">Student ID</label>
+                    <input type="text" class="form-control" id="student_id" name="student_id" placeholder="XXXX-XXXXX-XX-X">
                 </div>
-            </div>
+
+                <label class="form-label">Student Full Name</label>
+                <div class="mb-3 d-flex gap-2">
+                    <input type="text" class="form-control" name="first_name" placeholder="First Name">
+                    <input type="text" class="form-control" name="middle_name" placeholder="Middle Name">
+                    <input type="text" class="form-control" name="last_name" placeholder="Last Name">
+                    <input type="text" class="form-control" name="suffix" placeholder="Suffix">
+                </div>
+
+                <div class="mb-4">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="text" class="form-control" name="email" placeholder="email@example.com">
+                </div>
+
+                <!-- Fee Selection -->
+                <h3>Fees</h3>
+                <table class="table table-bordered align-middle text-center" id="fees-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60%">Fee Name</th>
+                            <th style="width: 15%">Amount</th>
+                            <th style="width: 15%">Quantity</th>
+                            <th style="width: 10%">Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows added dynamically -->
+                    </tbody>
+                </table>
+
+                <button type="button" class="btn btn-success btn-sm mb-3" id="addFeeRow">+ Add Fee</button>
+
+                <div class="mt-3">
+                    <h4>Total Amount: ₱<span id="total-amount">0.00</span></h4>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
+                    Submit Payment
+                </button>
+            </form>
+
+
+            <!-- Datalist for fee name autocomplete -->
+            <datalist id="feeSuggestions">
+                @foreach($fees as $fee)
+                    <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
+                @endforeach
+            </datalist>
         </div>
     </div>
 
@@ -97,7 +91,7 @@
 
     function createRow() {
         rowCount++;
-        const tbody = document.getElementById('fees-table-body');
+        const tbody = document.querySelector('#fees-table tbody');
         const tr = document.createElement('tr');
         tr.classList.add('fee-row');
 
@@ -149,9 +143,8 @@
     document.getElementById('addFeeRow').addEventListener('click', createRow);
 
     document.getElementById('confirmPaymentButton').addEventListener('click', function () {
-        const receiptNumber = document.getElementById('modal_receipt_number').value;
-        document.getElementById('receipt_number').value = receiptNumber;
 
+        // Validate all fee name inputs
         const nameInputs = document.querySelectorAll('.fee-name');
         let hasInvalid = false;
 
@@ -170,6 +163,7 @@
             return;
         }
 
+        // Before submission, create hidden inputs for quantities[fee_id]
         const form = document.getElementById('paymentForm');
         document.querySelectorAll('.dynamic-quantity').forEach(e => e.remove());
 
@@ -192,6 +186,7 @@
         form.submit();
     });
 
+    // Optional: create one row by default
     window.addEventListener('DOMContentLoaded', createRow);
 </script>
 
