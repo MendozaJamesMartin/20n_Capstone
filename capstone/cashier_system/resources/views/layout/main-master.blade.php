@@ -130,7 +130,7 @@
             <i class="fas fa-bars"></i>
         </button>
 
-        <span class="navbar-brand mb-0 h1 text-light" href="{{ route('admin.dashboard') }}">PUPTeC</span>
+        <a class="navbar-brand text-light" href=" {{ route('admin.dashboard') }}">PUPTeC</a>
     </nav>
 
     <!-- Sidebar -->

@@ -1,4 +1,4 @@
-@extends('layout.main-master')
+@extends('layout.main-user')
 
 @section('content')
     <main style="background-image:url('/bgpup1.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; display: flex; justify-content: center; align-items: center;">
