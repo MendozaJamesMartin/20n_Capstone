@@ -91,10 +91,10 @@
                         <td>
                             <div class="d-flex gap-2">
                                 @if($transaction->customer_type === 'Concessionaire')
-                                <a href=" {{ route('concessionaire.receipt', ['id' => $transaction->transaction_id ]) }}" type="button" class="btn btn-danger" title="View Customer Receipt"><i class="fa-solid fa-receipt text-light"></i></a>
+                                <a href=" {{ route('concessionaire.transaction.details', ['id' => $transaction->transaction_id ]) }}" type="button" class="btn btn-danger" title="View Transaction Details"><i class="fa-solid fa-receipt text-light"></i></a>
                                 <a href="{{ route('concessionaire.receipt.pdf', ['id' => $transaction->transaction_id ]) }}" target="_blank">View Receipt</a>
                                 @else
-                                <a href=" {{ route('customer.receipt', ['id' => $transaction->transaction_id ]) }}" type="button" class="btn btn-danger" title="View Customer Receipt"><i class="fa-solid fa-receipt text-light"></i></a>
+                                <a href=" {{ route('customer.transaction.details', ['id' => $transaction->transaction_id ]) }}" type="button" class="btn btn-danger" title="View Transaction Details"><i class="fa-solid fa-receipt text-light"></i></a>
                                 <a href="{{ route('customer.receipt.pdf', ['id' => $transaction->transaction_id ]) }}" target="_blank">View Receipt</a>
                                 @endif
 

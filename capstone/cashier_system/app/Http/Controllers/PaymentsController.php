@@ -76,7 +76,6 @@ class PaymentsController extends Controller
                     'suffix' => 'nullable|string',
                     'email' => 'required|string|email',
                     'quantities' => 'required|array',
-                    'receipt_number' => 'required|string',
                 ]);
 
                 Log::info("Filtering Items with 0 quantity");
@@ -107,48 +106,11 @@ class PaymentsController extends Controller
                 ]);
                 
                 $transactionId = $results[0]->transaction_id;
-                
-                // Now finalize the transaction
-                Log::info("Stored Procedure call FinalizeTransaction");
-                DB::statement("CALL FinalizeTransaction(?, ?)", [
-                    $transactionId,
-                    $validated['receipt_number']
-                ]);
 
                 DB::commit();
 
-                Log::info("Retrieve full_customer_transaction_details");
-
-                $TransactionDetails = collect();
-
-                $TransactionDetails = DB::table('full_customer_transaction_details')
-                    ->where('transaction_id', $transactionId)
-                    ->get();
-
-                Log::info("Transaction ID: {$transactionId}");
-                Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
-                
-                if ($TransactionDetails->isEmpty()) {
-                    abort(404, 'Transaction not found');
-                }
-
-                Log::info("generate PDF");
-                $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
-                    'TransactionDetails' => $TransactionDetails
-                ]);
-
-                $totalAmount = $TransactionDetails[0]->total_amount;
-
-                // Save the payment, then send the email
-                Log::info("generate email");
-                Mail::to($validated['email'])->send(
-                    new PaymentReceiptMail($totalAmount, $validated['receipt_number'], $TransactionDetails, $pdf->output())
-                );
-
                 Log::info("return");
-                return redirect()->route('receipts.list');
-                //return $pdf->stream("Receipt_{$transactionId}.pdf"); // opens in browser
-                //return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);
+                return redirect()->route('customer.transaction.details', ['id' => $transactionId]);
             }
         } catch (QueryException $e) {
             DB::rollBack();
@@ -172,7 +134,6 @@ class PaymentsController extends Controller
                     'name' => 'required|string',
                     'contact' => 'required|string|email',
                     'quantities' => 'required|array',
-                    'receipt_number' => 'required|string',
                 ]);
 
                 Log::info("Filtering Items with 0 quantity");
@@ -200,42 +161,10 @@ class PaymentsController extends Controller
 
                 $transactionId = $results[0]->transaction_id;
 
-                // Now finalize the transaction
-                DB::statement("CALL FinalizeTransaction(?, ?)", [
-                    $transactionId,
-                    $validated['receipt_number']
-                ]);
-
                 DB::commit();
 
-                Log::info("Retrieve full_customer_transaction_details");
-
-                $TransactionDetails = collect();
-
-                $TransactionDetails = DB::table('full_customer_transaction_details')
-                    ->where('transaction_id', $transactionId)
-                    ->get();
-
-                Log::info("Transaction ID: {$transactionId}");
-                Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
-
-                Log::info("generate PDF");
-                $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
-                    'TransactionDetails' => $TransactionDetails
-                ]);
-
-                $totalAmount = $TransactionDetails[0]->total_amount;
-
-                // Save the payment, then send the email
-                Log::info("generate email");
-                Mail::to($validated['contact'])->send(
-                    new PaymentReceiptMail($totalAmount, $validated['receipt_number'], $TransactionDetails, $pdf->output())
-                );
-
                 Log::info("return");
-                return redirect()->route('receipts.list');
-
-                //return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);
+                return redirect()->route('customer.transaction.details', ['id' => $transactionId]);
             }
         } catch (QueryException $e) {
             DB::rollBack();
@@ -313,24 +242,57 @@ class PaymentsController extends Controller
                 // Get all fees
                 $fees = Fee::all();
     
-                // Get current fee selections (map: fee_id => quantity)
-                $selectedFees = DB::table('customer_transaction_details')
-                    ->where('transaction_id', $transactionId)
-                    ->get()
-                    ->mapWithKeys(function ($item) {
+                $transactionDetails = DB::table('customer_transaction_details as ctd')
+                    ->join('customers as c', 'ctd.customer_id', '=', 'c.id')
+                    ->join('student_details as sd', 'c.id', '=', 'sd.customer_id')
+                    ->where('ctd.transaction_id', $transactionId)
+                    ->select(
+                        'ctd.fee_id',
+                        'ctd.quantity',
+                        'c.id as customer_id',
+                        'sd.email',
+                        'sd.student_id',
+                        'sd.first_name',
+                        'sd.middle_name',
+                        'sd.last_name',
+                        'sd.suffix'
+                    )
+                    ->get();
+
+                if ($transactionDetails->isNotEmpty()) {
+                    $selectedFees = $transactionDetails->mapWithKeys(function ($item) {
                         return [$item->fee_id => $item->quantity];
                     });
-    
-                Log::info("Loaded fees and existing transaction data");
-    
-                return view('common.payments.update-payment', compact('fees', 'selectedFees', 'transactionId'));
+
+                    $feeIds = $transactionDetails->pluck('fee_id')->unique();
+
+                    $selectedFeeDetails = Fee::whereIn('id', $feeIds)->get();
+
+                    $first = $transactionDetails->first();
+                    $customerInfo = [
+                        'customer_id'  => $first->customer_id,
+                        'email'        => $first->email,
+                        'student_id'   => $first->student_id,
+                        'first_name'   => $first->first_name,
+                        'middle_name'  => $first->middle_name,
+                        'last_name'    => $first->last_name,
+                        'suffix'       => $first->suffix,
+                    ];
+
+                    Log::info("Loaded fees and customer: {$first->first_name} {$first->last_name}");
+                } else {
+                    $selectedFees = collect();
+                    $customerInfo = null;
+                    Log::warning("No transaction details found for transaction ID $transactionId");
+                }
+
+                return view('common.payments.update-payment', compact('fees', 'selectedFees', 'selectedFeeDetails', 'transactionDetails', 'transactionId', 'customerInfo'));
             }
     
             elseif ($request->isMethod('put')) {
                 Log::info("Validating update form input");
                 $validated = $request->validate([
                     'quantities' => 'required|array',
-                    'receipt_number' => 'required|string',
                 ]);
     
                 Log::info("Filtering Items with 0 quantity");
@@ -354,14 +316,8 @@ class PaymentsController extends Controller
                     $quantities
                 ]);
     
-                Log::info("Calling FinalizeTransaction for payment finalization");
-                DB::statement("CALL FinalizeTransaction(?, ?)", [
-                    $transactionId,
-                    $validated['receipt_number']
-                ]);
-    
                 DB::commit();
-                return redirect()->route('customer.receipt', ['id' => $transactionId])->with('auto_print', true);
+                return redirect()->route('customer.transaction.details', ['id' => $transactionId]);
             }
     
         } catch (QueryException $e) {

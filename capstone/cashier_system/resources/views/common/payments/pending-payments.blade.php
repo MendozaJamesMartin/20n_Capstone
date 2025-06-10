@@ -86,7 +86,7 @@
                         <td>
                             <div class="d-flex gap-2">
                                 <a href=" {{ route('payments.update', ['transactionId' => $transaction->transaction_id]) }} " type="button" class="btn btn-danger" title="View and Edit Payment"><i class="fa-solid fa-pen-to-square"></i></a>
-                                <a href=" {{ route('customer.receipt', ['id' => $transaction->transaction_id ]) }} " type="button" class="btn btn-danger" title="View Receipt"><i class="fa-solid fa-receipt text-light"></i></a>
+                                <a href=" {{ route('customer.transaction.details', ['id' => $transaction->transaction_id ]) }} " type="button" class="btn btn-danger" title="View Receipt"><i class="fa-solid fa-receipt text-light"></i></a>
                             </div>
                         </td>
                     </tr>

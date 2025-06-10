@@ -36,8 +36,15 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
     
     //Transaction Managements
     Route::get('/transactions/history', [TransactionsController::class, 'GetTransactionsHistory'])->name('receipts.list');
-    Route::get('/transactions/customer/receipt/{id}', [TransactionsController::class, 'GetCustomerReceipt'])->name('customer.receipt');
-    Route::get('/transactions/concessionaire/receipt/{id}', [TransactionsController::class, 'GetConcessionaireReceipt'])->name('concessionaire.receipt');
+    Route::get('/transactions/customer/receipt/{id}', [TransactionsController::class, 'GetCustomerTransactionDetails'])->name('customer.transaction.details');
+    Route::get('/transactions/concessionaire/receipt/{id}', [TransactionsController::class, 'GetConcessionaireTransactionDetails'])->name('concessionaire.transaction.details');
+    
+    //Finalize Customer Transaction
+    Route::post('/transactions/finalize/{id}', [TransactionsController::class, 'finalizeTransaction'])->name('finalize.transation');
+    Route::post('/transactions/concessionaire/finalize/{id}', [TransactionsController::class, 'finalizeConcessionaireTransaction'])->name('finalize.concessionaire.transation');
+    //Finalize Concessionaire Transaction
+    Route::post('/transactions/receipt/save', [TransactionsController::class, 'saveReceiptNumber'])->name('save.receipt');
+    Route::post('/transactions/concessionaire/receipt/save', [TransactionsController::class, 'saveConcessionaireReceipt'])->name('save.concessionaire.receipt');
 
     //Receipt PDF Management
     Route::get('/customer/receipt/{id}', [TransactionsController::class, 'customerReceiptPDF'])->name('customer.receipt.pdf');

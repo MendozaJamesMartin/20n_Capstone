@@ -179,7 +179,6 @@ class ConcessionairesController extends Controller
                 $validated = $request->validate([
                     'bill_id' => 'required|array',
                     'amount' => 'required|array',
-                    'receipt_number' => 'required|string',
                 ]);
                 Log::info('Validation passed');
     
@@ -202,45 +201,16 @@ class ConcessionairesController extends Controller
                 Log::info('Formatted data for stored procedure', ['bill_ids' => $billIds, 'amounts' => $amounts]);
     
                 // Call the stored procedure
-                $results = DB::select("CALL ConcessionairePayBills(?, ?, ?)", [$billIds, $amounts, $validated['receipt_number']]);
+                $results = DB::select("CALL ConcessionairePayBills(?, ?)", [$billIds, $amounts]);
                 Log::info('Stored procedure executed successfully');
     
                 Log::info('Select Last insert ID from Stored Procedure');
                 $transactionId = $results[0]->transaction_id;
-                $concessionaireId = $results[0]->concessionaire_id;
 
                 DB::commit();
 
-                Log::info("Retrieve full_concessionaire_transaction_details");
-
-                $TransactionDetails = collect();
-
-                $TransactionDetails = DB::table('full_concessionaire_transaction_details')
-                    ->where('transaction_id', $transactionId)
-                    ->get();
-
-                $concessionaire = Concessionaire::find($concessionaireId);
-
-                Log::info("Transaction ID: {$transactionId}");
-                Log::info("Concessionaire ID: {$concessionaireId}");
-                Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
-
-                Log::info("generate PDF");
-                $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
-                    'TransactionDetails' => $TransactionDetails
-                ]);
-
-                $totalAmount = $TransactionDetails[0]->total_amount;
-
-                // Save the payment, then send the email
-                Log::info("generate email");
-                Mail::to($concessionaire->contact)->send(
-                    new PaymentReceiptMail($totalAmount, $validated['receipt_number'], $TransactionDetails, $pdf->output())
-                );
-
                 Log::info("return");
-                return redirect()->route('receipts.list');
-                //return redirect()->route('concessionaire.receipt', ['id' => $transactionId])->with('auto_print', true);;
+                return redirect()->route('concessionaire.transaction.details', ['id' => $transactionId]);
             }
         } catch (QueryException $e) {
             DB::rollBack();

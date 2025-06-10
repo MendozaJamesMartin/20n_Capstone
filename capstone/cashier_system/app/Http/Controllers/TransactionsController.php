@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PaymentReceiptMail;
 use App\Models\Concessionaire;
 use App\Models\ConcessionaireBill;
 use App\Models\Receipt;
@@ -12,8 +13,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class TransactionsController extends Controller
 {
@@ -68,16 +71,16 @@ class TransactionsController extends Controller
         return view('common.transactions.transactions-history', compact('result'));
     }
 
-    public function GetCustomerReceipt ($id) {
-        $TransactionDetails = DB::table('full_customer_transaction_details')
+    public function GetCustomerTransactionDetails ($id) {
+        $TransactionDetails = DB::table('customer_transaction_receipt')
             ->where('transaction_id', $id)
             ->get();
 
         return view('common.transactions.customer-details', compact('TransactionDetails'));
     }
 
-    public function GetConcessionaireReceipt ($id) {
-        $TransactionDetails = DB::table('full_concessionaire_transaction_details')
+    public function GetConcessionaireTransactionDetails ($id) {
+        $TransactionDetails = DB::table('concessionaire_transaction_receipt')
             ->where('transaction_id', $id)
             ->get();
 
@@ -85,16 +88,19 @@ class TransactionsController extends Controller
     }
 
     public function customerReceiptPDF ($id) {
-        $TransactionDetails = DB::table('full_customer_transaction_details')
+        $TransactionDetails = DB::table('customer_transaction_receipt')
         ->where('transaction_id', $id)
         ->get();
+
+        $Cashier = Auth::user();
 
         if ($TransactionDetails->isEmpty()) {
             abort(404, 'Transaction not found');
         }
 
         $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
-            'TransactionDetails' => $TransactionDetails
+            'TransactionDetails' => $TransactionDetails,
+            'Cashier' => $Cashier
         ]);
 
         // Stream the PDF so it opens in the browser (not downloaded unless user chooses to)
@@ -102,20 +108,221 @@ class TransactionsController extends Controller
     }
 
         public function concessionaireReceiptPDF ($id) {
-        $TransactionDetails = DB::table('full_concessionaire_transaction_details')
+        $TransactionDetails = DB::table('concessionaire_transaction_receipt')
         ->where('transaction_id', $id)
         ->get();
+
+        $Cashier = Auth::user();
 
         if ($TransactionDetails->isEmpty()) {
             abort(404, 'Transaction not found');
         }
 
         $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
-            'TransactionDetails' => $TransactionDetails
+            'TransactionDetails' => $TransactionDetails,
+            'Cashier' => $Cashier
         ]);
 
         // Stream the PDF so it opens in the browser (not downloaded unless user chooses to)
         return $pdf->stream("Receipt_{$id}.pdf");
+    }
+
+    public function finalizeTransaction ($transactionId) {
+        Log::info("Finalize Transaction with ID: $transactionId");
+        DB::beginTransaction();
+        try {
+            // Now finalize the transaction
+                Log::info("Retrieve customer_transaction_receipt");
+
+                $TransactionDetails = DB::table('customer_transaction_receipt')
+                    ->where('transaction_id', $transactionId)
+                    ->get();
+
+                $Cashier = Auth::user();
+
+                Log::info("Transaction ID: {$transactionId}");
+                Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
+                
+                if ($TransactionDetails->isEmpty()) {
+                    abort(404, 'Transaction not found');
+                }
+
+                Log::info("generate PDF");
+                $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
+                    'TransactionDetails' => $TransactionDetails,
+                    'Cashier' => $Cashier
+                ]);
+
+                Log::info("Stored Procedure call FinalizeTransaction");
+
+                DB::statement("CALL FinalizeTransaction(?)", [
+                    $transactionId,
+                ]);
+
+                DB::commit();
+
+                return $pdf->stream("Receipt_{$transactionId}.pdf");
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error("Failed to finalize transaction : " . $e->getMessage());
+            return back()->with('error', 'Transaction failed.');
+        }
+    }
+
+    public function finalizeConcessionaireTransaction ($transactionId) {
+        Log::info("Finalize Concessionaire Transaction with ID: $transactionId");
+        DB::beginTransaction();
+        try {
+                Log::info("Retrieve concessionaire_transaction_receipt");
+
+                $TransactionDetails = DB::table('concessionaire_transaction_receipt')
+                    ->where('transaction_id', $transactionId)
+                    ->get();
+
+                $Cashier = Auth::user();
+
+                $concessionaire = $TransactionDetails[0]->concessionaire_name;
+
+                Log::info("Transaction ID: {$transactionId}");
+                Log::info("Concessionaire: {$concessionaire}");
+                Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
+
+                Log::info("generate PDF");
+                $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
+                    'TransactionDetails' => $TransactionDetails,
+                    'Cashier' => $Cashier
+                ]);
+
+                DB::commit();
+                
+                return $pdf->stream("Receipt_{$transactionId}.pdf");
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error("Failed to finalize transaction : " . $e->getMessage());
+            return back()->with('error', 'Transaction failed.');
+        }
+    }
+
+    public function saveReceiptNumber (Request $request) {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'transaction_id' => 'required|exists:transactions,id',
+                'receipt_number' => 'required|string|max:50|unique:receipts,receipt_number',
+            ]);
+
+            // Call the stored procedure to save receipt number
+            $result = DB::select("CALL SaveReceiptNumber(?, ?)", [
+                $request->transaction_id,
+                $request->receipt_number,
+            ]);
+
+            DB::commit();
+
+            $transactionId = $result[0]->transaction_id;
+            $Cashier = Auth::user();
+
+            // Retrieve transaction details
+            $TransactionDetails = DB::table('customer_transaction_receipt')
+                ->where('transaction_id', $transactionId)
+                ->get();
+
+            if ($TransactionDetails->isEmpty()) {
+                throw new \Exception("Transaction details not found.");
+            }
+
+            // Extract values for email
+            $email = $TransactionDetails[0]->contact_info ?? null;
+            $receiptNumber = $TransactionDetails[0]->receipt_number ?? $request->receipt_number;
+            $totalAmount = $TransactionDetails[0]->totalAmount ?? 0;
+
+            Log::info('Generating PDF');
+            // Generate the PDF
+            $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
+                'TransactionDetails' => $TransactionDetails,    
+                'Cashier' => $Cashier
+            ]);
+
+            Log::info('Sending email to: ' . $email);
+            if ($email) {
+                // Send the email with the PDF attached
+                Mail::to($email)->send(
+                    new PaymentReceiptMail($totalAmount, $receiptNumber, $TransactionDetails, $pdf->output())
+                );
+            }
+
+            return response()->json(['success' => true]);
+
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error("Failed to save receipt number or send email: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+public function saveConcessionaireReceipt (Request $request) {
+        Log::info("Save Concessionaire Receipt");
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                'transaction_id' => 'required|exists:transactions,id',
+                'receipt_number' => 'required|string|max:50|unique:receipts,receipt_number',
+            ]);
+
+            Log::info("Call Save Receipt Number Procedure");
+            // Call the stored procedure to save receipt number
+            $result = DB::select("CALL SaveReceiptNumber(?, ?)", [
+                $request->transaction_id,
+                $request->receipt_number,
+            ]);
+
+            DB::commit();
+
+            $transactionId = $result[0]->transaction_id;
+            $Cashier = Auth::user();
+
+            // Retrieve transaction details
+            $TransactionDetails = DB::table('concessionaire_transaction_receipt')
+                ->where('transaction_id', $transactionId)
+                ->get();
+
+            if ($TransactionDetails->isEmpty()) {
+                throw new \Exception("Transaction details not found.");
+            }
+
+            // Extract values for email
+            $email = $TransactionDetails[0]->concessionaire_contact ?? null;
+            $receiptNumber = $TransactionDetails[0]->receipt_number ?? $request->receipt_number;
+            $totalAmount = $TransactionDetails[0]->total_amount ?? 0;
+
+            Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
+
+            Log::info('Generating PDF');
+            // Generate the PDF
+            $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
+                'TransactionDetails' => $TransactionDetails,
+                'Cashier' => $Cashier
+            ]);
+
+            Log::info('Sending email to: ' . $email);
+            if ($email) {
+                // Send the email with the PDF attached
+                Mail::to($email)->send(
+                    new PaymentReceiptMail($totalAmount, $receiptNumber, $TransactionDetails, $pdf->output())
+                );
+            }
+
+            Log::info("Return");
+            return response()->json([
+                'success' => true,
+                'redirect_url' => route('concessionaire.transaction.details', ['id' => $transactionId])
+            ]);
+
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error("Failed to save receipt number or send email: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
     }
 
 }

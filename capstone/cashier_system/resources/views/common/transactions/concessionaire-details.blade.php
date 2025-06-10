@@ -1,8 +1,8 @@
 @extends('layout.main-master')
 @section('content')
 
-<div style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
-    <main class="container" style="width:50%;">
+<main style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
+    <div class="container" style="width:50%;">
 
         @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -26,8 +26,12 @@
                         <td>
                             <p>{{ $TransactionDetails[0]->transaction_date }}</p>
                         </td>
+                    </tr>
+                    <tr>
                         <td>
-                            <p>{{ $TransactionDetails[0]->receipt_number }}</p>
+                            @if (!empty($TransactionDetails[0]->receipt_number))
+                                <p><strong>Receipt Number:</strong> {{ $TransactionDetails[0]->receipt_number }}</p>
+                            @endif
                         </td>
                     </tr>
                 </table>
@@ -71,19 +75,112 @@
                 </td>
             </table>
 
+            <input type="hidden" name="receipt_number" id="receipt_number">
+
+            @if (empty($TransactionDetails[0]->receipt_number))
+                <button type="button" class="btn btn-primary mt-3" id="viewPrintReceiptBtn">
+                    View and Print Receipt
+                </button>
+            @else
+                <button type="button" class="btn btn-secondary mt-3" disabled>
+                    Receipt Already Saved
+                </button>
+            @endif
+
             @else
             <p>No details found for this transaction.</p>
             @endif
-        </div>
-    </main>
-</div>
 
-@if(session('auto_print'))
+            <!-- Modal for Receipt Number -->
+            <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Enter Receipt Number</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <label for="modal_receipt_number" class="form-label">Receipt Number</label>
+                            <input type="text" class="form-control" id="modal_receipt_number" placeholder="Enter Receipt Number">
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-primary" id="confirmPaymentButton">Save Receipt</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
 <script>
-    window.addEventListener('load', function () {
-        window.print();
+    const transactionId = '{{ $TransactionDetails[0]->transaction_id }}';
+    const finalizeUrl = '{{ route("finalize.concessionaire.transation", ["id" => $TransactionDetails[0]->transaction_id]) }}';
+    const saveReceiptUrl = '{{ route("save.concessionaire.receipt") }}';
+    const csrfToken = '{{ csrf_token() }}';
+
+    const viewPrintBtn = document.getElementById('viewPrintReceiptBtn');
+    const receiptModal = document.getElementById('receiptModal');
+    const receiptInput = document.getElementById('modal_receipt_number');
+    const confirmBtn = document.getElementById('confirmPaymentButton');
+
+    viewPrintBtn?.addEventListener('click', function () {
+        // Show modal first
+        let modal = new bootstrap.Modal(receiptModal);
+        modal.show();
+
+        // After short delay, open PDF via POST in new tab
+        setTimeout(() => {
+            const pdfForm = document.createElement('form');
+            pdfForm.method = 'POST';
+            pdfForm.action = finalizeUrl;
+            pdfForm.target = '_blank';
+            pdfForm.style.display = 'none';
+
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = csrfToken;
+            pdfForm.appendChild(csrf);
+
+            document.body.appendChild(pdfForm);
+            pdfForm.submit();
+        }, 300);
+    });
+
+    confirmBtn.addEventListener('click', function () {
+        const receiptNumber = receiptInput.value.trim();
+
+        if (!receiptNumber) {
+            alert('Please enter a receipt number.');
+            return;
+        }
+
+        fetch(saveReceiptUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                transaction_id: transactionId,
+                receipt_number: receiptNumber
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to save receipt number');
+            return response.json();
+        })
+        .then(data => {
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url; // Ensures full reload from server
+            }
+        })
+        .catch(error => {
+            alert(error.message || 'An error occurred while saving.');
+        });
     });
 </script>
-@endif
 
 @endsection

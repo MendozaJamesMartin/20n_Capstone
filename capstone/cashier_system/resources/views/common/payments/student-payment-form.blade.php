@@ -58,32 +58,10 @@
                     <h4>Total Amount: ₱<span id="total-amount">0.00</span></h4>
                 </div>
 
-                <input type="hidden" name="receipt_number" id="receipt_number">
-
-                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#receiptModal">
+                <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
                     Submit Payment
                 </button>
             </form>
-
-            <!-- Modal for Receipt Number -->
-            <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Enter Receipt Number</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <label for="modal_receipt_number" class="form-label">Receipt Number</label>
-                            <input type="text" class="form-control" id="modal_receipt_number" placeholder="Enter Receipt Number">
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-primary" id="confirmPaymentButton">Print Receipt</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Datalist for fee name autocomplete -->
             <datalist id="feeSuggestions">
@@ -164,8 +142,6 @@
     document.getElementById('addFeeRow').addEventListener('click', createRow);
 
     document.getElementById('confirmPaymentButton').addEventListener('click', function () {
-        const receiptNumber = document.getElementById('modal_receipt_number').value;
-        document.getElementById('receipt_number').value = receiptNumber;
 
         // Validate all fee name inputs
         const nameInputs = document.querySelectorAll('.fee-name');

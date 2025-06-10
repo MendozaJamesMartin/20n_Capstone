@@ -28,6 +28,8 @@
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -160,7 +162,7 @@
                     Transactions
                 </a>
                 <div class="collapse ps-3" id="transactionsSubmenu">
-                    <a href="{{ route('receipts.list') }}" class="nav-link">View Receipts</a>
+                    <a href="{{ route('receipts.list') }}" class="nav-link">Transaction History and Receipts</a>
                 </div>
             </li>
 
@@ -193,7 +195,7 @@
                     Data Analytics and Reports
                 </a>
                 <div class="collapse ps-3" id="reportSubmenu">
-                    <a href="#" class="nav-link">View Receipts</a>
+                    <a href="#" class="nav-link">View Analytics</a>
                 </div>
             </li>
 

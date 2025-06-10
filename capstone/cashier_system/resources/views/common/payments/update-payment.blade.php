@@ -5,19 +5,38 @@
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
 
     <div class="container" style="width:75%">
-        <div class="bg-light" style="padding:5%">
+        <div class="bg-light p-5">
             <h1>Student Payment Form</h1>
 
             @if(session('success'))
-            <p style="color: green;">{{ session('success') }}</p>
+                <p class="text-success">{{ session('success') }}</p>
             @elseif(session('error'))
-            <p style="color: red;">{{ session('error') }}</p>
+                <p class="text-danger">{{ session('error') }}</p>
             @endif
 
             <form method="POST" action="{{ route('payments.update', ['transactionId' => $transactionId]) }}" id="paymentForm">
                 @csrf
                 @method('PUT')
-                
+
+                <!-- Student Info -->
+                <div class="mb-3">
+                    <label for="student_id" class="form-label">Student ID</label>
+                    <input type="text" class="form-control" id="student_id" name="student_id" value="{{ old('student_id', $customerInfo->student_id ?? '') }}">
+                </div>
+
+                <label class="form-label">Student Full Name</label>
+                <div class="mb-3 d-flex gap-2">
+                    <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $customerInfo->first_name ?? '') }}">
+                    <input type="text" class="form-control" name="middle_name" value="{{ old('middle_name', $customerInfo->middle_name ?? '') }}">
+                    <input type="text" class="form-control" name="last_name" value="{{ old('last_name', $customerInfo->last_name ?? '') }}">
+                    <input type="text" class="form-control" name="suffix" value="{{ old('suffix', $customerInfo->suffix ?? '') }}">
+                </div>
+
+                <div class="mb-4">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="text" class="form-control" name="email" value="{{ old('email', $customerInfo->email ?? '') }}">
+                </div>
+
                 <!-- Fee Selection -->
                 <h3>Fees</h3>
                 <table class="table table-bordered align-middle text-center" id="fees-table">
@@ -30,23 +49,30 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($selectedFees as $item)
-                            <tr class="fee-row">
-                                <td>
-                                    <input list="feeSuggestions" class="form-control fee-name" value="{{ $item->fee_name }}">
-                                    <input type="hidden" class="fee-id" name="fee_ids[]" value="{{ $item->fee_id }}">
-                                </td>
-                                <td>
-                                    <input type="number" step="0.01" class="form-control fee-amount" value="{{ number_format($item->amount, 2) }}" readonly>
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="{{ $item->quantity }}" min="1">
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
-                                </td>
-                            </tr>
-                        @endforeach
+                        @if(!empty($selectedFees) && $selectedFeeDetails->isNotEmpty())
+                            @foreach($selectedFees as $feeId => $quantity)
+                                @php
+                                    $fee = $selectedFeeDetails->firstWhere('id', $feeId);
+                                @endphp
+                                @if($fee)
+                                    <tr class="fee-row">
+                                        <td>
+                                            <input list="feeSuggestions" class="form-control fee-name" value="{{ $fee->fee_name }}">
+                                            <input type="hidden" class="fee-id" name="fee_ids[]" value="{{ $fee->id }}">
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" class="form-control fee-amount" readonly value="{{ number_format($fee->amount, 2, '.', '') }}">
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="{{ $quantity }}" min="1">
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
+                                        </td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                        @endif
                     </tbody>
                 </table>
 
@@ -77,7 +103,7 @@
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-primary" id="confirmPaymentButton">Submit Payment</button>
+                            <button class="btn btn-primary" id="confirmPaymentButton">Print Receipt</button>
                         </div>
                     </div>
                 </div>
@@ -89,13 +115,13 @@
                     <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
                 @endforeach
             </datalist>
-
         </div>
     </div>
 
 </main>
 
 <script>
+    const feesData = @json($fees);
     let rowCount = 0;
 
     function updateTotal() {
@@ -207,44 +233,10 @@
         form.submit();
     });
 
-    // Only add a row if none are pre-loaded
-window.addEventListener('DOMContentLoaded', () => {
-    if (document.querySelectorAll('.fee-row').length === 0) {
-        createRow();
-    }
-
-    // Rebind change events for preloaded rows
-    document.querySelectorAll('.fee-row').forEach(row => {
-        const nameInput = row.querySelector('.fee-name');
-        const amountInput = row.querySelector('.fee-amount');
-        const quantityInput = row.querySelector('.fee-quantity');
-        const feeIdInput = row.querySelector('.fee-id');
-
-        nameInput.addEventListener('change', () => {
-            const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
-            if (fee) {
-                amountInput.value = parseFloat(fee.amount).toFixed(2);
-                feeIdInput.value = fee.id;
-                nameInput.classList.remove('is-invalid');
-            } else {
-                amountInput.value = '';
-                feeIdInput.value = '';
-                nameInput.classList.add('is-invalid');
-            }
-            updateTotal();
-        });
-
-        quantityInput.addEventListener('input', updateTotal);
-
-        row.querySelector('.remove-row').addEventListener('click', () => {
-            row.remove();
-            updateTotal();
-        });
-    });
-
-    updateTotal();
+    window.addEventListener('DOMContentLoaded', () => {
+    createRow();
+    updateTotal(); // 👈 Force calculate total after the initial row is created
 });
-
 </script>
 
 @endsection

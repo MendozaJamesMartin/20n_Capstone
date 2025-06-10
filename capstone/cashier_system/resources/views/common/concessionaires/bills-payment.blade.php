@@ -65,35 +65,10 @@
                     </tbody>
                 </table>
 
-                <!-- Hidden input for receipt number -->
-                <input type="hidden" name="receipt_number" id="receipt_number">
-
-                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#receiptModal">
+                <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
                     Submit Payment
                 </button>
             </form>
-
-            <!-- Modal -->
-            <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="receiptModalLabel">Enter Receipt Number</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3">
-                                <label for="modal_receipt_number" class="form-label">Receipt Number</label>
-                                <input type="text" class="form-control" id="modal_receipt_number" placeholder="Enter Receipt Number">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="confirmPaymentButton">Submit Payment</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             @else
             <p>No unpaid bills found.</p>
@@ -101,16 +76,5 @@
         </div>
     </div>
 </main>
-
-<script>
-document.getElementById('confirmPaymentButton').addEventListener('click', function () {
-    // Copy receipt number from modal input to hidden input
-    const receiptNumber = document.getElementById('modal_receipt_number').value;
-    document.getElementById('receipt_number').value = receiptNumber;
-
-    // Submit the form
-    document.getElementById('paymentForm').submit();
-});
-</script>
 
 @endsection
