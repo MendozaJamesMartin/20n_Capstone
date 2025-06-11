@@ -16,6 +16,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -46,7 +47,7 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
                 $totalCols = 3 + $feeCount;
 
                 // Set column widths
-                $sheet->getColumnDimension('A')->setWidth(10); // Date
+                $sheet->getColumnDimension('A')->setWidth(15); // Date
                 $sheet->getColumnDimension('B')->setWidth(25); // OR Number
                 $sheet->getColumnDimension('C')->setWidth(20); // Total
 
@@ -108,7 +109,7 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
             $fees = DB::table('customer_transaction_details as ctd')
                 ->join('fees as f', 'ctd.fee_id', '=', 'f.id')
                 ->where('ctd.transaction_id', $txn->id)
-                ->select('f.fee_name', DB::raw('ctd.amount * ctd.quantity as total'))
+                ->select('f.fee_name', DB::raw('ctd.amount as total'))
                 ->get()
                 ->pluck('total', 'fee_name');
 
@@ -137,10 +138,6 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
                 $row[] = $fees[$fee] ?? null;
             }
 
-            if (count($dailyGroup) === 0) {
-                $this->boldRows[] = count($data) + 1; // bold first row of day
-            }
-
             $dailyGroup[] = $row;
         }
 
@@ -160,12 +157,12 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
         $row = [
             $date,
             'TOTAL',
-            collect($rows)->sum(fn ($r) => (float) $r[2]), // Total column
+            number_format(collect($rows)->sum(fn ($r) => (float) $r[2]), 2, '.', ''), // ensure 0.00 format
         ];
 
         foreach ($this->feeNames as $i => $fee) {
             $sum = collect($rows)->sum(fn ($r) => (float) ($r[3 + $i] ?? 0));
-            $row[] = $sum;
+            $row[] = number_format($sum, 2, '.', '');
         }
 
         return $row;
@@ -175,11 +172,41 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
     {
         $styles = [];
 
+        $highestRow = $sheet->getHighestRow();
+        $highestColumn = $sheet->getHighestColumn();
+
+        // 1. Bold only the TOTAL rows
         foreach ($this->boldRows as $row) {
-            $styles[$row] = [
-                'font' => ['bold' => true],
+            $styles[$row] = ['font' => ['bold' => true]];
+        }
+
+        // 2. Thin borders for all cells
+        $styles["A1:{$highestColumn}{$highestRow}"] = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                ]
+            ]
+        ];
+
+        // 3. Thick bottom border for header row (row 1)
+        $styles["A1:{$highestColumn}1"]['borders']['bottom'] = [
+            'borderStyle' => Border::BORDER_THICK,
+        ];
+
+        // 4. Thick right border for column C (Total Collection)
+        for ($row = 1; $row <= $highestRow; $row++) {
+            $styles["C{$row}"]['borders']['right'] = [
+                'borderStyle' => Border::BORDER_THICK,
             ];
         }
+
+        // ✅ 5. Set default font to Times New Roman
+        $sheet->getStyle("A1:{$highestColumn}{$highestRow}")->applyFromArray([
+            'font' => [
+                'name' => 'Times New Roman',
+            ]
+        ]);
 
         return $styles;
     }
