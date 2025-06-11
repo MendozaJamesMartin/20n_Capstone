@@ -55,4 +55,83 @@ class DashboardController extends Controller
             'pendingPayments'
         ));
     }
+
+    public function analytics() {
+        // Revenue Overview
+        $totalRevenue = DB::table('transactions')->sum('amount_paid');
+        $monthlyRevenue = DB::table('transactions')
+            ->whereBetween('transaction_date', [now()->startOfMonth(), now()->endOfMonth()])
+            ->sum('amount_paid');
+        $unpaidRevenue = DB::table('transactions')->sum('balance_due');
+
+        // Monthly Revenue Trend (Last 6 Months)
+        $monthlyTrend = DB::table('transactions')
+            ->selectRaw("DATE_FORMAT(transaction_date, '%Y-%m') as month, SUM(amount_paid) as total")
+            ->where('transaction_date', '>=', now()->subMonths(6))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+        $chartLabels = $monthlyTrend->pluck('month');
+        $chartData = $monthlyTrend->pluck('total');
+
+        // Get all fees summed and ordered
+        $allFees = DB::table('customer_transaction_details')
+            ->join('fees', 'customer_transaction_details.fee_id', '=', 'fees.id')
+            ->select('fees.fee_name', DB::raw('SUM(customer_transaction_details.amount * customer_transaction_details.quantity) as total'))
+            ->groupBy('fees.fee_name')
+            ->orderByDesc('total')
+            ->get();
+
+        // Take top 5 and calculate 'Others'
+        $topFees = $allFees->take(10);
+        $othersTotal = $allFees->skip(10)->sum('total');
+
+        if ($othersTotal > 0) {
+            $topFees->push((object)[
+                'fee_name' => 'Others',
+                'total' => $othersTotal
+            ]);
+        }
+
+        // Revenue by Customer Type
+        $revenueByType = DB::table('customer_transaction_details')
+            ->join('customers', 'customer_transaction_details.customer_id', '=', 'customers.id')
+            ->select('customers.customer_type', DB::raw('SUM(customer_transaction_details.amount * customer_transaction_details.quantity) as total'))
+            ->groupBy('customers.customer_type')
+            ->get();
+
+        // Concessionaire Billing
+        $waterBills = DB::table('concessionaire_bills')->where('utility_type', 'Water')->sum('bill_amount');
+        $electricityBills = DB::table('concessionaire_bills')->where('utility_type', 'Electricity')->sum('bill_amount');
+
+        $paidWater = DB::table('concessionaire_bills')
+            ->where('utility_type', 'Water')
+            ->where('status', 'Fully Paid')
+            ->sum('bill_amount');
+
+        $paidElectricity = DB::table('concessionaire_bills')
+            ->where('utility_type', 'Electricity')
+            ->where('status', 'Fully Paid')
+            ->sum('bill_amount');
+
+        $overdueBills = DB::table('concessionaire_bills')
+            ->where('due_date', '<', now())
+            ->whereIn('status', ['Unpaid', 'Partially Paid'])
+            ->count();
+
+        return view('common.analytics', compact(
+            'totalRevenue',
+            'monthlyRevenue',
+            'unpaidRevenue',
+            'chartLabels',
+            'chartData',
+            'topFees',
+            'revenueByType',
+            'waterBills',
+            'electricityBills',
+            'paidWater',
+            'paidElectricity',
+            'overdueBills'
+        ));
+    }
 }

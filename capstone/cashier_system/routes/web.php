@@ -21,6 +21,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
     
     //Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/analytics', [DashboardController::class, 'analytics'])->name('data.analytics');
 
     //Fees Management
     Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('fees.list');
@@ -50,6 +51,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
     Route::get('/customer/receipt/{id}', [TransactionsController::class, 'customerReceiptPDF'])->name('customer.receipt.pdf');
     Route::get('/concessionaire/receipt/{id}', [TransactionsController::class, 'concessionaireReceiptPDF'])->name('concessionaire.receipt.pdf');
 
+    //Transcations Monthly Report
+    Route::get('/reports/monthly/export', [TransactionsController::class, 'exportMonthlyReport'])->name('reports.monthly.export');
+
     //Concessionaire Management
     Route::get('concessionaires/list', [ConcessionairesController::class, 'GetConcessionairesList'])->name('concessionaires.list');
     Route::get('concessionaires/billing/list', [ConcessionairesController::class, 'GetBillingList'])->name('concessionaires.billing.list');
@@ -60,8 +64,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
     Route::get('/users/profile', [UsersController::class, 'showUserProfile'])->name('user.profile');
     Route::post('/users/profile', [UsersController::class, 'updateProfile'])->name('user.update');
     Route::post('/users/new/password', [UsersController::class, 'newPassword'])->name('new.password.save');
-
-    //Data Analysis and Reports
 
     //Superadmin only pages
     Route::group(['prefix' => 'admin', 'middleware' => ['admin.auth:Superadmin']], function () {

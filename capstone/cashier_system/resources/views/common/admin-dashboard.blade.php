@@ -55,14 +55,6 @@
             </div>
         </div>
 
-        <!-- Chart Placeholder -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Revenue Trends</h5>
-                <div class="bg-light border rounded" style="height: 200px;">[Chart goes here]</div>
-            </div>
-        </div>
-
         <!-- Tables -->
         <div class="row">
             <div class="col-lg-6 mb-4">

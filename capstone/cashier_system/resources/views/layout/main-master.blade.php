@@ -195,7 +195,7 @@
                     Data Analytics and Reports
                 </a>
                 <div class="collapse ps-3" id="reportSubmenu">
-                    <a href="#" class="nav-link">View Analytics</a>
+                    <a href="{{ route('data.analytics') }}" class="nav-link">View Analytics</a>
                 </div>
             </li>
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\MonthlyTransactionReportExport;
 use App\Mail\PaymentReceiptMail;
 use App\Models\Concessionaire;
 use App\Models\ConcessionaireBill;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionsController extends Controller
 {
@@ -323,6 +325,16 @@ public function saveConcessionaireReceipt (Request $request) {
             Log::error("Failed to save receipt number or send email: " . $e->getMessage());
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
+    }
+
+    public function exportMonthlyReport(Request $request)
+    {
+        $request->validate([
+            'month' => 'required|date_format:Y-m',
+        ]);
+
+        $month = $request->input('month');
+        return Excel::download(new MonthlyTransactionReportExport($month), "Monthly_Report_{$month}.xlsx");
     }
 
 }
