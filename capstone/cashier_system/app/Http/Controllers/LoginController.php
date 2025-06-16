@@ -4,16 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\UserAuthMiddleware;
+use App\Mail\ForgotPasswordMail;
 use App\Models\Admin;
 use App\Models\Credential;
 use App\Models\Student;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class LoginController extends Controller
 {
@@ -95,6 +98,63 @@ class LoginController extends Controller
         return redirect()->route('login')->withErrors(['email' => 'Invalid credentials.']);
     }
     
+    public function forgotPassword() {
+        return view('login.forgot-password');
+    }
+
+    public function forgotPasswordPost(Request $request) {
+        Log::info("Forgot Password start");
+    
+        DB::beginTransaction();
+        try {
+
+            $request->validate([
+                'email' => 'required|email',
+            ]);
+
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user) {
+                return back()->with('error', 'No user found with that email.');
+            }
+        
+            Log::info("User found with ID: " . $user->id);
+
+            // Generate a new random password
+            $newPassword = Str::random(10);
+
+            // Update user's password
+            $user->password = Hash::make($newPassword);
+            $user->save();
+    
+            // Save credentials
+            $credentials = new Credential();
+            $credentials->user_id = $user->id;
+            $credentials->is_deleted = 0;
+            $credentials->password = $user->password; // Already hashed above
+            $credentials->save();
+    
+            Log::info("Credential for new password created");
+    
+            DB::commit();
+
+            // Send the email
+            Mail::to($user->email)->send(new ForgotPasswordMail($user, $newPassword));
+
+            return redirect()->route('login')->with('success', 'Reset password due to forget, successful!');
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error("Password reset error: " . $e->getMessage());
+    
+            $message = "ERROR";
+            if ($e->errorInfo[1] == 1062) {
+                $message = "Email or Student ID already exists";
+            }
+    
+            return back()->with('error', $message);
+        }
+    }
+
     public function logout(Request $request) {
 
             $request->session()->flush();

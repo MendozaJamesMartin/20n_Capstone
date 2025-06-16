@@ -37,6 +37,7 @@
                             <button type="submit" class="btn btn-primary text-light main-bg">Login</button>
                         </div>
                     </form>
+                    <a href="{{ route('forgot.password') }}">Forgot Password</a>
                 </div>
             </div>
         </div>
