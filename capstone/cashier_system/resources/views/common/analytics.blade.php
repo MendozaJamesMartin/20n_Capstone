@@ -1,6 +1,16 @@
 @extends('layout.main-master')
 @section('content')
 
+<style>
+    .card:hover {
+        transform: scale(1.01);
+    }
+
+    .card {
+        transition: transform 0.2s;
+    }
+</style>
+
 <div class="container">
     <h2 class="mb-4">Cashier Analytics Dashboard</h2>
 
@@ -37,10 +47,10 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Monthly Revenue Trend</h5>
-                <form action="{{ route('reports.monthly.export') }}" method="GET" class="d-flex align-items-center" style="gap: 8px;">
-                    <input type="month" name="month" class="form-control form-control-sm" required style="max-width: 160px;">
-                    <button type="submit" class="btn btn-sm btn-outline-primary">Download Report</button>
-                </form>
+                <!-- Button to open modal -->
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
+                    Export Report
+                </button>
             </div>
             <canvas id="revenueChart" height="100"></canvas>
         </div>
@@ -101,6 +111,56 @@
         <div class="card-body text-danger">
             <h5>Overdue Concessionaire Bills</h5>
             <h3>{{ $overdueBills }} overdue</h3>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="GET" action="{{ route('reports.monthly.export') }}">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exportModalLabel">Export Custom Report</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @php
+                            $now = \Carbon\Carbon::now();
+                            $startOfMonth = $now->copy()->startOfMonth()->toDateString();
+                            $endOfMonth = $now->copy()->endOfMonth()->toDateString();
+                        @endphp
+
+                        <!-- Start Date -->
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ $startOfMonth }}" required>
+                        </div>
+
+                        <!-- End Date -->
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ $endOfMonth }}" required>
+                        </div>
+
+                        <!-- Fee Selection -->
+                        <div class="mb-3">
+                            <label for="fee_ids" class="form-label">Select Fees</label>
+                            <select name="fee_ids[]" id="fee_ids" class="form-select" multiple required>
+                                @foreach ($fees as $fee)
+                                    <option value="{{ $fee->id }}" selected>{{ $fee->fee_name }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Export</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>

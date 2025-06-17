@@ -330,11 +330,20 @@ public function saveConcessionaireReceipt (Request $request) {
     public function exportMonthlyReport(Request $request)
     {
         $request->validate([
-            'month' => 'required|date_format:Y-m',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'fee_ids' => 'array',
+            'fee_ids.*' => 'integer|exists:fees,id',
         ]);
 
-        $month = $request->input('month');
-        return Excel::download(new MonthlyTransactionReportExport($month), "Monthly_Report_{$month}.xlsx");
-    }
+        $start = $request->input('start_date');
+        $end = $request->input('end_date');
+        $feeIds = $request->input('fee_ids', []);
 
+        return Excel::download(
+            new MonthlyTransactionReportExport($start, $end, $feeIds),
+            "Report_{$start}_to_{$end}.xlsx"
+        );
+    }
+    
 }

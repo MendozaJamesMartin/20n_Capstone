@@ -22,7 +22,9 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles, WithColumnFormatting, WithEvents, WithCustomStartCell
 {
-    protected $month; // format: YYYY-MM
+    protected $startDate;
+    protected $endDate;
+    protected $feeIds;
     protected $feeNames = [];
     protected $boldRows = [];
 
@@ -31,9 +33,11 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
         return 'A1'; // Move data starting point down by 1 row to keep row 1 for styling
     }
 
-    public function __construct(string $month)
+    public function __construct(string $startDate, string $endDate, array $feeIds = [])
     {
-        $this->month = $month;
+        $this->startDate = Carbon::parse($startDate)->startOfDay();
+        $this->endDate = Carbon::parse($endDate)->endOfDay();
+        $this->feeIds = $feeIds;
     }
 
     public function registerEvents(): array
@@ -76,15 +80,14 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
 
     public function array(): array
     {
-        $start = Carbon::parse($this->month . '-01')->startOfMonth();
-        $end = $start->copy()->endOfMonth();
+        $start = $this->startDate;
+        $end = $this->endDate;
 
-        // Load all fee names statically
-        $this->feeNames = DB::table('fees')
-            ->whereNull('deleted_at')
-            ->orderBy('fee_name')
-            ->pluck('fee_name')
-            ->toArray();
+        $query = DB::table('fees')->whereNull('deleted_at');
+        if (!empty($this->feeIds)) {
+            $query->whereIn('id', $this->feeIds);
+        }
+        $this->feeNames = $query->orderBy('fee_name')->pluck('fee_name')->toArray();
 
         $transactions = DB::table('transactions as t')
             ->join('receipts as r', 't.id', '=', 'r.transaction_id')
@@ -235,7 +238,7 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
 
     public function title(): string
     {
-        return Carbon::parse($this->month . '-01')->format('F Y');
+        return 'Report ' . $this->startDate->format('M d') . ' - ' . $this->endDate->format('M d, Y');
     }
 
 }

@@ -82,6 +82,8 @@ class DashboardController extends Controller
             ->orderByDesc('total')
             ->get();
 
+        $fees = DB::table('fees')->whereNull('deleted_at')->orderBy('fee_name')->get();
+
         // Take top 5 and calculate 'Others'
         $topFees = $allFees->take(10);
         $othersTotal = $allFees->skip(10)->sum('total');
@@ -126,6 +128,7 @@ class DashboardController extends Controller
             'chartLabels',
             'chartData',
             'topFees',
+            'fees',
             'revenueByType',
             'waterBills',
             'electricityBills',
