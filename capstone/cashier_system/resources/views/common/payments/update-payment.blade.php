@@ -21,20 +21,20 @@
                 <!-- Student Info -->
                 <div class="mb-3">
                     <label for="student_id" class="form-label">Student ID</label>
-                    <input type="text" class="form-control" id="student_id" name="student_id" value="{{ old('student_id', $customerInfo->student_id ?? '') }}">
+                    <input type="text" class="form-control" id="student_id" name="student_id" value="{{ old('student_id', $transactionDetails[0]->student_id ?? '') }}">
                 </div>
 
                 <label class="form-label">Student Full Name</label>
                 <div class="mb-3 d-flex gap-2">
-                    <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $customerInfo->first_name ?? '') }}">
-                    <input type="text" class="form-control" name="middle_name" value="{{ old('middle_name', $customerInfo->middle_name ?? '') }}">
-                    <input type="text" class="form-control" name="last_name" value="{{ old('last_name', $customerInfo->last_name ?? '') }}">
-                    <input type="text" class="form-control" name="suffix" value="{{ old('suffix', $customerInfo->suffix ?? '') }}">
+                    <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $transactionDetails[0]->first_name ?? '') }}">
+                    <input type="text" class="form-control" name="middle_name" value="{{ old('middle_name', $transactionDetails[0]->middle_name ?? '') }}">
+                    <input type="text" class="form-control" name="last_name" value="{{ old('last_name', $transactionDetails[0]->last_name ?? '') }}">
+                    <input type="text" class="form-control" name="suffix" value="{{ old('suffix', $transactionDetails[0]->suffix ?? '') }}">
                 </div>
 
                 <div class="mb-4">
                     <label for="email" class="form-label">Email</label>
-                    <input type="text" class="form-control" name="email" value="{{ old('email', $customerInfo->email ?? '') }}">
+                    <input type="text" class="form-control" name="email" value="{{ old('email', $transactionDetails[0]->email ?? '') }}">
                 </div>
 
                 <!-- Fee Selection -->
@@ -100,7 +100,6 @@
 
 <script>
     const feesData = @json($fees);
-    let rowCount = 0;
 
     function updateTotal() {
         let total = 0;
@@ -112,8 +111,42 @@
         document.getElementById('total-amount').textContent = total.toFixed(2);
     }
 
+    function bindEventsToRow(row) {
+        const nameInput = row.querySelector('.fee-name');
+        const amountInput = row.querySelector('.fee-amount');
+        const quantityInput = row.querySelector('.fee-quantity');
+        const feeIdInput = row.querySelector('.fee-id');
+
+        if (nameInput) {
+            nameInput.addEventListener('change', () => {
+                const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
+                if (fee) {
+                    amountInput.value = parseFloat(fee.amount).toFixed(2);
+                    feeIdInput.value = fee.id;
+                    nameInput.classList.remove('is-invalid');
+                } else {
+                    amountInput.value = '';
+                    feeIdInput.value = '';
+                    nameInput.classList.add('is-invalid');
+                }
+                updateTotal();
+            });
+        }
+
+        if (quantityInput) {
+            quantityInput.addEventListener('input', updateTotal);
+        }
+
+        const removeBtn = row.querySelector('.remove-row');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                row.remove();
+                updateTotal();
+            });
+        }
+    }
+
     function createRow() {
-        rowCount++;
         const tbody = document.querySelector('#fees-table tbody');
         const tr = document.createElement('tr');
         tr.classList.add('fee-row');
@@ -135,39 +168,13 @@
         `;
 
         tbody.appendChild(tr);
-
-        const nameInput = tr.querySelector('.fee-name');
-        const amountInput = tr.querySelector('.fee-amount');
-        const quantityInput = tr.querySelector('.fee-quantity');
-        const feeIdInput = tr.querySelector('.fee-id');
-
-        nameInput.addEventListener('change', () => {
-            const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
-            if (fee) {
-                amountInput.value = parseFloat(fee.amount).toFixed(2);
-                feeIdInput.value = fee.id;
-                nameInput.classList.remove('is-invalid');
-            } else {
-                amountInput.value = '';
-                feeIdInput.value = '';
-                nameInput.classList.add('is-invalid');
-            }
-            updateTotal();
-        });
-
-        quantityInput.addEventListener('input', updateTotal);
-
-        tr.querySelector('.remove-row').addEventListener('click', () => {
-            tr.remove();
-            updateTotal();
-        });
+        bindEventsToRow(tr);
     }
 
     document.getElementById('addFeeRow').addEventListener('click', createRow);
 
-    document.getElementById('confirmPaymentButton').addEventListener('click', function () {
-
-        // Validate all fee name inputs
+    document.getElementById('confirmPaymentButton').addEventListener('click', function (e) {
+        // Validate all fee names
         const nameInputs = document.querySelectorAll('.fee-name');
         let hasInvalid = false;
 
@@ -182,14 +189,16 @@
         });
 
         if (hasInvalid) {
+            e.preventDefault();
             alert("Please correct invalid fee names before submitting.");
             return;
         }
 
-        // Before submission, create hidden inputs for quantities[fee_id]
+        // Remove old dynamic quantity inputs
         const form = document.getElementById('paymentForm');
-        document.querySelectorAll('.dynamic-quantity').forEach(e => e.remove());
+        document.querySelectorAll('.dynamic-quantity').forEach(el => el.remove());
 
+        // Rebuild dynamic quantity inputs for submission
         const feeIds = form.querySelectorAll('.fee-id');
         const quantities = form.querySelectorAll('.fee-quantity');
 
@@ -205,14 +214,13 @@
                 form.appendChild(input);
             }
         });
-
-        form.submit();
     });
 
-    // Optional: create one row by default
+    // On page load: bind events to existing rows and update total
     window.addEventListener('DOMContentLoaded', () => {
-    updateTotal(); // 👈 Force calculate total after the initial row is created
-});
+        document.querySelectorAll('.fee-row').forEach(bindEventsToRow);
+        updateTotal();
+    });
 </script>
 
 @endsection

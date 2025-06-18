@@ -58,7 +58,7 @@ class TransactionsController extends Controller
         $sortOrder = $request->input('sort_order', 'DESC'); // Default: descending
 
         // Validate sorting parameters
-        $validSortColumns = ['transaction_date', 'customer_name', 'total_amount', 'receipt_print_date'];
+        $validSortColumns = ['transaction_date', 'customer_type', 'customer_name', 'total_amount', 'receipt_print_date'];
         if (!in_array($sortBy, $validSortColumns)) {
             $sortBy = 'receipt_print_date'; // Fallback to default sorting column
         }
@@ -67,7 +67,7 @@ class TransactionsController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         // Paginate results
-        $result = $query->paginate(10);
+        $result = $query->paginate(10)->appends(request()->except('page'));
 
         // Return the view with sorted and filtered results
         return view('common.transactions.transactions-history', compact('result'));

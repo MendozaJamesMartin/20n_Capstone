@@ -32,17 +32,12 @@ class PaymentsController extends Controller
             $query->where('student_unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subMonth());
         }
 
-        // Apply entity_type filter if provided
-        if ($request->has('customer_type') && !empty($request->input('customer_type'))) {
-            $query->where('customer_type', $request->input('customer_type'));
-        }
-
         // Apply sorting method
         $sortBy = $request->input('sort_by', 'transaction_date'); // Default: sort by transaction date
         $sortOrder = $request->input('sort_order', 'DESC'); // Default: descending
 
         // Validate sorting parameters
-        $validSortColumns = ['transaction_date', 'customer_name', 'total_amount'];
+        $validSortColumns = ['transaction_date', 'full_name', 'total_amount'];
         if (!in_array($sortBy, $validSortColumns)) {
             $sortBy = 'transaction_date'; // Fallback to default sorting column
         }
@@ -51,7 +46,7 @@ class PaymentsController extends Controller
         $query->orderBy($sortBy, $sortOrder);
 
         // Paginate results
-        $result = $query->paginate(10);
+        $result = $query->paginate(10)->appends(request()->except('page'));
 
         // Return the view with sorted and filtered results
         return view('common.payments.pending-payments', compact('result'));
@@ -242,50 +237,49 @@ class PaymentsController extends Controller
                 // Get all fees
                 $fees = Fee::all();
     
-                $transactionDetails = DB::table('customer_transaction_details as ctd')
-                    ->join('customers as c', 'ctd.customer_id', '=', 'c.id')
-                    ->join('student_details as sd', 'c.id', '=', 'sd.customer_id')
-                    ->where('ctd.transaction_id', $transactionId)
+                $transactionDetails = DB::table('customer_transaction_receipt as ctr')
+                    ->join('customers as c', 'ctr.customer_id', '=', 'c.id')
+                    ->leftJoin('student_details as s', 'c.id', '=', 's.customer_id')
+                    ->join('fees', 'fees.fee_name', '=', 'ctr.fee_name') // to get fee_id
+                    ->where('ctr.transaction_id', $transactionId)
                     ->select(
-                        'ctd.fee_id',
-                        'ctd.quantity',
-                        'c.id as customer_id',
-                        'sd.email',
-                        'sd.student_id',
-                        'sd.first_name',
-                        'sd.middle_name',
-                        'sd.last_name',
-                        'sd.suffix'
+                        'fees.id as fee_id',
+                        'fees.amount',
+                        'ctr.*',
+                        's.first_name',
+                        's.middle_name',
+                        's.last_name',
+                        's.suffix',
+                        's.student_id',
+                        's.email'
                     )
                     ->get();
 
+                // Initialize defaults
+                $selectedFees = collect();
+                $selectedFeeDetails = collect();
+                $customerInfo = null;
+
                 if ($transactionDetails->isNotEmpty()) {
+                    // Map selected fee IDs and their quantities
                     $selectedFees = $transactionDetails->mapWithKeys(function ($item) {
                         return [$item->fee_id => $item->quantity];
                     });
 
+                    // Get detailed fee information using fee_ids (more reliable than names)
                     $feeIds = $transactionDetails->pluck('fee_id')->unique();
-
                     $selectedFeeDetails = Fee::whereIn('id', $feeIds)->get();
 
-                    $first = $transactionDetails->first();
-                    $customerInfo = [
-                        'customer_id'  => $first->customer_id,
-                        'email'        => $first->email,
-                        'student_id'   => $first->student_id,
-                        'first_name'   => $first->first_name,
-                        'middle_name'  => $first->middle_name,
-                        'last_name'    => $first->last_name,
-                        'suffix'       => $first->suffix,
+                    // Extract customer info from the first record
+                    $customerInfo = (object)[
+                        'first_name' => $transactionDetails[0]->first_name,
+                        'last_name' => $transactionDetails[0]->last_name,
                     ];
 
-                    Log::info("Loaded fees and customer: {$first->first_name} {$first->last_name}");
+                    Log::info("Loaded transaction details for: {$customerInfo->first_name} {$customerInfo->last_name}");
                 } else {
-                    $selectedFees = collect();
-                    $customerInfo = null;
                     Log::warning("No transaction details found for transaction ID $transactionId");
                 }
-
                 return view('common.payments.update-payment', compact('fees', 'selectedFees', 'selectedFeeDetails', 'transactionDetails', 'transactionId', 'customerInfo'));
             }
     

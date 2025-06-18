@@ -29,17 +29,10 @@
                                     <option value="this_month" {{ request('timeframe') == 'this_month' ? 'selected' : '' }}>This Month</option>
                                 </select>
 
-                                <label class="block mb-2">Entity Type</label>
-                                <select name="entity_type" class="w-full p-2 border rounded mb-4">
-                                    <option value="">All Entities</option>
-                                    <option value="student" {{ request('customer_type') == 'student' ? 'selected' : '' }}>Student</option>
-                                    <option value="concessionaire" {{ request('customer_type') == 'concessionaire' ? 'selected' : '' }}>Concessionaire</option>
-                                </select>
-
                                 <label class="block mb-2">Sort By</label>
                                 <select name="sort_by" class="w-full p-2 border rounded mb-4">
                                     <option value="transaction_date" {{ request('sort_by') == 'transaction_date' ? 'selected' : '' }}>Date</option>
-                                    <option value="customer_name" {{ request('sort_by') == 'customer_name' ? 'selected' : '' }}>Name</option>
+                                    <option value="full_name" {{ request('sort_by') == 'full_name' ? 'selected' : '' }}>Name</option>
                                     <option value="total_amount" {{ request('sort_by') == 'total_amount' ? 'selected' : '' }}>Total Amount</option>
                                 </select>
 
