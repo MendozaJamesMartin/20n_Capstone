@@ -1,209 +1,218 @@
 @extends('layout.main-master')
+
 @section('content')
+<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size:auto; background-position: right center; min-height: 85vh; padding: 2%;">
+    <div class="container">
 
-<main style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
+        <!-- Header: Title, Search, and Filter Button -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <h2 class="mb-0">Transactions History</h2>
 
-    <div class="container" style="width:90%">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <!-- Search Input -->
+                <form action="{{ url()->current() }}" method="GET" class="d-flex">
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="🔍 Search..."
+                        value="{{ request('search') }}">
+                    {{-- Preserve filters --}}
+                    @foreach(request()->except('search', 'page') as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                </form>
 
-        <div>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <td colspan="10">
-                            <h2>TRANSACTIONS HISTORY</h2>
-                        </td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th colspan="10" class="text-center">
-                            <div class="d-flex justify-content-center align-items-center flex-wrap">
-                                <form action="{{ url()->current() }}" method="GET">
-                                    <input type="text" id="search" style="width:15%" class="border p-2 w-1/3 rounded" placeholder="🔍 Search " onkeyup="filterTable()">
+                <!-- Filter Button -->
+                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="fa-solid fa-filter me-1"></i> Filters
+                </button>
+            </div>
+        </div>
 
-                                    <label class="block mb-2">Timeframe</label>
-                                    <select name="timeframe" class="w-full p-2 border rounded mb-4">
-                                        <option value="">All Timeframes</option>
-                                        <option value="today" {{ request('timeframe') == 'today' ? 'selected' : '' }}>Today</option>
-                                        <option value="this_week" {{ request('timeframe') == 'this_week' ? 'selected' : '' }}>This Week</option>
-                                        <option value="this_month" {{ request('timeframe') == 'this_month' ? 'selected' : '' }}>This Month</option>
-                                    </select>
+        <!-- Responsive Table -->
+        <div class="card shadow-sm p-3 mb-4 bg-light rounded">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle text-center mb-0">
+                    <thead class="table-dark">
+                        @php
+                            // Get current sort state
+                            $sortBy = request('sort_by');
+                            $sortOrder = request('sort_order', 'default');
 
-                                    <label class="block mb-2">Payor Type</label>
-                                    <select name="customer_type" class="w-full p-2 border rounded mb-4">
-                                        <option value="">All Payor</option>
-                                        <option value="Student" {{ request('customer_type') == 'Student' ? 'selected' : '' }}>Student</option>
-                                        <option value="Outsider" {{ request('customer_type') == 'Outsider' ? 'selected' : '' }}>Outsider</option>
-                                        <option value="Concessionaire" {{ request('customer_type') == 'Concessionaire' ? 'selected' : '' }}>Concessionaire</option>
-                                    </select>
+                            // Function to cycle sort state
+                            function sortCycle($field) {
+                                $current = request('sort_by') === $field ? request('sort_order', 'default') : 'default';
+                                return match ($current) {
+                                    'asc' => 'desc',
+                                    'desc' => 'default',
+                                    default => 'asc',
+                                };
+                            }
 
-                                    <label class="block mb-2">Sort By</label>
-                                    <select name="sort_by" class="w-full p-2 border rounded mb-4">
-                                        <option value="transaction_date" {{ request('sort_by') == 'transaction_date' ? 'selected' : '' }}>Date of Transaction</option>
-                                        <option value="receipt_print_date" {{ request('sort_by') == 'receipt_print_date' ? 'selected' : '' }}>Receipt Date of Print</option>
-                                        <option value="customer_name" {{ request('sort_by') == 'customer_name' ? 'selected' : '' }}>Name</option>
-                                        <option value="total_amount" {{ request('sort_by') == 'total_amount' ? 'selected' : '' }}>Total Amount</option>
-                                    </select>
-
-                                    <button type="button" class="btn btn-secondary ms-2" id="sortToggleBtn">
-                                        <span id="sortIcon">
-                                            @if(request('sort_order', 'desc') == 'desc')
-                                            <i class="fa-solid fa-arrow-down-wide-short"></i>
-                                            @else
-                                            <i class="fa-solid fa-arrow-up-short-wide"></i>
-                                            @endif
-                                        </span>
-                                    </button>
-
-                                    <input type="hidden" name="sort_order" id="sortOrderInput" value="{{ request('sort_order', 'desc') }}">
-
-                                    <button type="submit" class="btn btn-danger">Apply</button>
-                                    <a href="{{ url()->current() }}" class="btn btn-danger">Reset</a>
-                                </form>
-                            </div>
-                        </th>
-                    </tr>
-
-                    <tr>
-                        <th>Transaction ID</th>
-                        <th>Receipt Number</th>
-                        <th>Customer Name</th>
-                        <th>Customer Type</th>
-                        <th>Total Amount</th>
-                        <th>Amount Paid</th>
-                        <th>Balance Due</th>
-                        <th>Transaction Date</th>
-                        <th>Receipt Printing Date</th>
-                        <th>Action</th>
-                    </tr>
-                </tbody>
-                <tbody>
-                    @forelse($result as $transaction)
-                    <tr>
-                        <td>{{ $transaction->transaction_id }}</td>
-                        <td>{{ $transaction->receipt_number }}</td>
-                        <td>{{ $transaction->customer_name }}</td>
-                        <td>{{ $transaction->customer_type }}</td>
-                        <td>{{ $transaction->total_amount }}</td>
-                        <td>{{ $transaction->paid_amount }}</td>
-                        <td>{{ $transaction->balance_due }}</td>
-                        <td>{{ $transaction->transaction_date }}</td>
-                        <td>{{ $transaction->receipt_print_date }}</td>
-                        <td>
-                            <div class="d-flex gap-2">
-                                @if($transaction->customer_type === 'Concessionaire')
-                                <a href=" {{ route('concessionaire.transaction.details', ['id' => $transaction->transaction_id ]) }}" type="button" class="btn btn-danger" title="View Transaction Details"><i class="fa-solid fa-receipt text-light"></i></a>
-                                <a href="{{ route('concessionaire.receipt.pdf', ['id' => $transaction->transaction_id ]) }}" type="button" class="btn btn-sm btn-danger" title="View Receipt" target="_blank">View Receipt</a>
-                                @else
-                                <a href=" {{ route('customer.transaction.details', ['id' => $transaction->transaction_id ]) }}" type="button" class="btn btn-danger" title="View Transaction Details"><i class="fa-solid fa-receipt text-light"></i></a>
-                                <a href="{{ route('customer.receipt.pdf', ['id' => $transaction->transaction_id ]) }}" type="button" class="btn btn-sm btn-danger" title="View Receipt" target="_blank">View Receipt</a>
-                                @endif
-
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="9" class="text-center">No transactions found</td>
-                    </tr>
-                    @endforelse
-
-                    <!-- Add empty rows to fill up to 10 rows -->
-                    @for ($i = $result->count(); $i < 10; $i++)
+                            // Function to return icon
+                            function sortIcon($field) {
+                                if (request('sort_by') !== $field) return '';
+                                return match (request('sort_order')) {
+                                    'asc' => ' ▲',
+                                    'desc' => ' ▼',
+                                    default => '',
+                                };
+                            }
+                        @endphp
                         <tr>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
-                        <td>&nbsp;</td>
+                            @foreach ([
+                                'transaction_id' => 'Transaction ID',
+                                'receipt_number' => 'Receipt No.',
+                                'customer_name' => 'Customer Name',
+                                'customer_type' => 'Type',
+                                'total_amount' => 'Total',
+                                'transaction_date' => 'Transaction Date',
+                            ] as $field => $label)
+                                @php
+                                    $newOrder = sortCycle($field);
+                                    $params = array_merge(request()->except('sort_by', 'sort_order', 'page'), [
+                                        'sort_by' => $newOrder === 'default' ? null : $field,
+                                        'sort_order' => $newOrder === 'default' ? null : $newOrder,
+                                    ]);
+                                    $url = url()->current() . '?' . http_build_query(array_filter($params));
+                                @endphp
+                                <th>
+                                    <a href="{{ $url }}" class="text-white text-decoration-none">
+                                        {{ $label }}{!! sortIcon($field) !!}
+                                    </a>
+                                </th>
+                            @endforeach
+                            <th>Action</th>
                         </tr>
-                        @endfor
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse($result as $transaction)
+                        <tr>
+                            <td>{{ $transaction->transaction_id }}</td>
+                            <td>{{ $transaction->receipt_number }}</td>
+                            <td>{{ $transaction->customer_name }}</td>
+                            <td>{{ $transaction->customer_type }}</td>
+                            <td>{{ $transaction->total_amount }}</td>
+                            <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d') }}</td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-2">
+                                    @if($transaction->customer_type === 'Concessionaire')
+                                    <a href="{{ route('concessionaire.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="Details"><i class="fa-solid fa-pen-to-square"></i></a>
+                                    <a href="{{ route('concessionaire.receipt.pdf', ['id' => $transaction->transaction_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Receipt"><i class="fa-solid fa-receipt"></i></a>
+                                    @else
+                                    <a href="{{ route('customer.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="Details"><i class="fa-solid fa-pen-to-square"></i></a>
+                                    <a href="{{ route('customer.receipt.pdf', ['id' => $transaction->transaction_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Receipt"><i class="fa-solid fa-receipt"></i></a>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="10" class="text-center">No transactions found</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Pagination Controls -->
-        <div class="d-flex justify-content-center align-items-center mt-3 gap-2">
+        <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mt-3">
 
-            <!-- Go to First Page Button -->
+            <!-- Go to First Page -->
             @if ($result->onFirstPage())
-            <button class="btn btn-secondary" disabled>« First</button>
+                <button class="btn btn-outline-dark rounded-pill px-3" disabled>« First</button>
             @else
-            <a href="{{ $result->url(1) }}" class="btn btn-secondary">« First</a>
+                <a href="{{ $result->url(1) }}" class="btn btn-outline-secondary rounded-pill px-3">« First</a>
             @endif
 
-            <!-- Previous Page Button -->
+            <!-- Previous Page -->
             @if ($result->onFirstPage())
-            <button class="btn btn-secondary" disabled>‹ Prev</button>
+                <button class="btn btn-outline-dark rounded-pill px-3" disabled>‹ Prev</button>
             @else
-            <a href="{{ $result->previousPageUrl() }}" class="btn btn-secondary">‹ Prev</a>
+                <a href="{{ $result->previousPageUrl() }}" class="btn btn-outline-secondary rounded-pill px-3">‹ Prev</a>
             @endif
 
-            <!-- Editable Page Number -->
+            <!-- Editable Page Input -->
             <form action="{{ url()->current() }}" method="GET" class="d-flex align-items-center">
-                <span>Page</span>
-                <input type="number" name="page" class="form-control mx-2 text-center"
-                    value="{{ $result->currentPage() }}"
-                    min="1" max="{{ $result->lastPage() }}"
-                    style="width: 60px;"
-                    onkeydown="if(event.key === 'Enter') this.form.submit();">
+                <span class="me-2">Page</span>
+                <input 
+                    type="number" 
+                    name="page" 
+                    value="{{ $result->currentPage() }}" 
+                    min="1" 
+                    max="{{ $result->lastPage() }}"
+                    class="form-control form-control-sm text-center me-2" 
+                    style="width: 70px;"
+                    onkeydown="if(event.key === 'Enter') this.form.submit();"
+                >
                 <span>of {{ $result->lastPage() }}</span>
+
+                {{-- Preserve filters --}}
+                @foreach(request()->except('page') as $key => $value)
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endforeach
             </form>
 
-            <!-- Next Page Button -->
+            <!-- Next Page -->
             @if ($result->hasMorePages())
-            <a href="{{ $result->nextPageUrl() }}" class="btn btn-secondary">Next ›</a>
+                <a href="{{ $result->nextPageUrl() }}" class="btn btn-outline-secondary rounded-pill px-3">Next ›</a>
             @else
-            <button class="btn btn-secondary" disabled>Next ›</button>
+                <button class="btn btn-outline-dark rounded-pill px-3" disabled>Next ›</button>
             @endif
 
-            <!-- Go to Last Page Button -->
+            <!-- Go to Last Page -->
             @if ($result->currentPage() == $result->lastPage())
-            <button class="btn btn-secondary" disabled>Last »</button>
+                <button class="btn btn-outline-dark rounded-pill px-3" disabled>Last »</button>
             @else
-            <a href="{{ $result->url($result->lastPage()) }}" class="btn btn-secondary">Last »</a>
+                <a href="{{ $result->url($result->lastPage()) }}" class="btn btn-outline-secondary rounded-pill px-3">Last »</a>
             @endif
 
         </div>
 
-    </div>
+        <!-- Filter Modal -->
+        <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <form action="{{ url()->current() }}" method="GET" class="modal-content p-4">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="filterModalLabel"><i class="fa-solid fa-filter me-2"></i> Filter Transactions</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body row g-3">
 
-</main>
+                        <div class="col-md-6">
+                            <label for="timeframe" class="form-label">Timeframe</label>
+                            <select name="timeframe" class="form-select">
+                                <option value="">All Timeframes</option>
+                                <option value="today" {{ request('timeframe') == 'today' ? 'selected' : '' }}>Today</option>
+                                <option value="this_week" {{ request('timeframe') == 'this_week' ? 'selected' : '' }}>This Week</option>
+                                <option value="this_month" {{ request('timeframe') == 'this_month' ? 'selected' : '' }}>This Month</option>
+                            </select>
+                        </div>
 
-<!-- Modal for Transaction Receipt Details -->
-<div class="modal fade" id="receiptDetailsModal" tabindex="-1" aria-labelledby="receiptDetailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-body">
-                <!-- Receipt Details Table -->
-                <div id="receipt-details-body">
-                    <!-- The content will be injected here by JavaScript -->
-                </div>
+                        <div class="col-md-6">
+                            <label for="customer_type" class="form-label">Payor Type</label>
+                            <select name="customer_type" class="form-select">
+                                <option value="">All</option>
+                                <option value="Student" {{ request('customer_type') == 'Student' ? 'selected' : '' }}>Student</option>
+                                <option value="Outsider" {{ request('customer_type') == 'Outsider' ? 'selected' : '' }}>Outsider</option>
+                                <option value="Concessionaire" {{ request('customer_type') == 'Concessionaire' ? 'selected' : '' }}>Concessionaire</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12 d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                <a href="{{ url()->current() }}" class="btn btn-outline-secondary">Reset</a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
+
     </div>
-</div>
+</main>
 
 <script>
-    document.getElementById('sortToggleBtn').addEventListener('click', function() {
-        let sortOrderInput = document.getElementById('sortOrderInput');
-        let sortIcon = document.getElementById('sortIcon');
-
-        // Toggle between 'asc' and 'desc'
-        if (sortOrderInput.value === 'asc') {
-            sortOrderInput.value = 'desc';
-        } else {
-            sortOrderInput.value = 'asc';
-        }
-
-        // Submit the form
-        this.closest('form').submit();
+    // Toggle sort order value on checkbox
+    document.getElementById('toggleSort').addEventListener('change', function () {
+        document.getElementById('sortOrderInput').value = this.checked ? 'asc' : 'desc';
     });
 </script>
-
 @endsection

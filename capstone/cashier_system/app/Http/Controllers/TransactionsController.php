@@ -102,14 +102,15 @@ class TransactionsController extends Controller
 
         $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
             'TransactionDetails' => $TransactionDetails,
-            'Cashier' => $Cashier
-        ]);
+            'Cashier' => $Cashier,
+            'printMode' => false,
+        ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
 
         // Stream the PDF so it opens in the browser (not downloaded unless user chooses to)
         return $pdf->stream("Receipt_{$id}.pdf");
     }
 
-        public function concessionaireReceiptPDF ($id) {
+    public function concessionaireReceiptPDF ($id) {
         $TransactionDetails = DB::table('concessionaire_transaction_receipt')
         ->where('transaction_id', $id)
         ->get();
@@ -122,8 +123,9 @@ class TransactionsController extends Controller
 
         $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
             'TransactionDetails' => $TransactionDetails,
-            'Cashier' => $Cashier
-        ]);
+            'Cashier' => $Cashier,
+            'printMode' => false,
+        ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
 
         // Stream the PDF so it opens in the browser (not downloaded unless user chooses to)
         return $pdf->stream("Receipt_{$id}.pdf");
@@ -152,8 +154,9 @@ class TransactionsController extends Controller
                 Log::info("generate PDF");
                 $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
                     'TransactionDetails' => $TransactionDetails,
-                    'Cashier' => $Cashier
-                ]);
+                    'Cashier' => $Cashier,
+                    'printMode' => true,
+                ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
 
                 Log::info("Stored Procedure call FinalizeTransaction");
 
@@ -192,8 +195,8 @@ class TransactionsController extends Controller
                 Log::info("generate PDF");
                 $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
                     'TransactionDetails' => $TransactionDetails,
-                    'Cashier' => $Cashier
-                ]);
+                    'Cashier' => $Cashier,
+                ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
 
                 DB::commit();
                 
@@ -242,8 +245,9 @@ class TransactionsController extends Controller
             // Generate the PDF
             $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
                 'TransactionDetails' => $TransactionDetails,    
-                'Cashier' => $Cashier
-            ]);
+                'Cashier' => $Cashier,
+                'printMode' => false,
+            ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
 
             Log::info('Sending email to: ' . $email);
             if ($email) {
@@ -304,7 +308,7 @@ public function saveConcessionaireReceipt (Request $request) {
             $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
                 'TransactionDetails' => $TransactionDetails,
                 'Cashier' => $Cashier
-            ]);
+            ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
 
             Log::info('Sending email to: ' . $email);
             if ($email) {

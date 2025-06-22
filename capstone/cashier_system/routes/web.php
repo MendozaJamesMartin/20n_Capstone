@@ -43,6 +43,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
     //Finalize Customer Transaction
     Route::post('/transactions/finalize/{id}', [TransactionsController::class, 'finalizeTransaction'])->name('finalize.transation');
     Route::post('/transactions/concessionaire/finalize/{id}', [TransactionsController::class, 'finalizeConcessionaireTransaction'])->name('finalize.concessionaire.transation');
+
     //Finalize Concessionaire Transaction
     Route::post('/transactions/receipt/save', [TransactionsController::class, 'saveReceiptNumber'])->name('save.receipt');
     Route::post('/transactions/concessionaire/receipt/save', [TransactionsController::class, 'saveConcessionaireReceipt'])->name('save.concessionaire.receipt');
@@ -91,7 +92,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
 Route::group(['middleware' => 'guest', 'prefix' > '/admin'], function() {
     Route::get('/login', [LoginController::class, 'login'])->name('login');
     Route::post('/login', [LoginController::class, 'loginPost'])->name('login.submit');
-
         
     Route::get('/forgot/password', [LoginController::class, 'forgotPassword'])->name('forgot.password');
     Route::post('/forgot/password', [LoginController::class, 'forgotPasswordPost'])->name('forgot.password');
@@ -107,8 +107,8 @@ Route::group(['middleware' => 'guest', 'prefix' => '/customer'], function () {
         //Self-Service Student Payment Form
         Route::match(['get', 'post'], '/payment/form', [PaymentsController::class, 'selfServiceStudentPayment'])->name('student.payment.form');
         //Payment Form Success
-        Route::get('/payment/submitted/{transactionId}', function ($transactionId) {
-            return view('students.submitted', compact('transactionId'));
+        Route::get('/payment/submitted/{transaction_num}', function ($transaction_num) {
+            return view('students.submitted', compact('transaction_num'));
         })->name('students.submitted');
     });
     

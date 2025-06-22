@@ -19,29 +19,6 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <th colspan="5">
-                        <div>
-                        <form action="{{ url()->current() }}" method="GET">
-
-                            <input type="text" id="search" class="border p-2 w-1/3 rounded" placeholder="🔍 Search concessionaires..." onkeyup="filterTable()">
-
-                                <label class="block mb-2">Sort By</label>
-                                <select name="sort_by" class="w-full p-2 border rounded mb-4">
-                                    <option value="id" {{ request('sort_by') == 'id' ? 'selected' : '' }}>ID</option>
-                                    <option value="entity_name" {{ request('sort_by') == 'name' ? 'selected' : '' }}>Name</option>
-                                </select>
-
-                                <!-- Hidden Input for Sorting Order -->
-                                <input type="hidden" name="sort_order" id="sortOrderInput" value="asc">
-
-                                <button type="submit" class="btn btn-danger">Apply</button>
-                                <a href="{{ url()->current() }}" class="btn btn-danger">Reset</a>
-                        </form>
-                            
-                        </div>
-                        </th>
-                    </tr>
-                    <tr>
                         <th>Concessionaire ID</th>
                         <th>Name</th>
                         <th>Contact</th>

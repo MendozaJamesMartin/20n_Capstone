@@ -71,7 +71,6 @@
                         <th>Balance Due</th>
                         <th>Due Date</th>
                         <th>Status</th>
-                        <th>Action</th>
                     </tr>
                 </tbody>
                 <tbody>
@@ -84,18 +83,16 @@
                         <td>{{ $billings->balance_due }}</td>
                         <td>{{ $billings->due_date }}</td>
                         <td>{{ $billings->status }}</td>
-                        <td></td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="text-center">No Concessionaire Billing found</td>
+                        <td colspan="7" class="text-center">No Concessionaire Billing found</td>
                     </tr>
                 @endforelse
 
                 <!-- Add empty rows to fill up to 10 rows -->
                 @for ($i = $result->count(); $i < 10; $i++)
                     <tr>
-                        <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>

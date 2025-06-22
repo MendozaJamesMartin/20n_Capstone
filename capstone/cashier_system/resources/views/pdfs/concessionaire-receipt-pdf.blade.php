@@ -8,11 +8,13 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
+            margin: 1;
+            padding: 1;
             font-family: Arial, sans-serif;
-            font-size: 12px;
-            margin: 0;
-            padding: 20px;
+            font-size: 12px; /* Smaller font to fit small page */
+            width: 99%;
+            height: 99%;
         }
 
         table {
@@ -22,8 +24,25 @@
 
         td, th {
             border: 1px solid #000;
-            padding: 5px;
+            padding: 3px; /* reduced padding */
             vertical-align: top;
+        }
+
+        .item-table {
+            table-layout: fixed;
+            height: 190px; /* Adjust based on your paper size — tune this */
+        }
+
+        .item-table td, .item-table th {
+            height: 15px; /* force row height */
+            overflow: hidden;
+            word-wrap: break-word;
+            line-height: 1.1;
+            font-size: 9px;
+        }
+
+        .item-table .cell-wrap {
+            white-space: normal;
         }
 
         .text-center {
@@ -35,11 +54,20 @@
         }
 
         .section {
-            margin-bottom: 8px;
+            margin-bottom: 4px; /* tighter spacing */
         }
 
         .signature-box {
-            height: 50px;
+            height: 40px; /* reduced for space */
+        }
+
+        h2 {
+            font-size: 12px;
+            margin: 4px 0;
+        }
+
+        hr {
+            margin: 2px 0;
         }
     </style>
 </head>
@@ -50,8 +78,9 @@
         <tr>
             <td>
                 <strong>ACCOUNTABLE FORM N. 51-C <br>
+                    <br>
                     Revised January, 1992 (ORIGINAL)<br>
-                    </strong>
+                </strong>
             </td>
         </tr>
     </table>
@@ -59,26 +88,26 @@
     {{-- Header: 3-column --}}
     <table class="section">
         <tr>    
-            <td style="width: 30%;">&nbsp;</td>
-            <td style="width: 40%;">
+            <td style="width: 25%;">&nbsp;</td>
+            <td style="width: 50%;">
                 <div class="text-center">
                     Official Receipt of the <br>
-                    Republic of the Philippines<br>
+                    Republic of the Philippines
                 </div>
-                <div>
-                    <hr>
+                <hr>
+                <div class="text-center">
                     <h2>No. {{ $TransactionDetails[0]->receipt_number }}</h2>
                 </div>
             </td>
-            <td style="width: 30%;">&nbsp;</td>
+            <td style="width: 25%;">&nbsp;</td>
         </tr>
     </table>
 
     {{-- Date --}}
     <table class="section">
         <tr>
-            <td style="width: 33.33%;">Fund</td>
-            <td style="width: 67.67%;">Date: {{ $TransactionDetails[0]->transaction_date ?? now()->format('Y-m-d H:i:s') }}</td>
+            <td style="width: 35%;">Fund</td>
+            <td style="width: 65%;">Date: {{ $TransactionDetails[0]->transaction_date ?? now()->format('Y-m-d H:i:s') }}</td>
         </tr>
     </table>
 
@@ -88,43 +117,47 @@
             <td><strong>POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</strong></td>
         </tr>
         <tr>
-            <td>Payor <strong style="text-transform: uppercase;">{{ $TransactionDetails[0]->concessionaire_name ?? 'John Doe' }}</strong></td>
+            <td>Payor <strong style="text-transform: uppercase;">{{ $TransactionDetails[0]->customer_name ?? 'John Doe' }}</strong></td>
         </tr>
     </table>
 
     {{-- Itemized Section --}}
     @php
-        $maxRows = 10;
+        $maxRows = 13;
         $itemCount = count($TransactionDetails);
         $blankRows = $maxRows - $itemCount;
     @endphp
 
-    <table class="section">
-        <tr>
-            <th style="width: 65%;">Nature of Collection</th>
-            <th style="width: 15%;">Account Code</th>
-            <th style="width: 20%;">Amount</th>
-        </tr>
-
-        @foreach($TransactionDetails as $bill)
+    <table class="section item-table">
+        <thead>
             <tr>
-                <td style="border-top: 0px; border-bottom: 0px;">{{ $bill->bill_type }}</td>
-                <td style="border-top: 0px; border-bottom: 0px;"></td>
-                <td style="border-top: 0px; border-bottom: 0px;" class="text-center">{{ number_format($bill->amount_paid, 2) }}</td>
+                <th style="width: 60%;">Nature of Collection</th>
+                <th style="width: 20%;">Account Code</th>
+                <th style="width: 20%;">Amount</th>
             </tr>
-        @endforeach
+        </thead>
+        <tbody>
+            @foreach($TransactionDetails as $bill)
+                <tr>
+                    <td style="border-top: 0px; border-bottom: 0px;">{{ $bill->bill_type }}</td>
+                    <td style="border-top: 0px; border-bottom: 0px;"></td>
+                    <td class="text-center" style="border-top: 0px; border-bottom: 0px;">{{ number_format($bill->amount_paid, 2) }}</td>
+                </tr>
+            @endforeach
 
-        @for ($i = 0; $i < $blankRows; $i++)
+            @for ($i = 0; $i < $blankRows; $i++)
+                <tr>
+                    <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
+                    <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
+                    <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
+                </tr>
+            @endfor
+
             <tr>
-                <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
-                <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
-                <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
+                <td colspan="2" class="text-center"><strong>TOTAL</strong></td>
+                <td class="text-center"><strong>{{ number_format($TransactionDetails->sum('amount_paid'), 2) }}</strong></td>
             </tr>
-        @endfor
-        <tr>
-            <td colspan="2" class="text-center"><strong>TOTAL</strong></td>
-            <td class="text-center"><strong>{{ number_format($TransactionDetails->sum('amount_paid'), 2) }}</strong></td>
-        </tr>
+        </tbody>
     </table>
 
     {{-- Total --}}
@@ -133,6 +166,12 @@
             <td>
                 Amount in Words
             </td>
+        </tr>
+    </table>
+
+    <table class="section">
+        <tr>
+            <td>&nbsp;</td>
         </tr>
     </table>
 
@@ -159,7 +198,7 @@
     </table>
 
     {{-- Signature --}}
-    <table>
+    <table class="section">
         <tr>
             <td colspan="2" style="border-bottom: 0px;">
                 <div class="text-left">Received the amount stated above.</div>
@@ -175,8 +214,8 @@
         </tr>
     </table>
 
-    {{-- Footer --}}
-    <table>
+    {{-- Notes --}}
+    <table class="section">
         <tr>
             <td>
                 NOTE: Write the number and date of this receipt on the back of check/money<br>
@@ -185,7 +224,7 @@
         </tr>
     </table>
 
-    {{-- Footer --}}
+    {{-- University Footer --}}
     <table>
         <tr>
             <td class="text-center">

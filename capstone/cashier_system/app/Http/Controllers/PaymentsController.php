@@ -217,9 +217,10 @@ class PaymentsController extends Controller
                 ]);
                 
                 $transactionId = $results[0]->transaction_id;
+                $transaction_num = $results[0]->transaction_number;
 
                 DB::commit();
-                return redirect()->route('students.submitted', ['transactionId' => $transactionId]);
+                return redirect()->route('students.submitted', ['transaction_num' => $transaction_num]);
             }
         } catch (QueryException $e) {
             DB::rollBack();

@@ -3,10 +3,9 @@
 @section('content')
 
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
-
-    <div class="container" style="width:75%">
-        <div class="bg-light p-5">
-            <h1>Student Payment Form</h1>
+    <div class="container-fluid">
+        <div class="bg-light p-4 p-md-5 rounded mx-auto" style="max-width: 900px;">
+            <h1 class="mb-4">Student Payment Form</h1>
 
             @if(session('success'))
                 <p class="text-success">{{ session('success') }}</p>
@@ -23,12 +22,20 @@
                     <input type="text" class="form-control" id="student_id" name="student_id" placeholder="XXXX-XXXXX-XX-X">
                 </div>
 
-                <label class="form-label">Student Full Name</label>
-                <div class="mb-3 d-flex gap-2">
-                    <input type="text" class="form-control" name="first_name" placeholder="First Name">
-                    <input type="text" class="form-control" name="middle_name" placeholder="Middle Name">
-                    <input type="text" class="form-control" name="last_name" placeholder="Last Name">
-                    <input type="text" class="form-control" name="suffix" placeholder="Suffix">
+                <div class="row mb-3 g-2">
+                    <label class="form-label">Student Full Name</label>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <input type="text" class="form-control" name="first_name" placeholder="First Name">
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <input type="text" class="form-control" name="middle_name" placeholder="Middle Name">
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <input type="text" class="form-control" name="last_name" placeholder="Last Name">
+                    </div>
+                    <div class="col-12 col-sm-6 col-md-3">
+                        <input type="text" class="form-control" name="suffix" placeholder="Suffix">
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -38,19 +45,21 @@
 
                 <!-- Fee Selection -->
                 <h3>Fees</h3>
-                <table class="table table-bordered align-middle text-center" id="fees-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 60%">Fee Name</th>
-                            <th style="width: 15%">Amount</th>
-                            <th style="width: 15%">Quantity</th>
-                            <th style="width: 10%">Remove</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Rows added dynamically -->
-                    </tbody>
-                </table>
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered align-middle text-center" id="fees-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 60%">Fee Name</th>
+                                <th style="width: 15%">Amount</th>
+                                <th style="width: 15%">Quantity</th>
+                                <th style="width: 10%">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
 
                 <button type="button" class="btn btn-success btn-sm mb-3" id="addFeeRow">+ Add Fee</button>
 
@@ -63,7 +72,6 @@
                 </button>
             </form>
 
-
             <!-- Datalist for fee name autocomplete -->
             <datalist id="feeSuggestions">
                 @foreach($fees as $fee)
@@ -72,7 +80,6 @@
             </datalist>
         </div>
     </div>
-
 </main>
 
 <script>

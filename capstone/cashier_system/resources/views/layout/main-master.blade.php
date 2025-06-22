@@ -162,7 +162,7 @@
                     Transactions
                 </a>
                 <div class="collapse ps-3" id="transactionsSubmenu">
-                    <a href="{{ route('receipts.list') }}" class="nav-link">Transaction History and Receipts</a>
+                    <a href="{{ route('receipts.list') }}" class="nav-link">Transaction History</a>
                 </div>
             </li>
 
