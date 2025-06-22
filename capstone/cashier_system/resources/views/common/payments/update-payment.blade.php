@@ -83,9 +83,17 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
-                    Submit Payment
+                    Approve
                 </button>
             </form>
+            
+                <form action="{{ route('payments.disapprove', ['id' => $transactionDetails[0]->transaction_id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to disapprove and delete this transaction?');" style="display:inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger mt-3" title="Disapprove Payment">
+                        Disapprove
+                    </button>
+                </form>
 
             <!-- Datalist for fee name autocomplete -->
             <datalist id="feeSuggestions">

@@ -322,4 +322,51 @@ class PaymentsController extends Controller
         }
     }
     
+    public function disapproveTransaction($id) {
+        Log::info("Begin Transaction disapproval");
+        DB::beginTransaction();
+        try {
+            $transaction = DB::table('transactions')->where('id', $id)->first();
+            // Safety check: only delete if transaction is unfinalized and completely unpaid
+            if (
+                !$transaction ||
+                !is_null($transaction->transaction_date) || // already finalized
+                $transaction->amount_paid != 0 || 
+                $transaction->balance_due != $transaction->total_amount
+            ) {
+                return redirect()->route('payments.pending')->with('error', 'Only unfinalized and unpaid transactions can be disapproved.');
+            }
+
+            // Get customer_id via the transaction
+            $customerId = DB::table('customer_transaction_details')
+                ->where('transaction_id', $id)
+                ->value('customer_id');
+
+            // Delete from customer_transaction_details
+            DB::table('customer_transaction_details')->where('transaction_id', $id)->delete();
+
+            // Delete the transaction
+            DB::table('transactions')->where('id', $id)->delete();
+
+            // Check if customer has any remaining transactions
+            $remaining = DB::table('customer_transaction_details')
+                ->where('customer_id', $customerId)
+                ->count();
+
+            if ($remaining === 0) {
+                DB::table('student_details')->where('customer_id', $customerId)->delete();
+                DB::table('customers')->where('id', $customerId)->delete();
+            }
+
+            DB::commit();
+            return redirect()->route('payments.pending')->with('success', 'Transaction disapproved and deleted successfully.');
+
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::info("Failed to Delete Transaction");
+            return redirect()->route('payments.pending')->with('error', 'Failed to delete transaction');
+        }
+
+    }
+
 }

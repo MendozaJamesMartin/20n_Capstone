@@ -97,6 +97,13 @@
                                 <a href="{{ route('payments.update', ['transactionId' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="View and Edit Payment">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
+                                <form action="{{ route('payments.disapprove', ['id' => $transaction->transaction_id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to disapprove and delete this transaction?');" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Disapprove Payment">
+                                        <i class="fa fa-trash" aria-hidden="true"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         @empty
