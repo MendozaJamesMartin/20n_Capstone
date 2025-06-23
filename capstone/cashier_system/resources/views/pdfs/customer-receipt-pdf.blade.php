@@ -107,7 +107,7 @@
     <table class="section">
         <tr>
             <td style="width: 35%;">Fund</td>
-            <td style="width: 65%;">Date: {{ $TransactionDetails[0]->transaction_date ?? now()->format('Y-m-d H:i:s') }}</td>
+            <td style="width: 65%;" class="text-right">{{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('Y-m-d') }}</td>
         </tr>
     </table>
 
@@ -117,7 +117,7 @@
             <td><strong>POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</strong></td>
         </tr>
         <tr>
-            <td>Payor <strong style="text-transform: uppercase;">{{ $TransactionDetails[0]->customer_name ?? 'John Doe' }}</strong></td>
+            <td>Payor <strong style="text-transform: uppercase;" class="text-right">{{ $TransactionDetails[0]->customer_name ?? 'John Doe' }}</strong></td>
         </tr>
     </table>
 

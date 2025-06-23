@@ -12,7 +12,7 @@
             margin: 1;
             padding: 1;
             font-family: Arial, sans-serif;
-            font-size: 12px; /* Smaller font to fit small page */
+            font-size: 12px;
             width: 99%;
             height: 99%;
         }
@@ -23,18 +23,17 @@
         }
 
         td, th {
-            border: 1px solid #000;
-            padding: 3px; /* reduced padding */
+            padding: 3px;
             vertical-align: top;
         }
 
         .item-table {
             table-layout: fixed;
-            height: 190px; /* Adjust based on your paper size — tune this */
+            height: 190px;
         }
 
         .item-table td, .item-table th {
-            height: 15px; /* force row height */
+            height: 15px;
             overflow: hidden;
             word-wrap: break-word;
             line-height: 1.1;
@@ -54,11 +53,11 @@
         }
 
         .section {
-            margin-bottom: 4px; /* tighter spacing */
+            margin-bottom: 4px;
         }
 
         .signature-box {
-            height: 40px; /* reduced for space */
+            height: 40px;
         }
 
         h2 {
@@ -68,13 +67,19 @@
 
         hr {
             margin: 2px 0;
+            border: none;
+            border-top: 1px solid #000;
+        }
+
+        .invisible-text {
+            color: transparent;
         }
     </style>
 </head>
 <body>
 
     {{-- Header notes --}}
-    <table class="section">
+    <table class="section invisible-text">
         <tr>
             <td>
                 <strong>ACCOUNTABLE FORM N. 51-C <br>
@@ -86,7 +91,7 @@
     </table>
 
     {{-- Header: 3-column --}}
-    <table class="section">
+    <table class="section invisible-text">
         <tr>    
             <td style="width: 25%;">&nbsp;</td>
             <td style="width: 50%;">
@@ -94,7 +99,7 @@
                     Official Receipt of the <br>
                     Republic of the Philippines
                 </div>
-                <hr>
+                <br>
                 <div class="text-center">
                     <h2>No. {{ $TransactionDetails[0]->receipt_number }}</h2>
                 </div>
@@ -106,18 +111,18 @@
     {{-- Date --}}
     <table class="section">
         <tr>
-            <td style="width: 35%;">Fund</td>
-            <td style="width: 65%;">{{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('Y-m-d') }}</td>
+            <td style="width: 35%;" class="invisible-text">Fund</td>
+            <td style="width: 65%;" class="text-right">{{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('Y-m-d') }}</td>
         </tr>
     </table>
 
     {{-- Institution and Customer Name --}}
     <table class="section">
-        <tr class="text-center">
+        <tr class="text-center invisible-text">
             <td><strong>POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</strong></td>
         </tr>
         <tr>
-            <td>Payor <strong style="text-transform: uppercase;">{{ $TransactionDetails[0]->customer_name ?? 'John Doe' }}</strong></td>
+            <td class="text-center"><strong style="text-transform: uppercase;">{{ $TransactionDetails[0]->customer_name ?? 'John Doe' }}</strong></td>
         </tr>
     </table>
 
@@ -129,7 +134,7 @@
     @endphp
 
     <table class="section item-table">
-        <thead>
+        <thead class="invisible-text">
             <tr>
                 <th style="width: 60%;">Nature of Collection</th>
                 <th style="width: 20%;">Account Code</th>
@@ -154,7 +159,7 @@
             @endfor
 
             <tr>
-                <td colspan="2" class="text-center"><strong>TOTAL</strong></td>
+                <td colspan="2" class="text-center invisible-text"><strong>TOTAL</strong></td>
                 <td class="text-center"><strong>{{ number_format($TransactionDetails->sum('amount_paid'), 2) }}</strong></td>
             </tr>
         </tbody>
@@ -163,7 +168,7 @@
     {{-- Total --}}
     <table class="section">
         <tr>
-            <td>
+            <td class="invisible-text">
                 Amount in Words
             </td>
         </tr>
@@ -176,7 +181,7 @@
     </table>
 
     {{-- Payment Method --}}
-    <table class="section">
+    <table class="section invisible-text">
         <tr>
             <td style="width: 25%; border-bottom: 0px;">Cash</td>
             <td style="width: 25%;" class="text-center">Drawee Bank</td>
@@ -198,7 +203,7 @@
     </table>
 
     {{-- Signature --}}
-    <table class="section">
+    <table class="section invisible-text">
         <tr>
             <td colspan="2" style="border-bottom: 0px;">
                 <div class="text-left">Received the amount stated above.</div>
@@ -208,14 +213,14 @@
             <td style="border-top: 0px; border-right: 0px;" ></td>
             <td style="border-top: 0px; border-left: 0px;" class="text-center">
                 <strong>{{ $Cashier->first_name }} {{ $Cashier->last_name }}</strong>
-                <hr>
+                <br>
                 Collecting Officer
             </td>
         </tr>
     </table>
 
     {{-- Notes --}}
-    <table class="section">
+    <table class="section invisible-text">
         <tr>
             <td>
                 NOTE: Write the number and date of this receipt on the back of check/money<br>
@@ -227,7 +232,7 @@
     {{-- University Footer --}}
     <table>
         <tr>
-            <td class="text-center">
+            <td class="text-center invisible-text">
                 <strong>"THE COUNTRY'S 1ST POLYTECHNIC U"</strong>
             </td>
         </tr>

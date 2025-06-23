@@ -152,7 +152,7 @@ class TransactionsController extends Controller
                 }
 
                 Log::info("generate PDF");
-                $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
+                $pdf = Pdf::loadView('for-print.customer-print', [
                     'TransactionDetails' => $TransactionDetails,
                     'Cashier' => $Cashier,
                     'printMode' => true,
@@ -193,7 +193,7 @@ class TransactionsController extends Controller
                 Log::info("Transaction Details Retrieved: " . json_encode($TransactionDetails));
 
                 Log::info("generate PDF");
-                $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
+                $pdf = Pdf::loadView('for-print.concessionaire-print', [
                     'TransactionDetails' => $TransactionDetails,
                     'Cashier' => $Cashier,
                 ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
