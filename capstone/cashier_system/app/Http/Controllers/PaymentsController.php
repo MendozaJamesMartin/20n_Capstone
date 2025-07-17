@@ -206,33 +206,41 @@ class PaymentsController extends Controller
                     'suffix' => 'nullable|string',
                     'email' => 'required|string|email',
                     'quantities' => 'required|array',
-                ]);
+                    'amounts' => 'required|array', 
+                ]);                
 
                 Log::info("Filtering Items with 0 quantity");
                 // Filter out fees with zero quantity
                 $fees = array_filter($validated['quantities'], function ($qty) {
                     return $qty > 0;
                 });
-
+                
                 if (empty($fees)) {
                     return back()->with('error', 'Please select at least one fee.');
                 }
-
-                Log::info("Extract Fee ID and Quantities as array");
-                // Extract Fee IDs & Quantities as comma-separated strings
-                $feeIds = implode(',', array_keys($fees));
-                $quantities = implode(',', array_values($fees));
-
-                Log::info("Stored Procedure call");
-                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?, ?)", [
+                
+                $feeIds = array_keys($fees);
+                $quantities = array_values($fees);
+                
+                // Use same keys to extract amounts
+                $amounts = array_map(function ($id) use ($validated) {
+                    return $validated['amounts'][$id] ?? '0.00';
+                }, $feeIds);
+                
+                $feeIdsStr = implode(',', $feeIds);
+                $quantitiesStr = implode(',', $quantities);
+                $amountsStr = implode(',', $amounts);
+                
+                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     $validated['student_id'],
                     $validated['first_name'],
                     $validated['middle_name'],
                     $validated['last_name'],
                     $validated['suffix'],
                     $validated['email'],
-                    $feeIds,
-                    $quantities
+                    $feeIdsStr,
+                    $quantitiesStr,
+                    $amountsStr
                 ]);
                 
                 $transactionId = $results[0]->transaction_id;
@@ -307,6 +315,7 @@ class PaymentsController extends Controller
                 Log::info("Validating update form input");
                 $validated = $request->validate([
                     'quantities' => 'required|array',
+                    'amounts' => 'required|array',
                 ]);
     
                 Log::info("Filtering Items with 0 quantity");
@@ -314,20 +323,30 @@ class PaymentsController extends Controller
                 $fees = array_filter($validated['quantities'], function ($qty) {
                     return $qty > 0;
                 });
-    
+                
                 if (empty($fees)) {
                     return back()->with('error', 'Please select at least one fee.');
                 }
+                
+                $feeIds = array_keys($fees);
+                $quantities = array_values($fees);
+                
+                // Use same keys to extract amounts
+                $amounts = array_map(function ($id) use ($validated) {
+                    return $validated['amounts'][$id] ?? '0.00';
+                }, $feeIds);
     
                 Log::info("Building fee ID and quantity strings");
-                $feeIds = implode(',', array_keys($fees));
-                $quantities = implode(',', array_values($fees));
+                $feeIdsStr = implode(',', $feeIds);
+                $quantitiesStr = implode(',', $quantities);
+                $amountsStr = implode(',', $amounts);
     
                 Log::info("Calling stored procedure to update fees for transaction $transactionId");
-                DB::statement("CALL UpdateUnpaidTransaction(?, ?, ?)", [
+                DB::statement("CALL UpdateUnpaidTransaction(?, ?, ?, ?)", [
                     $transactionId,
-                    $feeIds,
-                    $quantities
+                    $feeIdsStr,
+                    $quantitiesStr,
+                    $amountsStr,
                 ]);
     
                 DB::commit();

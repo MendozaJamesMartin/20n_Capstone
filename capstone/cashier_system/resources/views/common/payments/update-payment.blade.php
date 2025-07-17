@@ -61,7 +61,7 @@
                                             <input type="hidden" class="fee-id" name="fee_ids[]" value="{{ $fee->id }}">
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" class="form-control fee-amount" readonly value="{{ number_format($fee->amount, 2, '.', '') }}">
+                                            <input type="number" step="0.01" class="form-control fee-amount" value="{{ number_format($fee->amount, 2, '.', '') }}">
                                         </td>
                                         <td>
                                             <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="{{ $quantity }}" min="1">
@@ -181,8 +181,9 @@
 
     document.getElementById('addFeeRow').addEventListener('click', createRow);
 
-    document.getElementById('confirmPaymentButton').addEventListener('click', function (e) {
-        // Validate all fee names
+    document.getElementById('confirmPaymentButton').addEventListener('click', function () {
+
+        // Validate all fee name inputs
         const nameInputs = document.querySelectorAll('.fee-name');
         let hasInvalid = false;
 
@@ -197,31 +198,40 @@
         });
 
         if (hasInvalid) {
-            e.preventDefault();
             alert("Please correct invalid fee names before submitting.");
             return;
         }
 
-        // Remove old dynamic quantity inputs
+        // Before submission, create hidden inputs for quantities[fee_id]
         const form = document.getElementById('paymentForm');
-        document.querySelectorAll('.dynamic-quantity').forEach(el => el.remove());
+        document.querySelectorAll('.dynamic-quantity').forEach(e => e.remove());
 
-        // Rebuild dynamic quantity inputs for submission
         const feeIds = form.querySelectorAll('.fee-id');
         const quantities = form.querySelectorAll('.fee-quantity');
+        const amounts = form.querySelectorAll('.fee-amount');
 
         feeIds.forEach((idInput, i) => {
             const feeId = idInput.value;
             const quantity = quantities[i].value;
-            if (feeId && quantity > 0) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = `quantities[${feeId}]`;
-                input.value = quantity;
-                input.classList.add('dynamic-quantity');
-                form.appendChild(input);
+            const amount = amounts[i].value;
+            if (feeId && quantity > 0 && amount) {
+                const qtyInput = document.createElement('input');
+                qtyInput.type = 'hidden';
+                qtyInput.name = `quantities[${feeId}]`;
+                qtyInput.value = quantity;
+                qtyInput.classList.add('dynamic-quantity');
+                form.appendChild(qtyInput);
+
+                const amtInput = document.createElement('input');
+                amtInput.type = 'hidden';
+                amtInput.name = `amounts[${feeId}]`;
+                amtInput.value = amount;
+                amtInput.classList.add('dynamic-quantity');
+                form.appendChild(amtInput);
             }
         });
+
+        form.submit();
     });
 
     // On page load: bind events to existing rows and update total
