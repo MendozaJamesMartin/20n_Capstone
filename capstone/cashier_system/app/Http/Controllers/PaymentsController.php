@@ -71,33 +71,41 @@ class PaymentsController extends Controller
                     'suffix' => 'nullable|string',
                     'email' => 'required|string|email',
                     'quantities' => 'required|array',
-                ]);
+                    'amounts' => 'required|array', 
+                ]);                
 
                 Log::info("Filtering Items with 0 quantity");
                 // Filter out fees with zero quantity
                 $fees = array_filter($validated['quantities'], function ($qty) {
                     return $qty > 0;
                 });
-
+                
                 if (empty($fees)) {
                     return back()->with('error', 'Please select at least one fee.');
                 }
-
-                Log::info("Extract Fee ID and Quantities as array");
-                // Extract Fee IDs & Quantities as comma-separated strings
-                $feeIds = implode(',', array_keys($fees));
-                $quantities = implode(',', array_values($fees));
-
-                Log::info("Stored Procedure call StudentPayment");
-                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?, ?)", [
+                
+                $feeIds = array_keys($fees);
+                $quantities = array_values($fees);
+                
+                // Use same keys to extract amounts
+                $amounts = array_map(function ($id) use ($validated) {
+                    return $validated['amounts'][$id] ?? '0.00';
+                }, $feeIds);
+                
+                $feeIdsStr = implode(',', $feeIds);
+                $quantitiesStr = implode(',', $quantities);
+                $amountsStr = implode(',', $amounts);
+                
+                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     $validated['student_id'],
                     $validated['first_name'],
                     $validated['middle_name'],
                     $validated['last_name'],
                     $validated['suffix'],
                     $validated['email'],
-                    $feeIds,
-                    $quantities
+                    $feeIdsStr,
+                    $quantitiesStr,
+                    $amountsStr
                 ]);
                 
                 $transactionId = $results[0]->transaction_id;
@@ -129,29 +137,40 @@ class PaymentsController extends Controller
                     'name' => 'required|string',
                     'contact' => 'required|string|email',
                     'quantities' => 'required|array',
+                    'amounts' => 'required|array',
                 ]);
 
+                Log::info("Filtering Items with 0 quantity");
+                // Filter out fees with zero quantity
                 Log::info("Filtering Items with 0 quantity");
                 // Filter out fees with zero quantity
                 $fees = array_filter($validated['quantities'], function ($qty) {
                     return $qty > 0;
                 });
-
+                
                 if (empty($fees)) {
                     return back()->with('error', 'Please select at least one fee.');
                 }
-
-                Log::info("Extract Fee ID and Quantities as array");
-                // Extract Fee IDs & Quantities as comma-separated strings
-                $feeIds = implode(',', array_keys($fees));
-                $quantities = implode(',', array_values($fees));
+                
+                $feeIds = array_keys($fees);
+                $quantities = array_values($fees);
+                
+                // Use same keys to extract amounts
+                $amounts = array_map(function ($id) use ($validated) {
+                    return $validated['amounts'][$id] ?? '0.00';
+                }, $feeIds);
+                
+                $feeIdsStr = implode(',', $feeIds);
+                $quantitiesStr = implode(',', $quantities);
+                $amountsStr = implode(',', $amounts);
 
                 Log::info("Stored Procedure call");
-                $results = DB::select("CALL OutsiderPayment(?, ?, ?, ?)", [
+                $results = DB::select("CALL OutsiderPayment(?, ?, ?, ?, ?)", [
                     $validated['name'],
                     $validated['contact'],
-                    $feeIds,
-                    $quantities
+                    $feeIdsStr,
+                    $quantitiesStr,
+                    $amountsStr
                 ]);
 
                 $transactionId = $results[0]->transaction_id;

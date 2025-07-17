@@ -121,6 +121,7 @@
             const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
             if (fee) {
                 amountInput.value = parseFloat(fee.amount).toFixed(2);
+                amountInput.readOnly = !fee.is_variable;  // ✅ editable only if variable
                 feeIdInput.value = fee.id;
                 nameInput.classList.remove('is-invalid');
             } else {
@@ -168,17 +169,26 @@
 
         const feeIds = form.querySelectorAll('.fee-id');
         const quantities = form.querySelectorAll('.fee-quantity');
+        const amounts = form.querySelectorAll('.fee-amount');
 
         feeIds.forEach((idInput, i) => {
             const feeId = idInput.value;
             const quantity = quantities[i].value;
-            if (feeId && quantity > 0) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = `quantities[${feeId}]`;
-                input.value = quantity;
-                input.classList.add('dynamic-quantity');
-                form.appendChild(input);
+            const amount = amounts[i].value;
+            if (feeId && quantity > 0 && amount) {
+                const qtyInput = document.createElement('input');
+                qtyInput.type = 'hidden';
+                qtyInput.name = `quantities[${feeId}]`;
+                qtyInput.value = quantity;
+                qtyInput.classList.add('dynamic-quantity');
+                form.appendChild(qtyInput);
+
+                const amtInput = document.createElement('input');
+                amtInput.type = 'hidden';
+                amtInput.name = `amounts[${feeId}]`;
+                amtInput.value = amount;
+                amtInput.classList.add('dynamic-quantity');
+                form.appendChild(amtInput);
             }
         });
 
