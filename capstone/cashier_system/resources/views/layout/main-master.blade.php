@@ -184,6 +184,7 @@
                 </a>
                 <div class="collapse ps-3" id="maintenanceSubmenu">
                     <a href="{{ route('fees.list') }}" class="nav-link">Manage Fees</a>
+                    <a href="{{ route('receipts.manage') }}" class="nav-link">Manage Receipts</a>
                     <a href="{{ route('concessionaires.list') }}" class="nav-link">Manage Concessionaires</a>
                     <a href="{{ route('users.list') }}" class="nav-link">Manage Users</a>
                 </div>

@@ -13,6 +13,12 @@
             <p style="color: red;">{{ session('error') }}</p>
             @endif
 
+            @if (!$hasActiveBatch)
+                <div class="alert alert-danger">
+                    🚫 Cannot finalize transaction. No receipt numbers available. Please load a new batch first.
+                </div>
+            @endif
+
             <form method="GET" action="{{ route('concessionaires.billing.payment') }}">
                 <div class="row mb-3">
                     <div class="col-md-12">
@@ -76,5 +82,23 @@
         </div>
     </div>
 </main>
+
+<script>
+        window.addEventListener('DOMContentLoaded', () => {
+
+        const hasActiveBatch = @json($hasActiveBatch);
+        if (!hasActiveBatch) {
+            document.querySelectorAll('#paymentForm input, #paymentForm button, #paymentForm select').forEach(el => {
+                el.disabled = true;
+            });
+
+            const form = document.getElementById('paymentForm');
+            const notice = document.createElement('p');
+            notice.className = 'text-danger mt-2';
+            notice.textContent = '🛑 Payment form is disabled due to no available receipt numbers.';
+            form.appendChild(notice);
+        }
+    });
+</script>
 
 @endsection

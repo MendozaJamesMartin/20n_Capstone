@@ -200,9 +200,9 @@
     </table>
 
     {{-- Signature --}}
-    <table class="section invisible-text">
+    <table class="section">
         <tr>
-            <td colspan="2">
+            <td colspan="2" style="border-bottom: 0px;" class="invisible-text">
                 <div class="text-left">Received the amount stated above.</div>
             </td>
         </tr>
@@ -211,7 +211,7 @@
             <td class="text-center">
                 <strong>{{ $Cashier->first_name }} {{ $Cashier->last_name }}</strong>
                 <br>
-                Collecting Officer
+                <span style="visibility: hidden;">Collecting Officer</span>
             </td>
         </tr>
     </table>

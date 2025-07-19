@@ -6,6 +6,7 @@ use App\Mail\ConcessionaireBillMail;
 use App\Mail\PaymentReceiptMail;
 use App\Models\Concessionaire;
 use App\Models\ConcessionaireBill;
+use App\Models\ReceiptBatch;
 use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -169,8 +170,13 @@ class ConcessionairesController extends Controller
                 }
     
                 $bills = $billings->get();
+
+                Log::info("Receipt Batch checker");
+                $currentBatch = ReceiptBatch::whereColumn('next_number', '<=', 'end_number')
+                    ->orderBy('id')
+                    ->first();
                 
-                return view('common.concessionaires.bills-payment', compact('concessionaires', 'bills'));
+                return view('common.concessionaires.bills-payment', compact('concessionaires', 'bills'), ['hasActiveBatch' => $currentBatch !== null]);
                 Log::info('display concessionaire billing');
             } elseif ($request->isMethod('post')) {
                 Log::info('Processing concessionaire transaction request');

@@ -46,10 +46,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
     Route::post('/transactions/finalize/{id}', [TransactionsController::class, 'finalizeTransaction'])->name('finalize.transation');
     Route::post('/transactions/concessionaire/finalize/{id}', [TransactionsController::class, 'finalizeConcessionaireTransaction'])->name('finalize.concessionaire.transation');
 
-    //Finalize Concessionaire Transaction
-    Route::post('/transactions/receipt/save', [TransactionsController::class, 'saveReceiptNumber'])->name('save.receipt');
-    Route::post('/transactions/concessionaire/receipt/save', [TransactionsController::class, 'saveConcessionaireReceipt'])->name('save.concessionaire.receipt');
-
     //Receipt PDF Management
     Route::get('/customer/receipt/{id}', [TransactionsController::class, 'customerReceiptPDF'])->name('customer.receipt.pdf');
     Route::get('/concessionaire/receipt/{id}', [TransactionsController::class, 'concessionaireReceiptPDF'])->name('concessionaire.receipt.pdf');
@@ -86,6 +82,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
         //Concessionaires Management
         Route::post('concessionaires/add', [ConcessionairesController::class, 'AddNewConcessionaire'])->name('concessionaires.add');
         Route::post('concessionaires/update/{id}', [ConcessionairesController::class, 'updateConcessionaire'])->name('concessionaires.update');
+
+        //Receipts Management
+        Route::get('/admin/receipts', [ReceiptsController::class, 'manage'])->name('receipts.manage');
+        Route::post('/admin/receipts/add-batch', [ReceiptsController::class, 'addBatch'])->name('receipts.addBatch');
 
     });
 

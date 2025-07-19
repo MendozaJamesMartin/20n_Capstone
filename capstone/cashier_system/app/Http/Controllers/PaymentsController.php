@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\PaymentReceiptMail;
 use App\Models\Fee;
 use App\Models\Receipt;
+use App\Models\ReceiptBatch;
 use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -58,9 +59,15 @@ class PaymentsController extends Controller
         try {
             if ($request->isMethod('get')) {
                 // Display the form for creating a transaction
-                $fees = Fee::all();
                 Log::info("List of Fees");
-                return view('common.payments.student-payment-form', compact('fees'));
+                $fees = Fee::all();
+
+                Log::info("Receipt Batch checker");
+                $currentBatch = ReceiptBatch::whereColumn('next_number', '<=', 'end_number')
+                    ->orderBy('id')
+                    ->first();
+                    
+                return view('common.payments.student-payment-form', compact('fees'), ['hasActiveBatch' => $currentBatch !== null]);
             } elseif ($request->isMethod('post')) {
                 Log::info("Input Validation");
                 $validated = $request->validate([
@@ -128,9 +135,15 @@ class PaymentsController extends Controller
         try {
             if ($request->isMethod('get')) {
                 // Display the form for creating a transaction
-                $fees = Fee::all();
                 Log::info("List of Fees");
-                return view('common.payments.outsider-payment-form', compact('fees'));
+                $fees = Fee::all();
+
+                Log::info("Receipt Batch checker");
+                $currentBatch = ReceiptBatch::whereColumn('next_number', '<=', 'end_number')
+                    ->orderBy('id')
+                    ->first();
+
+                return view('common.payments.outsider-payment-form', compact('fees'), ['hasActiveBatch' => $currentBatch !== null]);
             } elseif ($request->isMethod('post')) {
                 Log::info("Input Validation");
                 $validated = $request->validate([
@@ -192,10 +205,16 @@ class PaymentsController extends Controller
         DB::beginTransaction();
         try {
             if ($request->isMethod('get')) {
-                // Display the form for creating a transaction
-                $fees = Fee::all();
+
                 Log::info("List of Fees");
-                return view('students.payment-form-unpaid', compact('fees'));
+                $fees = Fee::all();
+
+                Log::info("Receipt Batch checker");
+                $currentBatch = ReceiptBatch::whereColumn('next_number', '<=', 'end_number')
+                    ->orderBy('id')
+                    ->first();
+
+                return view('students.payment-form-unpaid', compact('fees'), ['hasActiveBatch' => $currentBatch !== null]);
             } elseif ($request->isMethod('post')) {
                 Log::info("Input Validation");
                 $validated = $request->validate([

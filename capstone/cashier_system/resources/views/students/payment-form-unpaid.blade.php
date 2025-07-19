@@ -13,6 +13,12 @@
                 <p class="text-danger">{{ session('error') }}</p>
             @endif
 
+            @if (!$hasActiveBatch)
+                <div class="alert alert-danger">
+                    🚫 Cannot submit payment. Please wait for further announcement for Cashier availability.
+                </div>
+            @endif
+
             <form method="POST" action="{{ route('student.payment.form') }}" id="paymentForm">
                 @csrf
 
@@ -202,8 +208,22 @@
         form.submit();
     });
 
-    // Optional: create one row by default
-    window.addEventListener('DOMContentLoaded', createRow);
+    window.addEventListener('DOMContentLoaded', () => {
+        createRow();
+
+        const hasActiveBatch = @json($hasActiveBatch);
+        if (!hasActiveBatch) {
+            document.querySelectorAll('#paymentForm input, #paymentForm button, #paymentForm select').forEach(el => {
+                el.disabled = true;
+            });
+
+            const form = document.getElementById('paymentForm');
+            const notice = document.createElement('p');
+            notice.className = 'text-danger mt-2';
+            notice.textContent = '🛑 Payment form is temporarily disabled.';
+            form.appendChild(notice);
+        }
+    });
 </script>
 
 @endsection
