@@ -95,7 +95,6 @@ class TransactionsController extends Controller
             ->orderBy('id')
             ->first();
 
-
         return view('common.transactions.concessionaire-details', compact('TransactionDetails'), ['hasActiveBatch' => $currentBatch !== null]);
     }
 

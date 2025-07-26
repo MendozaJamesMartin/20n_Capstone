@@ -139,9 +139,9 @@
         <tbody>
             @foreach($TransactionDetails as $bill)
                 <tr>
-                    <td style="border-top: 0px; border-bottom: 0px;">{{ $bill->bill_type }}</td>
+                    <td style="border-top: 0px; border-bottom: 0px;">{{ $bill->utility_type }}</td>
                     <td style="border-top: 0px; border-bottom: 0px;"></td>
-                    <td class="text-center" style="border-top: 0px; border-bottom: 0px;">{{ number_format($bill->amount_paid, 2) }}</td>
+                    <td class="text-center" style="border-top: 0px; border-bottom: 0px;">{{ number_format($bill->bill_payment, 2) }}</td>
                 </tr>
             @endforeach
 
@@ -155,7 +155,7 @@
 
             <tr>
                 <td colspan="2" class="text-center"><strong>TOTAL</strong></td>
-                <td class="text-center"><strong>{{ number_format($TransactionDetails->sum('amount_paid'), 2) }}</strong></td>
+                <td class="text-center"><strong>{{ number_format($TransactionDetails->sum('bill_payment'), 2) }}</strong></td>
             </tr>
         </tbody>
     </table>

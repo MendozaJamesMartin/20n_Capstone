@@ -1,182 +1,109 @@
 @extends('layout.main-master')
 
 @section('content')
-<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size:auto; background-position: right center; min-height: 85vh; padding: 2%;">
+<main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:auto; background-position: right center; min-height: 85vh; padding: 2%;">
     <div class="container">
 
-        <!-- Header and Filters -->
+        <!-- Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <h2 class="mb-0">Concessionaire Billing List</h2>
+            <h2 class="mb-0">Latest Concessionaire Bills</h2>
+        </div>
 
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <form action="{{ url()->current() }}" method="GET" class="d-flex">
-                    <input type="text" name="search" class="form-control form-control-sm" placeholder="🔍 Search..." value="{{ request('search') }}">
-                    @foreach(request()->except('search', 'page') as $key => $value)
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                    @endforeach
-                </form>
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3" id="billTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="electricity-tab" data-bs-toggle="tab" data-bs-target="#electricity" type="button" role="tab">Electricity</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="water-tab" data-bs-toggle="tab" data-bs-target="#water" type="button" role="tab">Water</button>
+            </li>
+        </ul>
 
-                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#filterModal">
-                    <i class="fa-solid fa-filter me-1"></i> Filters
-                </button>
+        <div class="card shadow-sm p-3 mb-4 bg-light rounded tab-content" id="billTabsContent">
+            <!-- Electricity Bills -->
+            <div class="tab-pane fade show active" id="electricity" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle text-center mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Concessionaire</th>
+                                <th>Billing Period</th>
+                                <th>Bill Start Date</th>
+                                <th>Bill End Date</th>
+                                <th>kWh Used</th>
+                                <th>₱/kWh</th>
+                                <th>Current Charges</th>
+                                <th>Previous Unpaid</th>
+                                <th>Total Due</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($electricityBills as $bill)
+                            <tr>
+                                <td>{{ $bill->concessionaire_name }}</td>
+                                <td>{{ $bill->billing_period }}</td>
+                                <td>{{ $bill->bill_start_date }}</td>
+                                <td>{{ $bill->bill_end_date }}</td>
+                                <td>{{ number_format($bill->concessionaire_kwh_used, 2) }}</td>
+                                <td>₱{{ number_format($bill->cost_per_kwh, 2) }}</td>
+                                <td>₱{{ number_format($bill->concessionaire_total_amount, 2) }}</td>
+                                <td>₱{{ number_format($bill->previous_unpaid, 2) }}</td>
+                                <td>₱{{ number_format($bill->total_amount_due, 2) }}</td>
+                                <td>{{ $bill->due_date }}</td>
+                                <td><span class="badge bg-{{ $bill->status === 'Fully Paid' ? 'success' : ($bill->status === 'Partially Paid' ? 'warning' : 'danger') }}">{{ $bill->status }}</span></td>
+                                <td>
+                                    <a href="{{ route('concessionaire.bill.electricity.pdf', ['id' => $bill->bill_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Billing Statement"><i class="fa-solid fa-receipt"></i></a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="9" class="text-center">No electricity bills available.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Water Bills -->
+            <div class="tab-pane fade" id="water" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle text-center mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Concessionaire</th>
+                                <th>Billing Period</th>
+                                <th>Current Charges</th>
+                                <th>Previous Unpaid</th>
+                                <th>Total Due</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($waterBills as $bill)
+                            <tr>
+                                <td>{{ $bill->concessionaire_name }}</td>
+                                <td>{{ $bill->billing_period }}</td>
+                                <td>₱{{ number_format($bill->current_charges, 2) }}</td>
+                                <td>₱{{ number_format($bill->previous_unpaid, 2) }}</td>
+                                <td>₱{{ number_format($bill->total_amount_due, 2) }}</td>
+                                <td>{{ $bill->due_date }}</td>
+                                <td><span class="badge bg-{{ $bill->status === 'Fully Paid' ? 'success' : ($bill->status === 'Partially Paid' ? 'warning' : 'danger') }}">{{ $bill->status }}</span></td>
+                                <td>
+                                    <a href="{{ route('concessionaire.bill.water.pdf', ['id' => $bill->bill_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Billing Statement"><i class="fa-solid fa-receipt"></i></a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="7" class="text-center">No water bills available.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-
-        <!-- Table -->
-        <div class="card shadow-sm p-3 mb-4 bg-light rounded">
-            <div class="table-responsive">
-                <table class="table table-striped align-middle text-center mb-0">
-                    <thead class="table-dark">
-                        @php
-                            function sortCycle($field) {
-                                $current = request('sort_by') === $field ? request('sort_order', 'default') : 'default';
-                                return match ($current) {
-                                    'asc' => 'desc',
-                                    'desc' => 'default',
-                                    default => 'asc',
-                                };
-                            }
-                            function sortIcon($field) {
-                                if (request('sort_by') !== $field) return '';
-                                return match (request('sort_order')) {
-                                    'asc' => ' ▲',
-                                    'desc' => ' ▼',
-                                    default => '',
-                                };
-                            }
-                        @endphp
-                        <tr>
-                            @foreach([
-                                'id' => 'ID',
-                                'concessionaire' => 'Concessionaire',
-                                'utility_type' => 'Utility Type',
-                                'bill_amount' => 'Bill Amount',
-                                'balance_due' => 'Balance Due',
-                                'due_date' => 'Due Date',
-                                'status' => 'Status',
-                            ] as $field => $label)
-                                @php
-                                    $newOrder = sortCycle($field);
-                                    $params = array_merge(request()->except('sort_by', 'sort_order', 'page'), [
-                                        'sort_by' => $newOrder === 'default' ? null : $field,
-                                        'sort_order' => $newOrder === 'default' ? null : $newOrder,
-                                    ]);
-                                    $url = url()->current() . '?' . http_build_query(array_filter($params));
-                                @endphp
-                                <th>
-                                    <a href="{{ $url }}" class="text-white text-decoration-none">
-                                        {{ $label }}{!! sortIcon($field) !!}
-                                    </a>
-                                </th>
-                            @endforeach
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($result as $billing)
-                        <tr>
-                            <td>{{ $billing->id }}</td>
-                            <td>{{ optional($billing->concessionaire)->name ?? 'N/A' }}</td>
-                            <td>{{ $billing->utility_type }}</td>
-                            <td>{{ $billing->bill_amount }}</td>
-                            <td>{{ $billing->balance_due }}</td>
-                            <td>{{ $billing->due_date }}</td>
-                            <td>{{ $billing->status }}</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="7" class="text-center">No concessionaire billings found.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Pagination -->
-        <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mt-3">
-            @if ($result->onFirstPage())
-                <button class="btn btn-outline-dark rounded-pill px-3" disabled>« First</button>
-                <button class="btn btn-outline-dark rounded-pill px-3" disabled>‹ Prev</button>
-            @else
-                <a href="{{ $result->url(1) }}" class="btn btn-outline-secondary rounded-pill px-3">« First</a>
-                <a href="{{ $result->previousPageUrl() }}" class="btn btn-outline-secondary rounded-pill px-3">‹ Prev</a>
-            @endif
-
-            <form action="{{ url()->current() }}" method="GET" class="d-flex align-items-center">
-                <span class="me-2">Page</span>
-                <input type="number" name="page" value="{{ $result->currentPage() }}" min="1" max="{{ $result->lastPage() }}"
-                    class="form-control form-control-sm text-center me-2" style="width: 70px;" onkeydown="if(event.key === 'Enter') this.form.submit();">
-                <span>of {{ $result->lastPage() }}</span>
-                @foreach(request()->except('page') as $key => $value)
-                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                @endforeach
-            </form>
-
-            @if ($result->hasMorePages())
-                <a href="{{ $result->nextPageUrl() }}" class="btn btn-outline-secondary rounded-pill px-3">Next ›</a>
-                <a href="{{ $result->url($result->lastPage()) }}" class="btn btn-outline-secondary rounded-pill px-3">Last »</a>
-            @else
-                <button class="btn btn-outline-dark rounded-pill px-3" disabled>Next ›</button>
-                <button class="btn btn-outline-dark rounded-pill px-3" disabled>Last »</button>
-            @endif
-        </div>
-
-        <!-- Filter Modal -->
-        <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-md">
-                <form action="{{ url()->current() }}" method="GET" class="modal-content p-4">
-                    <div class="modal-header">
-                        <h5 class="modal-title"><i class="fa-solid fa-filter me-2"></i>Filter Billings</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body row g-3">
-
-                        <div class="col-md-6">
-                            <label for="utility_type" class="form-label">Utility Type</label>
-                            <select name="utility_type" class="form-select">
-                                <option value="">All Utilities</option>
-                                <option value="Water" {{ request('utility_type') == 'Water' ? 'selected' : '' }}>Water</option>
-                                <option value="Electricity" {{ request('utility_type') == 'Electricity' ? 'selected' : '' }}>Electricity</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="status" class="form-label">Payment Status</label>
-                            <select name="status" class="form-select">
-                                <option value="">All</option>
-                                <option value="Unpaid" {{ request('status') == 'Unpaid' ? 'selected' : '' }}>Unpaid</option>
-                                <option value="Partially Paid" {{ request('status') == 'Partially Paid' ? 'selected' : '' }}>Partially Paid</option>
-                                <option value="Paid" {{ request('status') == 'Paid' ? 'selected' : '' }}>Paid</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="sort_by" class="form-label">Sort By</label>
-                            <select name="sort_by" class="form-select">
-                                <option value="due_date" {{ request('sort_by') == 'due_date' ? 'selected' : '' }}>Due Date</option>
-                                <option value="bill_amount" {{ request('sort_by') == 'bill_amount' ? 'selected' : '' }}>Bill Amount</option>
-                                <option value="balance_due" {{ request('sort_by') == 'balance_due' ? 'selected' : '' }}>Balance Due</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Sort Order</label>
-                            <select name="sort_order" class="form-select">
-                                <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Ascending</option>
-                                <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Descending</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12 d-flex justify-content-between align-items-center">
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">Apply Filters</button>
-                                <a href="{{ url()->current() }}" class="btn btn-outline-secondary">Reset</a>
-                            </div>
-                        </div>
-
-                    </div>
-                </form>
-            </div>
-        </div>
-
     </div>
 </main>
 @endsection

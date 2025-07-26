@@ -25,7 +25,7 @@
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
                         <strong>Status:</strong>
-                        @if ($TransactionDetails[0]->paid_amount == 0)
+                        @if ($TransactionDetails[0]->amount_paid == 0)
                             <span id="tx-status" class="badge bg-warning text-dark">Pending</span>
                         @else
                             <span id="tx-status" class="badge bg-success text-white">Complete</span>
@@ -38,7 +38,7 @@
                         <div class="alert alert-danger">
                             🚫 Cannot finalize transaction. No receipt numbers available. Please load a new batch first.
                         </div>
-                    @elseif ($TransactionDetails[0]->paid_amount == 0)
+                    @elseif ($TransactionDetails[0]->amount_paid == 0)
                         <form id="finalizeForm" method="POST" action="{{ route('finalize.transation', ['id' => $TransactionDetails[0]->transaction_id]) }}" target="_blank" style="display: inline;">
                             @csrf
                             <button type="submit" id="finalizeBtn" class="btn btn-success">

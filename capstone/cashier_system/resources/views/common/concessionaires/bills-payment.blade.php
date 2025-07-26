@@ -3,102 +3,57 @@
 @section('content')
 
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
-    <div class="container" style="width:75%">
-        <div class="bg-light" style="padding:5%">
-            <h1>Concessionaire Payment Form</h1>
+    <div class="container" style="width: 600px;">
+        <div class="bg-light p-4 rounded shadow-sm">
+
+            <h2>Concessionaire Bill Payment</h2>
 
             @if(session('success'))
-            <p style="color: green;">{{ session('success') }}</p>
+                <div class="alert alert-success mt-3">{{ session('success') }}</div>
             @elseif(session('error'))
-            <p style="color: red;">{{ session('error') }}</p>
+                <div class="alert alert-danger mt-3">{{ session('error') }}</div>
             @endif
 
             @if (!$hasActiveBatch)
-                <div class="alert alert-danger">
-                    🚫 Cannot finalize transaction. No receipt numbers available. Please load a new batch first.
+                <div class="alert alert-danger mt-3">
+                    🚫 Cannot proceed with transaction. No receipt numbers available. Please load a new batch first.
                 </div>
             @endif
 
-            <form method="GET" action="{{ route('concessionaires.billing.payment') }}">
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label for="concessionaire">Select Concessionaire:</label>
-                        <select class="form-control" name="concessionaire_id" id="concessionaire" onchange="this.form.submit()">
-                            <option value="">-- All Concessionaires --</option>
-                            @foreach($concessionaires as $concessionaire)
-                            <option value="{{ $concessionaire->id }}" {{ request('concessionaire_id') == $concessionaire->id ? 'selected' : '' }}>
-                                {{ $concessionaire->name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </form>
-
-            @if(isset($bills) && count($bills) > 0)
-            <form method="POST" action="{{ route('concessionaires.billing.payment') }}" id="paymentForm">
+            <form method="POST" action="{{ route('concessionaires.billing.payment') }}" id="paymentForm" class="mt-4">
                 @csrf
-                <!-- Unpaid Bills Table (Initially Hidden) -->
-                <h4 class="mt-3">Unpaid Bills</h4>
-                <table class="table table-striped" id="bills-table">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Concessionaire</th>
-                            <th>Utility Type</th>
-                            <th>Bill Amount (₱)</th>
-                            <th>Balance Due (₱)</th>
-                            <th>Due Date</th>
-                            <th>Payment Amount (₱)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($bills as $bill)
-                        <tr>
-                            <td>
-                                <input type="checkbox" name="bill_id[]" value="{{ $bill->id }}">
-                            </td>
-                            <td>{{ optional($bill->concessionaire)->name ?? 'N/A' }}</td>
-                            <td>{{ $bill->utility_type }}</td>
-                            <td>{{ $bill->bill_amount }}</td>
-                            <td>{{ $bill->balance_due }}</td>
-                            <td>{{ $bill->due_date }}</td>
-                            <td>
-                                <input type="number" name="amount[{{ $bill->id }}]" step="0.01" min="0" max="{{ $bill->balance_due }}">
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
 
-                <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
+                <div class="mb-3">
+                    <label for="concessionaire_id" class="form-label">Select Concessionaire</label>
+                    <select name="concessionaire_id" id="concessionaire_id" class="form-select" required>
+                        <option value="">-- Choose --</option>
+                        @foreach($concessionaires as $concessionaire)
+                            <option value="{{ $concessionaire->id }}">{{ $concessionaire->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="utility_type" class="form-label">Utility Type</label>
+                    <select name="utility_type" id="utility_type" class="form-select" required>
+                        <option value="">-- Choose --</option>
+                        <option value="Water">Water</option>
+                        <option value="Electricity">Electricity</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="amount_paid" class="form-label">Amount to Pay (₱)</label>
+                    <input type="number" step="0.01" min="0" name="amount_paid" class="form-control" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mt-3" {{ !$hasActiveBatch ? 'disabled' : '' }}>
                     Submit Payment
                 </button>
             </form>
 
-            @else
-            <p>No unpaid bills found.</p>
-            @endif
         </div>
     </div>
 </main>
-
-<script>
-        window.addEventListener('DOMContentLoaded', () => {
-
-        const hasActiveBatch = @json($hasActiveBatch);
-        if (!hasActiveBatch) {
-            document.querySelectorAll('#paymentForm input, #paymentForm button, #paymentForm select').forEach(el => {
-                el.disabled = true;
-            });
-
-            const form = document.getElementById('paymentForm');
-            const notice = document.createElement('p');
-            notice.className = 'text-danger mt-2';
-            notice.textContent = '🛑 Payment form is disabled due to no available receipt numbers.';
-            form.appendChild(notice);
-        }
-    });
-</script>
 
 @endsection

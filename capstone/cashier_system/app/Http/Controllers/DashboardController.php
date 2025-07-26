@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ConcessionaireBill;
 use App\Models\Receipt;
+use App\Models\ReceiptBatch;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,7 +18,6 @@ class DashboardController extends Controller
 
         // Total revenue today
         $todaysRevenue = Transaction::whereDate('transaction_date', Carbon::today())
-            ->where('balance_due', '0')
             ->sum('total_amount');
 
         // Unpaid transactions
@@ -28,7 +28,7 @@ class DashboardController extends Controller
             ->count();
 
         // Bills due soon (within 7 days, assuming `due_date`)
-        $billsDue = ConcessionaireBill::where('balance_due', '>', '0')
+        $billsDue = ConcessionaireBill::where('status', '!=', 'Fully Paid')
             ->whereBetween('due_date', [$today, $today->copy()->addDays(7)])
             ->count();
 
@@ -39,12 +39,10 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // Unpaid transactions
-        $pendingPayments = ConcessionaireBill::where('balance_due', '>', '0')
-            ->whereBetween('due_date', [$today, $today->copy()->addDays(7)])
-            ->orderBy('due_date', 'desc')
-            ->limit(5)
-            ->get();
+        $currentBatch = ReceiptBatch::whereNotNull('next_number')
+            ->whereColumn('next_number', '<=', 'end_number')
+            ->orderBy('created_at', 'desc')
+            ->first();
 
         return view('common.admin-dashboard', compact(
             'todaysRevenue',
@@ -52,7 +50,7 @@ class DashboardController extends Controller
             'paidCount',
             'billsDue',
             'recentPayments',
-            'pendingPayments'
+            'currentBatch'
         ));
     }
 
@@ -102,25 +100,6 @@ class DashboardController extends Controller
             ->groupBy('customers.customer_type')
             ->get();
 
-        // Concessionaire Billing
-        $waterBills = DB::table('concessionaire_bills')->where('utility_type', 'Water')->sum('bill_amount');
-        $electricityBills = DB::table('concessionaire_bills')->where('utility_type', 'Electricity')->sum('bill_amount');
-
-        $paidWater = DB::table('concessionaire_bills')
-            ->where('utility_type', 'Water')
-            ->where('status', 'Fully Paid')
-            ->sum('bill_amount');
-
-        $paidElectricity = DB::table('concessionaire_bills')
-            ->where('utility_type', 'Electricity')
-            ->where('status', 'Fully Paid')
-            ->sum('bill_amount');
-
-        $overdueBills = DB::table('concessionaire_bills')
-            ->where('due_date', '<', now())
-            ->whereIn('status', ['Unpaid', 'Partially Paid'])
-            ->count();
-
         return view('common.analytics', compact(
             'totalRevenue',
             'monthlyRevenue',
@@ -130,11 +109,6 @@ class DashboardController extends Controller
             'topFees',
             'fees',
             'revenueByType',
-            'waterBills',
-            'electricityBills',
-            'paidWater',
-            'paidElectricity',
-            'overdueBills'
         ));
     }
 }

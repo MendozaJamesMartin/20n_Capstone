@@ -12,7 +12,7 @@
             <a href="#quick-actions" class="btn btn-primary btn-lg mt-3">Get Started</a>
         </div>
 
-        <div class="section">
+    <div class="section">
 
         <!-- KPI Cards -->
         <div class="row mb-4 section" id="quick-actions">
@@ -84,37 +84,32 @@
                     </div>
                 </a>
             </div>
-
             <div class="col-lg-6 mb-4">
-                <a href=" {{ route('payments.pending') }}" class="text-decoration-none text-reset">
+                <a href=" {{ route('receipts.manage') }}" class="text-decoration-none text-reset">
                     <div class="card shadow-sm">
                         <div class="card-body">
-                            <h5 class="card-title">List of Bills Due</h5>
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Due Date</th>
-                                        <th>Concessionaire</th>
-                                        <th>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($pendingPayments as $pendingPayment)
-                                    <tr>
-                                        <td>{{ $pendingPayment->due_date }}</td>
-                                        <td>{{ $pendingPayment->concessionaire_name }}</td>
-                                        <td>₱{{ number_format($pendingPayment->balance_due, 2) }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            <h5 class="card-title">Current Receipt Batch</h5>
+                            <!-- Current Active Receipt Batch -->
+                            @if ($currentBatch)
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <p><strong>Start Number:</strong> {{ $currentBatch->start_number ?? 0 }}</p>
+                                        <p><strong>Current Receipt Number:</strong> {{ $currentBatch->display_next_number }}</p>
+                                        <p><strong>End Number:</strong> {{ $currentBatch->end_number ?? 0 }}</p>
+                                        <p><strong>Receipts Used:</strong> {{ $currentBatch->used_count }}</p>
+                                        <p><strong>Receipts Left:</strong> {{ $currentBatch->remaining_count }}</p>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="alert alert-warning">No active receipt batch available.</div>
+                            @endif
                         </div>
                     </div>
                 </a>
             </div>
         </div>
 
-        </div>
+    </div>
         
 </main>
 

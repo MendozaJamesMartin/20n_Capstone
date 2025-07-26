@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BillsController;
 use App\Http\Controllers\ConcessionairesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeesController;
@@ -44,7 +45,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
     
     //Finalize Customer Transaction
     Route::post('/transactions/finalize/{id}', [TransactionsController::class, 'finalizeTransaction'])->name('finalize.transation');
-    Route::post('/transactions/concessionaire/finalize/{id}', [TransactionsController::class, 'finalizeConcessionaireTransaction'])->name('finalize.concessionaire.transation');
 
     //Receipt PDF Management
     Route::get('/customer/receipt/{id}', [TransactionsController::class, 'customerReceiptPDF'])->name('customer.receipt.pdf');
@@ -55,9 +55,11 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
 
     //Concessionaire Management
     Route::get('concessionaires/list', [ConcessionairesController::class, 'GetConcessionairesList'])->name('concessionaires.list');
-    Route::get('concessionaires/billing/list', [ConcessionairesController::class, 'GetBillingList'])->name('concessionaires.billing.list');
-    Route::match(['get', 'post'], 'concessionaires/billing/new', [ConcessionairesController::class, 'CreateNewBilling'])->name('concessionaires.billing.new');
-    Route::match(['get', 'post'], 'concessionaires/billing/payment', [ConcessionairesController::class, 'BillsPayment'])->name('concessionaires.billing.payment');
+    Route::get('concessionaires/billing/list', [BillsController::class, 'GetBillingList'])->name('concessionaires.billing.list');
+    Route::match(['get', 'post'], 'concessionaires/billing/new', [BillsController::class, 'CreateNewBilling'])->name('concessionaires.billing.new');
+    Route::match(['get', 'post'], 'concessionaires/billing/payment', [BillsController::class, 'BillsPayment'])->name('concessionaires.billing.payment');
+    Route::get('concessionaire/billing/electricity/{id}', [BillsController::class, 'electricityBillingStatement'])->name('concessionaire.bill.electricity.pdf');
+    Route::get('concessionaire/billing/water/{id}', [BillsController::class, 'waterBillingStatement'])->name('concessionaire.bill.water.pdf');
 
     //User Management
     Route::get('/users/profile', [UsersController::class, 'showUserProfile'])->name('user.profile');
