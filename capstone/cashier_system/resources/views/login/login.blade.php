@@ -25,9 +25,14 @@
                             <label for="email" class="form-label">Username/Email</label>
                             <input type="text" class="form-control" id="email" name="email" />
                         </div>
-                        <div class="mb-4">
+                        <div class="mb-4 position-relative">
                             <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" />
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" name="password">
+                                <button type="button" class="btn btn-outline-secondary toggle-password" tabindex="-1">
+                                    <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="mb-4">
                             <input type="checkbox" class="form-check-input" id="remember" name="remember" />
@@ -44,5 +49,17 @@
     </div>
 
 </main>
+
+<script>
+document.querySelector('.toggle-password').addEventListener('click', function () {
+    const passwordField = document.getElementById('password');
+    const icon = document.getElementById('togglePasswordIcon');
+    
+    const isPassword = passwordField.type === 'password';
+    passwordField.type = isPassword ? 'text' : 'password';
+    icon.classList.toggle('bi-eye', isPassword);
+    icon.classList.toggle('bi-eye-slash', !isPassword);
+});
+</script>
 
 @endsection

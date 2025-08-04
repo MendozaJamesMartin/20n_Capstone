@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\UserAuthMiddleware;
 use App\Mail\ForgotPasswordMail;
-use App\Models\Admin;
+use App\Mail\SendOtpCode;
 use App\Models\Credential;
-use App\Models\Student;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Database\QueryException;
@@ -52,7 +51,8 @@ class LoginController extends Controller
             Log::info("Credential created");
     
             DB::commit();
-            return back()->with('success', 'Register successful!');
+
+            return redirect()->route('users.list');
         } catch (QueryException $e) {
             DB::rollBack();
             Log::error("Registration error: " . $e->getMessage());
@@ -70,32 +70,41 @@ class LoginController extends Controller
         return view('login.login');
     }
 
-    public function loginPost(Request $request)
-    {
-        Log::info('loginPost');
-    
-        // Validate input
+    public function loginPost(Request $request) {
         $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string|min:4',
         ]);
-    
-        // Attempt authentication
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+
+        $remember = $request->filled('remember');
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
-            Log::info("User authenticated: {$user->email}, Type: {$user->role}");
-            
-            // Check user type and redirect accordingly
-            if ($user->role === 'admin' || 'Superadmin') {
-                return redirect()->route('admin.dashboard');
-            } else {
-                Auth::logout();
-                return redirect()->route('login')->withErrors(['email' => 'Unauthorized user type.']);
+            session()->put('user', $user);
+            session()->put('loginId', $user->id);
+
+            if (is_null($user->email_verified_at)) {
+                // Generate OTP and send email
+                $otp = rand(100000, 999999);
+
+                session([
+                    'otp_code' => $otp,
+                    'otp_expires_at' => now()->addMinutes(10),
+                    'otp_attempts' => 0,
+                    'otp_user_id' => $user->id,
+                    'otp_email' => $user->email,
+                ]);
+
+                Mail::to($user->email)->send(new SendOtpCode($otp));
+
+                return redirect()->route('otp.verify.form');
             }
-        }
-        
-        // Authentication failed
-        return redirect()->route('login')->withErrors(['email' => 'Invalid credentials.']);
+
+        return redirect()->route('admin.dashboard');
+    }
+
+    return redirect()->route('login')->with('error', 'Invalid Credentials');
     }
     
     public function forgotPassword() {

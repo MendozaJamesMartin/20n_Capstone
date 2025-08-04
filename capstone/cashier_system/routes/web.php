@@ -5,20 +5,18 @@ use App\Http\Controllers\ConcessionairesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeesController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\OtpController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\ReceiptsController;
 use App\Http\Controllers\TransactionsController;
 use App\Http\Controllers\UsersController;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use Psy\Readline\Transient;
 
 use function Pest\Laravel\get;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
+Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], function () {
     
     //Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
@@ -93,21 +91,26 @@ Route::group(['prefix' => 'admin', 'middleware' => ['user.auth']], function () {
 
 });
 
-Route::group(['middleware' => 'guest', 'prefix' > '/admin'], function() {
+Route::group(['middleware' => ['user.auth']], function() {
+    Route::get('/verify-otp', [OtpController::class, 'showForm'])->name('otp.verify.form');
+    Route::post('/verify-otp', [OtpController::class, 'verify'])->name('otp.verify');
+    Route::post('/resend-otp', [OtpController::class, 'resend'])->name('otp.resend');
+    
+    Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+});
+
+Route::group(['middleware' => ['redirect.auth'], 'prefix' > '/admin'], function() {
     Route::get('/login', [LoginController::class, 'login'])->name('login');
     Route::post('/login', [LoginController::class, 'loginPost'])->name('login.submit');
-        
+
     Route::get('/forgot/password', [LoginController::class, 'forgotPassword'])->name('forgot.password');
     Route::post('/forgot/password', [LoginController::class, 'forgotPasswordPost'])->name('forgot.password');
 });
 
-Route::group(['middleware' => 'guest', 'prefix' => '/customer'], function () {
+Route::group(['middleware' => ['redirect.auth'], 'prefix' => '/customer'], function () {
+    
     //Student-side Webpages
     Route::group(['prefix' => '/student'], function(){
-        //Student Home Page
-        Route::get('/dashboard', function () {
-            return view('students.student-dashboard');
-        })->name('student.dashboard');
         //Self-Service Student Payment Form
         Route::match(['get', 'post'], '/payment/form', [PaymentsController::class, 'selfServiceStudentPayment'])->name('student.payment.form');
         //Payment Form Success
@@ -116,17 +119,9 @@ Route::group(['middleware' => 'guest', 'prefix' => '/customer'], function () {
         })->name('students.submitted');
     });
     
-    //Concessionaire Webpages
-    Route::group(['prefix' => '/concessionaire'], function() {
-
-    });
 });
 
-Route::group(['middleware' => ['user.auth']], function() {
-    Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
-});
-
-Route::group(['middleware' => 'guest', 'prefix' => '/'], function () {
+Route::group(['middleware' => ['redirect.auth'], 'prefix' => '/'], function () {
 
     Route::get('/', function () {
         return view('common.home');

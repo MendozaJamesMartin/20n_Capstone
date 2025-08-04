@@ -19,43 +19,16 @@ class UserAuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        Log::info('ENTER USER AUTH MIDDLEWARE HANDLE=====>');
-        if(Auth::check()) {
-            $user = $request->session()->get('user');
-            if ($user) {
-                Log::info($user);
-            } else {
-                Log::info("Via remember");
-                $user = User::where('id', Auth::id())->first();
-                Session()->put('user', $user);
-                Session()->put('loginId', $user->id);
-            }
-
-            return $next($request);
-
-        } else {
-            $username = $request->input('username');
-            $password = $request->input('password');
-            $user = User::where('email', $username)->first();
-
-            $remember = $request->has('remember');
-
-            if ($user) {
-                if (Auth::attempt(['email' => $username, 'password' => $password], $remember)) {
-                    Log::info("Logged In");
-                    $request->session()->put('user', $user);
-                    $request->session()->put('loginId', $user->id);
-
-                    return $next($request);
-                } else {
-                    return back()->withErrors(['password' => 'Invalid Password.']);
-                }
-            } else {
-                return redirect('/')->with('error', 'Invalid Credentials');
-            }
-
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Please log in first.');
         }
-        Log::info('EXIT USER AUTH MIDDLEWARE HANDLE=====>');
+
+        // Optionally restore session data
+        if (!$request->session()->has('user')) {
+            $user = Auth::user();
+            session()->put('user', $user);
+            session()->put('loginId', $user->id);
+        }
 
         return $next($request);
     }
