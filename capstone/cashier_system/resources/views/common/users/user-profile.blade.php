@@ -1,8 +1,8 @@
 @extends('layout.main-master')
 @section('content')
 
-<div style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
-    <main class="container" style="width:50%;">
+<main style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
+    <div class="container" style="width:50%;">
 
         @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -108,14 +108,14 @@
                                 @csrf
                                 @method('POST')
 
-                                <label for="last_name" class="form-label">New Password: </label>
-                                <div class="mb-3 d-flex gap-2">
-                                    <input type="password" name="password" class="form-control" id="password" required>
-                                </div>
-                                
-                                <label for="last_name" class="form-label">Confirm Password: </label>
-                                <div class="mb-3 d-flex gap-2">
-                                    <input type="password" name="password" class="form-control" id="password" required>
+                                <label for="password" class="form-label">New Password: </label>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="password" name="password">
+                                        <button type="button" class="btn btn-outline-secondary toggle-password" tabindex="-1">
+                                            <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <button type="submit" class="btn btn-danger">Save</button>
@@ -126,7 +126,19 @@
             </div>
 
         </div>
-    </main>
-</div>
+    </div>
+</main>
+
+<script>
+document.querySelector('.toggle-password').addEventListener('click', function () {
+    const passwordField = document.getElementById('password');
+    const icon = document.getElementById('togglePasswordIcon');
+    
+    const isPassword = passwordField.type === 'password';
+    passwordField.type = isPassword ? 'text' : 'password';
+    icon.classList.toggle('bi-eye', isPassword);
+    icon.classList.toggle('bi-eye-slash', !isPassword);
+});
+</script>
 
 @endsection
