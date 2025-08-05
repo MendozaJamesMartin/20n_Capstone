@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\BillsController;
 use App\Http\Controllers\ConcessionairesController;
 use App\Http\Controllers\DashboardController;
@@ -87,6 +88,8 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
         Route::get('/admin/receipts', [ReceiptsController::class, 'manage'])->name('receipts.manage');
         Route::post('/admin/receipts/add-batch', [ReceiptsController::class, 'addBatch'])->name('receipts.addBatch');
 
+        //Audit logs
+        Route::get('/audit/logs', [AuditLogController::class, 'index'])->name('audit.logs');
     });
 
 });

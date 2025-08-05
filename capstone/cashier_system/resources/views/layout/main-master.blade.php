@@ -160,12 +160,9 @@
 
             <!-- Transactions -->
             <li class="nav-item mt-2">
-                <a class="nav-link" data-bs-toggle="collapse" href="#transactionsSubmenu" role="button" aria-expanded="false" aria-controls="transactionsSubmenu">
+                <a class="nav-link" href="{{ route('receipts.list') }}">
                     Transactions
                 </a>
-                <div class="collapse ps-3" id="transactionsSubmenu">
-                    <a href="{{ route('receipts.list') }}" class="nav-link">Transaction History</a>
-                </div>
             </li>
 
             <!-- Billing -->
@@ -200,6 +197,13 @@
                 <div class="collapse ps-3" id="reportSubmenu">
                     <a href="{{ route('data.analytics') }}" class="nav-link">View Analytics</a>
                 </div>
+            </li>
+
+            <!-- Audit Logs -->
+            <li class="nav-item mt-2">
+                <a class="nav-link" href="{{ route('audit.logs') }}">
+                    Audit Logs
+                </a>
             </li>
 
             <!-- Account -->
