@@ -83,12 +83,14 @@ class FeesController extends Controller
     }    
 
     public function deleteFees($id) {
-        Fee::find($id)->delete();
+        $fee = Fee::findOrFail($id);
+        $fee->delete(); // Triggers audit
         return redirect()->route('fees.list')->with('success', 'Item deleted successfully!');
     }
 
     public function restoreFees($id) {
-        Fee::withTrashed()->find($id)->restore();
+        $fee = Fee::withTrashed()->findOrFail($id);
+        $fee->restore(); // Triggers audit
         return redirect()->route('fees.list.deleted')->with('success', 'Item restored successfully!');
     }
 }

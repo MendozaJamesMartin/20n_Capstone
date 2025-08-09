@@ -9,7 +9,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class Fee extends Model implements Auditable
 {
-    use AuditingAuditable;
+    use \OwenIt\Auditing\Auditable;
 
     protected $auditInclude = ['fee_name', 'amount'];
     protected $softDelete = true; // to track deletion/restoration

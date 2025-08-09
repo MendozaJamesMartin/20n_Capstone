@@ -13,7 +13,7 @@ class User extends Authenticatable implements Auditable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
-    use AuditingAuditable;
+    use \OwenIt\Auditing\Auditable;
 
     protected $auditInclude = [
         'first_name',
@@ -21,7 +21,6 @@ class User extends Authenticatable implements Auditable
         'last_name',
         'suffix',
         'email',
-        'password',
         'role',
         'email_verified_at'];
 
@@ -62,6 +61,11 @@ class User extends Authenticatable implements Auditable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getNameAttribute(): string
+    {
+        return trim("{$this->first_name} {$this->last_name}");
     }
 
 }
