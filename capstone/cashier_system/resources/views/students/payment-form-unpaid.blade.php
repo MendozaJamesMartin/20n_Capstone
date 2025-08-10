@@ -22,50 +22,32 @@
             <form method="POST" action="{{ route('student.payment.form') }}" id="paymentForm">
                 @csrf
 
-                <!-- Student Info -->
+                <!-- Outsider Info -->
                 <div class="mb-3">
-                    <label for="student_id" class="form-label">Student ID</label>
-                    <input type="text" class="form-control" id="student_id" name="student_id" placeholder="XXXX-XXXXX-XX-X">
-                </div>
-
-                <div class="row mb-3 g-2">
-                    <label class="form-label">Student Full Name</label>
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <input type="text" class="form-control" name="first_name" placeholder="First Name">
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <input type="text" class="form-control" name="middle_name" placeholder="Middle Name">
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <input type="text" class="form-control" name="last_name" placeholder="Last Name">
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <input type="text" class="form-control" name="suffix" placeholder="Suffix">
-                    </div>
+                    <label for="customer_name" class="form-label">Customer Name</label>
+                    <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="First Name M.I. Last Name" required>
                 </div>
 
                 <div class="mb-4">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="text" class="form-control" name="email" placeholder="email@example.com">
+                    <label for="contact" class="form-label">Contact</label>
+                    <input type="text" class="form-control" id="contact" name="contact" placeholder="example@email.com">
                 </div>
 
                 <!-- Fee Selection -->
                 <h3>Fees</h3>
-                <div class="table-responsive mb-3">
-                    <table class="table table-bordered align-middle text-center" id="fees-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width: 60%">Fee Name</th>
-                                <th style="width: 15%">Amount</th>
-                                <th style="width: 15%">Quantity</th>
-                                <th style="width: 10%">Remove</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Rows added dynamically -->
-                        </tbody>
-                    </table>
-                </div>
+                <table class="table table-bordered align-middle text-center" id="fees-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 60%">Fee Name</th>
+                            <th style="width: 15%">Amount</th>
+                            <th style="width: 15%">Quantity</th>
+                            <th style="width: 10%">Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows added dynamically -->
+                    </tbody>
+                </table>
 
                 <button type="button" class="btn btn-success btn-sm mb-3" id="addFeeRow">+ Add Fee</button>
 

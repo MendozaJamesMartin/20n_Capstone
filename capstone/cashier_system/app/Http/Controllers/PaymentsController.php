@@ -21,7 +21,7 @@ class PaymentsController extends Controller
         $timeframe = $request->input('timeframe', 'all');
         $search = $request->input('search', '');
 
-        $query = DB::table('student_unpaid_transactions_list')
+        $query = DB::table('unpaid_transactions_list')
             ->select();
 
         // Apply timeframe filter
@@ -53,83 +53,7 @@ class PaymentsController extends Controller
         return view('common.payments.pending-payments', compact('result'));
     }
 
-    public function StudentPayment(Request $request) {
-        Log::info("Payment form accessed");
-        DB::beginTransaction();
-        try {
-            if ($request->isMethod('get')) {
-                // Display the form for creating a transaction
-                Log::info("List of Fees");
-                $fees = Fee::all();
-
-                Log::info("Receipt Batch checker");
-                $currentBatch = ReceiptBatch::whereColumn('next_number', '<=', 'end_number')
-                    ->orderBy('id')
-                    ->first();
-                    
-                return view('common.payments.student-payment-form', compact('fees'), ['hasActiveBatch' => $currentBatch !== null]);
-            } elseif ($request->isMethod('post')) {
-                Log::info("Input Validation");
-                $validated = $request->validate([
-                    'student_id' => 'required|string',
-                    'first_name' => 'required|string',
-                    'middle_name' => 'required|string',
-                    'last_name' => 'required|string',
-                    'suffix' => 'nullable|string',
-                    'email' => 'required|string|email',
-                    'quantities' => 'required|array',
-                    'amounts' => 'required|array', 
-                ]);                
-
-                Log::info("Filtering Items with 0 quantity");
-                // Filter out fees with zero quantity
-                $fees = array_filter($validated['quantities'], function ($qty) {
-                    return $qty > 0;
-                });
-                
-                if (empty($fees)) {
-                    return back()->with('error', 'Please select at least one fee.');
-                }
-                
-                $feeIds = array_keys($fees);
-                $quantities = array_values($fees);
-                
-                // Use same keys to extract amounts
-                $amounts = array_map(function ($id) use ($validated) {
-                    return $validated['amounts'][$id] ?? '0.00';
-                }, $feeIds);
-                
-                $feeIdsStr = implode(',', $feeIds);
-                $quantitiesStr = implode(',', $quantities);
-                $amountsStr = implode(',', $amounts);
-                
-                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                    $validated['student_id'],
-                    $validated['first_name'],
-                    $validated['middle_name'],
-                    $validated['last_name'],
-                    $validated['suffix'],
-                    $validated['email'],
-                    $feeIdsStr,
-                    $quantitiesStr,
-                    $amountsStr
-                ]);
-                
-                $transactionId = $results[0]->transaction_id;
-
-                DB::commit();
-
-                Log::info("return");
-                return redirect()->route('customer.transaction.details', ['id' => $transactionId]);
-            }
-        } catch (QueryException $e) {
-            DB::rollBack();
-            Log::info("Payment form unsuccessful");
-            return back()->with('error', 'Student payment failed');
-        }
-    }
-
-    public function OutsiderPayment(Request $request) {
+    public function CustomerPayment(Request $request) {
         Log::info("Payment form accessed");
         DB::beginTransaction();
         try {
@@ -143,20 +67,19 @@ class PaymentsController extends Controller
                     ->orderBy('id')
                     ->first();
 
-                return view('common.payments.outsider-payment-form', compact('fees'), ['hasActiveBatch' => $currentBatch !== null]);
+                return view('common.payments.customer-payment-form', compact('fees'), ['hasActiveBatch' => $currentBatch !== null]);
             } elseif ($request->isMethod('post')) {
                 Log::info("Input Validation");
                 $validated = $request->validate([
-                    'name' => 'required|string',
-                    'contact' => 'required|string|email',
+                    'customer_name' => 'required|string',
+                    'contact' => 'nullable|string|email',
                     'quantities' => 'required|array',
                     'amounts' => 'required|array',
                 ]);
 
                 Log::info("Filtering Items with 0 quantity");
                 // Filter out fees with zero quantity
-                Log::info("Filtering Items with 0 quantity");
-                // Filter out fees with zero quantity
+
                 $fees = array_filter($validated['quantities'], function ($qty) {
                     return $qty > 0;
                 });
@@ -178,8 +101,8 @@ class PaymentsController extends Controller
                 $amountsStr = implode(',', $amounts);
 
                 Log::info("Stored Procedure call");
-                $results = DB::select("CALL OutsiderPayment(?, ?, ?, ?, ?)", [
-                    $validated['name'],
+                $results = DB::select("CALL CustomerPayment(?, ?, ?, ?, ?)", [
+                    $validated['customer_name'],
                     $validated['contact'],
                     $feeIdsStr,
                     $quantitiesStr,
@@ -196,7 +119,7 @@ class PaymentsController extends Controller
         } catch (QueryException $e) {
             DB::rollBack();
             Log::info("Payment form unsuccessful");
-            return back()->with('error', 'Outsider customer payment failed');
+            return back()->with('error', 'Customer payment failed');
         }
     }
 
@@ -218,15 +141,11 @@ class PaymentsController extends Controller
             } elseif ($request->isMethod('post')) {
                 Log::info("Input Validation");
                 $validated = $request->validate([
-                    'student_id' => 'required|string',
-                    'first_name' => 'required|string',
-                    'middle_name' => 'required|string',
-                    'last_name' => 'required|string',
-                    'suffix' => 'nullable|string',
-                    'email' => 'required|string|email',
+                    'customer_name' => 'required|string',
+                    'contact' => 'nullable|string|email',
                     'quantities' => 'required|array',
-                    'amounts' => 'required|array', 
-                ]);                
+                    'amounts' => 'required|array',
+                ]);      
 
                 Log::info("Filtering Items with 0 quantity");
                 // Filter out fees with zero quantity
@@ -250,13 +169,10 @@ class PaymentsController extends Controller
                 $quantitiesStr = implode(',', $quantities);
                 $amountsStr = implode(',', $amounts);
                 
-                $results = DB::select("CALL StudentPayment(?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-                    $validated['student_id'],
-                    $validated['first_name'],
-                    $validated['middle_name'],
-                    $validated['last_name'],
-                    $validated['suffix'],
-                    $validated['email'],
+                Log::info("Stored Procedure call");
+                $results = DB::select("CALL CustomerPayment(?, ?, ?, ?, ?)", [
+                    $validated['customer_name'],
+                    $validated['contact'],
                     $feeIdsStr,
                     $quantitiesStr,
                     $amountsStr
@@ -284,21 +200,17 @@ class PaymentsController extends Controller
                 // Get all fees
                 $fees = Fee::all();
     
+                // Get transaction details
                 $transactionDetails = DB::table('customer_transaction_receipt as ctr')
                     ->join('customers as c', 'ctr.customer_id', '=', 'c.id')
-                    ->leftJoin('student_details as s', 'c.id', '=', 's.customer_id')
                     ->join('fees', 'fees.fee_name', '=', 'ctr.fee_name') // to get fee_id
                     ->where('ctr.transaction_id', $transactionId)
                     ->select(
                         'fees.id as fee_id',
                         'fees.amount',
                         'ctr.*',
-                        's.first_name',
-                        's.middle_name',
-                        's.last_name',
-                        's.suffix',
-                        's.student_id',
-                        's.email'
+                        'c.customer_name',
+                        'c.contact'
                     )
                     ->get();
 
@@ -313,21 +225,29 @@ class PaymentsController extends Controller
                         return [$item->fee_id => $item->quantity];
                     });
 
-                    // Get detailed fee information using fee_ids (more reliable than names)
+                    // Get detailed fee information using fee_ids
                     $feeIds = $transactionDetails->pluck('fee_id')->unique();
                     $selectedFeeDetails = Fee::whereIn('id', $feeIds)->get();
 
                     // Extract customer info from the first record
                     $customerInfo = (object)[
-                        'first_name' => $transactionDetails[0]->first_name,
-                        'last_name' => $transactionDetails[0]->last_name,
+                        'customer_name' => $transactionDetails[0]->customer_name,
+                        'contact' => $transactionDetails[0]->contact,
                     ];
 
-                    Log::info("Loaded transaction details for: {$customerInfo->first_name} {$customerInfo->last_name}");
+                    Log::info("Loaded transaction details for: {$customerInfo->customer_name}");
                 } else {
                     Log::warning("No transaction details found for transaction ID $transactionId");
                 }
-                return view('common.payments.update-payment', compact('fees', 'selectedFees', 'selectedFeeDetails', 'transactionDetails', 'transactionId', 'customerInfo'));
+
+                return view('common.payments.update-payment', compact(
+                    'fees',
+                    'selectedFees',
+                    'selectedFeeDetails',
+                    'transactionDetails',
+                    'transactionId',
+                    'customerInfo'
+                ));
             }
     
             elseif ($request->isMethod('put')) {

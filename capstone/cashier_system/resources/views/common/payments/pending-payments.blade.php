@@ -59,8 +59,7 @@
                         <tr>
                             @foreach ([
                                 'transaction_number' => 'Transaction Number',
-                                'student_id' => 'Student ID',
-                                'full_name' => 'Full Name',
+                                'customer_name' => 'Customer Name',
                                 'total_amount' => 'Total Amount',
                                 'amount_paid' => 'Amount Paid',
                                 'balance_due' => 'Balance Due',
@@ -87,8 +86,7 @@
                         @forelse($result as $transaction)
                         <tr>
                             <td>{{ $transaction->transaction_number }}</td>
-                            <td>{{ $transaction->student_id }}</td>
-                            <td>{{ $transaction->full_name }}</td>
+                            <td>{{ $transaction->customer_name }}</td>
                             <td>{{ $transaction->total_amount }}</td>
                             <td>{{ $transaction->amount_paid }}</td>
                             <td>{{ $transaction->balance_due }}</td>

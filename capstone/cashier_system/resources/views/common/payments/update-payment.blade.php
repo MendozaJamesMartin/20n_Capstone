@@ -19,17 +19,9 @@
                 @method('PUT')
 
                 <!-- Student Info -->
-                <div class="mb-3">
-                    <label for="student_id" class="form-label">Student ID</label>
-                    <input type="text" class="form-control" id="student_id" name="student_id" value="{{ old('student_id', $transactionDetails[0]->student_id ?? '') }}">
-                </div>
-
                 <label class="form-label">Student Full Name</label>
                 <div class="mb-3 d-flex gap-2">
-                    <input type="text" class="form-control" name="first_name" value="{{ old('first_name', $transactionDetails[0]->first_name ?? '') }}">
-                    <input type="text" class="form-control" name="middle_name" value="{{ old('middle_name', $transactionDetails[0]->middle_name ?? '') }}">
-                    <input type="text" class="form-control" name="last_name" value="{{ old('last_name', $transactionDetails[0]->last_name ?? '') }}">
-                    <input type="text" class="form-control" name="suffix" value="{{ old('suffix', $transactionDetails[0]->suffix ?? '') }}">
+                    <input type="text" class="form-control" name="customer_name" value="{{ old('customer_name', $transactionDetails[0]->customer_name ?? '') }}">
                 </div>
 
                 <div class="mb-4">

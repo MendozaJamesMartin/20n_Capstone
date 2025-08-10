@@ -148,21 +148,23 @@
             <!-- Payments -->
             <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="collapse" href="#paymentsSubmenu" role="button" aria-expanded="false" aria-controls="paymentsSubmenu">
-                    Payments
+                    Payment Forms
                 </a>
                 <div class="collapse ps-3" id="paymentsSubmenu">
-                    <a href="{{ route('payments.pending') }}" class="nav-link">Pending Payments</a>
-                    <a href="{{ route('payments.student.new') }}" class="nav-link">Student Payment Form</a>
-                    <a href="{{ route('payments.outsider.new') }}" class="nav-link">Outsider Payment Form</a>
+                    <a href="{{ route('payments.customer.new') }}" class="nav-link">Customer Payment Form</a>
                     <a href="{{ route('concessionaires.billing.payment') }}" class="nav-link">Bills Payment</a>
                 </div>
             </li>
 
-            <!-- Transactions -->
-            <li class="nav-item mt-2">
-                <a class="nav-link" href="{{ route('receipts.list') }}">
+            <!-- Payments -->
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="collapse" href="#transactionsSubmenu" role="button" aria-expanded="false" aria-controls="transactionsSubmenu">
                     Transactions
                 </a>
+                <div class="collapse ps-3" id="transactionsSubmenu">
+                    <a href="{{ route('payments.pending') }}" class="nav-link">Pending Transactions</a>
+                    <a href="{{ route('receipts.list') }}" class="nav-link">Transaction History</a>
+                </div>
             </li>
 
             <!-- Billing -->

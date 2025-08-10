@@ -29,8 +29,7 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     Route::get('fees/list/deleted', [FeesController::class, 'deletedFeesList'])->name('fees.list.deleted');
 
     //Customer Payments
-    Route::match(['get', 'post'], '/payments/student/new', [PaymentsController::class, 'StudentPayment'])->name('payments.student.new');
-    Route::match(['get', 'post'], '/payments/outsider/new', [PaymentsController::class, 'OutsiderPayment'])->name('payments.outsider.new');
+    Route::match(['get', 'post'], '/payments/new', [PaymentsController::class, 'CustomerPayment'])->name('payments.customer.new');
     //List of pending payments
     Route::get('/payments/pending', [PaymentsController::class, 'GetPendingPaymentsList'])->name('payments.pending');
     //View Details of Pending Payments and Edit them before approving payment

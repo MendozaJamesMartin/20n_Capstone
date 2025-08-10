@@ -6,7 +6,7 @@
 
     <div class="container" style="width:75%">
         <div class="bg-light p-5">
-            <h1>Student Payment Form</h1>
+            <h1>Customer Payment Form</h1>
 
             @if(session('success'))
                 <p class="text-success">{{ session('success') }}</p>
@@ -20,26 +20,18 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('payments.student.new') }}" id="paymentForm">
+            <form method="POST" action="{{ route('payments.customer.new') }}" id="paymentForm">
                 @csrf
 
-                <!-- Student Info -->
+                <!-- Outsider Info -->
                 <div class="mb-3">
-                    <label for="student_id" class="form-label">Student ID</label>
-                    <input type="text" class="form-control" id="student_id" name="student_id" placeholder="XXXX-XXXXX-XX-X">
-                </div>
-
-                <label class="form-label">Student Full Name</label>
-                <div class="mb-3 d-flex gap-2">
-                    <input type="text" class="form-control" name="first_name" placeholder="First Name">
-                    <input type="text" class="form-control" name="middle_name" placeholder="Middle Name">
-                    <input type="text" class="form-control" name="last_name" placeholder="Last Name">
-                    <input type="text" class="form-control" name="suffix" placeholder="Suffix">
+                    <label for="customer_name" class="form-label">Customer Name</label>
+                    <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="First Name M.I. Last Name" required>
                 </div>
 
                 <div class="mb-4">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="text" class="form-control" name="email" placeholder="email@example.com">
+                    <label for="contact" class="form-label">Contact</label>
+                    <input type="text" class="form-control" id="contact" name="contact" placeholder="example@email.com">
                 </div>
 
                 <!-- Fee Selection -->
@@ -75,6 +67,7 @@
                     <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
                 @endforeach
             </datalist>
+
         </div>
     </div>
 
@@ -220,7 +213,6 @@
             form.appendChild(notice);
         }
     });
-
 </script>
 
 @endsection
