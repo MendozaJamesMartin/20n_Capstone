@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\ReceiptsController;
 use App\Http\Controllers\TransactionsController;
 use App\Http\Controllers\UsersController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
 use Psy\Readline\Transient;
@@ -52,13 +53,15 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     //Transcations Monthly Report
     Route::get('/reports/monthly/export', [TransactionsController::class, 'exportMonthlyReport'])->name('reports.monthly.export');
 
-    //Concessionaire Management
+    //Concessionaire Bills Management
     Route::get('concessionaires/list', [ConcessionairesController::class, 'GetConcessionairesList'])->name('concessionaires.list');
     Route::get('concessionaires/billing/list', [BillsController::class, 'GetBillingList'])->name('concessionaires.billing.list');
     Route::match(['get', 'post'], 'concessionaires/billing/new', [BillsController::class, 'CreateNewBilling'])->name('concessionaires.billing.new');
     Route::match(['get', 'post'], 'concessionaires/billing/payment', [BillsController::class, 'BillsPayment'])->name('concessionaires.billing.payment');
     Route::get('concessionaire/billing/electricity/{id}', [BillsController::class, 'electricityBillingStatement'])->name('concessionaire.bill.electricity.pdf');
     Route::get('concessionaire/billing/water/{id}', [BillsController::class, 'waterBillingStatement'])->name('concessionaire.bill.water.pdf');
+    //Check if Concessionaire receives billing first time
+    Route::get('/check-first-bill/{concessionaire_id}/{utility_type}', [BillsController::class, 'checkFirstBill']);
 
     //User Management
     Route::get('/users/profile', [UsersController::class, 'showUserProfile'])->name('user.profile');

@@ -69,15 +69,34 @@ class BillsController extends Controller
                     Log::info("Successful procedure call");
 
                 } elseif ($validated['utility_type'] === 'Electricity') {
-                    $request->validate([
+
+                    // Step 1: Check if this concessionaire has any previous electricity bill
+                    Log::info("Check if concessionaire first time bill");
+                    $isFirstBill = DB::table('concessionaire_bills')
+                        ->where('concessionaire_id', $validated['concessionaire_id'])
+                        ->where('utility_type', 'Electricity')
+                        ->count() === 0;
+                    Log::info("Check finished");
+
+                    // Step 2: Build validation rules dynamically
+                    Log::info("Building Validation rules");
+                    $electricityRules = [
                         'bill_start_date' => 'required|date',
                         'bill_end_date' => 'required|date|after_or_equal:bill_start_date',
                         'current_reading' => 'required|numeric|min:0',
-                        'concessionaire_kwh' => 'required|numeric|min:0',
                         'cost_per_kwh' => 'required|numeric|min:0',
                         'university_total_kwh' => 'required|numeric|min:0',
                         'university_total_bill' => 'required|numeric|min:0',
-                    ]);
+                        'previous_reading' => $isFirstBill ? 'required|numeric|min:0' : 'nullable|numeric|min:0'
+                    ];
+
+                    Log::info("Finished building validation rules");
+
+                    // Step 3: Validate
+                    $request->validate($electricityRules);
+
+                    // Step 4: Decide what to pass to the procedure
+                    $previousReading = $isFirstBill ? $request->input('previous_reading') : null;
 
                     Log::info("Procedure call CreateElectricityBill");
                     DB::statement('CALL CreateElectricityBill(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
@@ -90,7 +109,7 @@ class BillsController extends Controller
                         $request->input('university_total_kwh'),
                         $request->input('university_total_bill'),
                         $request->input('cost_per_kwh'),
-                        $request->input('concessionaire_kwh')
+                        $previousReading
                     ]);
                     Log::info("Procedure call success");
                 }
@@ -105,7 +124,18 @@ class BillsController extends Controller
             Log::info("Concessionaire New Billing unsuccessful");
             return back()->with('error', 'Bill creation unsuccessful!');
         }
-        
+    }
+
+    // ConcessionaireBillingController.php
+    public function checkFirstBill($concessionaire_id, $utility_type) {
+        $count = DB::table('concessionaire_bills')
+            ->where('concessionaire_id', $concessionaire_id)
+            ->where('utility_type', $utility_type)
+            ->count();
+    
+        return response()->json([
+            'isFirstBill' => $count === 0
+        ]);
     }
 
     public function electricityBillingStatement($id) {
@@ -144,35 +174,45 @@ class BillsController extends Controller
             // Handle POST
             $validated = $request->validate([
                 'concessionaire_id' => 'required|exists:concessionaires,id',
-                'utility_type' => 'required|in:Water,Electricity',
-                'amount_paid' => 'required|numeric|min:0.01'
+                'utility_type' => 'required|array|min:1|max:2',
+                'utility_type.*' => 'required|in:Water,Electricity|distinct',
+                'amount_paid' => 'required|array|min:1|max:2',
+                'amount_paid.*' => 'required|numeric|min:0.01'
             ]);
 
-            // Check if there are any unpaid or partially paid bills
-            $hasUnpaid = DB::table('concessionaire_bills')
-                ->where('concessionaire_id', $validated['concessionaire_id'])
-                ->where('utility_type', $validated['utility_type'])
-                ->whereIn('status', ['Unpaid', 'Partially Paid'])
-                ->exists();
+            // Check if any unpaid bills exist for each utility type
+            foreach ($validated['utility_type'] as $index => $type) {
+                $hasUnpaid = DB::table('concessionaire_bills')
+                    ->where('concessionaire_id', $validated['concessionaire_id'])
+                    ->where('utility_type', $type)
+                    ->whereIn('status', ['Unpaid', 'Partially Paid'])
+                    ->exists();
 
-            if (!$hasUnpaid) {
-                return back()->with('error', '🚫 All bills for this concessionaire and utility type are already fully paid.');
-                DB::rollBack();
+                if (!$hasUnpaid) {
+                    return back()->with('error', "🚫 All bills for $type are already fully paid.");
+                }
             }
+
+            // Convert arrays to CSV for stored procedure
+            $utilityCSV = implode(',', $validated['utility_type']);
+            $amountCSV = implode(',', $validated['amount_paid']);
 
             // Call the stored procedure
             $results = DB::select("CALL ConcessionaireBillsPayment(?, ?, ?)", [
                 $validated['concessionaire_id'],
-                $validated['utility_type'],
-                $validated['amount_paid']
+                $utilityCSV,
+                $amountCSV
             ]);
 
             $transactionId = $results[0]->transaction_id ?? null;
 
             DB::commit();
 
+            // Combine all SP messages
+            $messages = collect($results)->pluck('message')->implode("\n");
+
             return redirect()->route('concessionaire.transaction.details', ['id' => $transactionId])
-                            ->with('success', $results[0]->message ?? 'Payment processed.');
+                            ->with('success', $messages);
             
         } catch (QueryException $e) {
             DB::rollBack();

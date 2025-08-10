@@ -9,7 +9,7 @@
             <h2>Concessionaire Bill Payment</h2>
 
             @if(session('success'))
-                <div class="alert alert-success mt-3">{{ session('success') }}</div>
+                <div class="alert alert-success mt-3" style="white-space: pre-line;">{{ session('success') }}</div>
             @elseif(session('error'))
                 <div class="alert alert-danger mt-3">{{ session('error') }}</div>
             @endif
@@ -33,19 +33,25 @@
                     </select>
                 </div>
 
-                <div class="mb-3">
-                    <label for="utility_type" class="form-label">Utility Type</label>
-                    <select name="utility_type" id="utility_type" class="form-select" required>
-                        <option value="">-- Choose --</option>
-                        <option value="Water">Water</option>
-                        <option value="Electricity">Electricity</option>
-                    </select>
+                <div id="utility-container">
+                    <div class="utility-row row g-2 mb-2">
+                        <div class="col-6">
+                            <select name="utility_type[]" class="form-select utility-select" required>
+                                <option value="">-- Choose --</option>
+                                <option value="Water">Water</option>
+                                <option value="Electricity">Electricity</option>
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <input type="number" step="0.01" min="0" name="amount_paid[]" class="form-control" placeholder="₱ Amount" required>
+                        </div>
+                        <div class="col-1 d-flex align-items-center">
+                            <button type="button" class="btn btn-danger btn-sm remove-row" style="display:none;">&times;</button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="amount_paid" class="form-label">Amount to Pay (₱)</label>
-                    <input type="number" step="0.01" min="0" name="amount_paid" class="form-control" required>
-                </div>
+                <button type="button" class="btn btn-secondary btn-sm mb-3" id="add-utility">+ Add Another Utility</button>
 
                 <button type="submit" class="btn btn-primary w-100 mt-3" {{ !$hasActiveBatch ? 'disabled' : '' }}>
                     Submit Payment
@@ -55,5 +61,51 @@
         </div>
     </div>
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('utility-container');
+    const addBtn = document.getElementById('add-utility');
+
+    addBtn.addEventListener('click', function() {
+        if (container.querySelectorAll('.utility-row').length >= 2) return;
+
+        const clone = container.querySelector('.utility-row').cloneNode(true);
+        clone.querySelectorAll('input, select').forEach(el => el.value = '');
+        clone.querySelector('.remove-row').style.display = 'inline-block';
+        container.appendChild(clone);
+        updateUtilityOptions();
+    });
+
+    container.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-row')) {
+            e.target.closest('.utility-row').remove();
+            updateUtilityOptions();
+        }
+    });
+
+    container.addEventListener('change', function(e) {
+        if (e.target.classList.contains('utility-select')) {
+            updateUtilityOptions();
+        }
+    });
+
+    function updateUtilityOptions() {
+        const selectedValues = Array.from(container.querySelectorAll('.utility-select'))
+            .map(s => s.value)
+            .filter(v => v !== '');
+
+        container.querySelectorAll('.utility-select').forEach(select => {
+            Array.from(select.options).forEach(opt => {
+                if (opt.value && selectedValues.includes(opt.value) && opt.value !== select.value) {
+                    opt.disabled = true;
+                } else {
+                    opt.disabled = false;
+                }
+            });
+        });
+    }
+});
+</script>
 
 @endsection

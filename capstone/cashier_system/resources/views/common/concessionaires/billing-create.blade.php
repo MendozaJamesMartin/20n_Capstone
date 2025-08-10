@@ -17,7 +17,7 @@
 
                 <div class="mb-3">
                     <label for="concessionaire_id" class="form-label">Concessionaire</label>
-                    <select name="concessionaire_id" class="form-select" required>
+                    <select name="concessionaire_id" id="concessionaire_id" class="form-select" required>
                         <option value="">-- Select --</option>
                         @foreach($concessionaires as $c)
                             <option value="{{ $c->id }}">{{ $c->name }}</option>
@@ -68,13 +68,13 @@
                             <label class="form-label">Bill End Date</label>
                             <input type="date" name="bill_end_date" class="form-control">
                         </div>
+                        <div class="col-md-6" id="previousReadingField">
+                            <label class="form-label">Previous Reading (First Bill Only)</label>
+                            <input type="number" name="previous_reading" id="previous_reading" class="form-control" step="0.01">
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">Current Reading</label>
                             <input type="number" name="current_reading" class="form-control" step="0.01">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Concessionaire kWh</label>
-                            <input type="number" name="concessionaire_kwh" class="form-control" step="0.01">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Cost per kWh</label>
@@ -110,4 +110,5 @@
         electricityFields.classList.toggle('d-none', selected !== 'Electricity');
     });
 </script>
+
 @endsection

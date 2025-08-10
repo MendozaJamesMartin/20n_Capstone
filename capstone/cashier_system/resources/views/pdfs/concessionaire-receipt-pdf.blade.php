@@ -117,7 +117,7 @@
             <td><strong>POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</strong></td>
         </tr>
         <tr>
-            <td>Payor <strong style="text-transform: uppercase;">{{ $TransactionDetails[0]->customer_name ?? 'John Doe' }}</strong></td>
+            <td>Payor <strong style="text-transform: uppercase;">{{ $TransactionDetails[0]->concessionaire_name ?? 'John Doe' }}</strong></td>
         </tr>
     </table>
 
@@ -139,7 +139,7 @@
         <tbody>
             @foreach($TransactionDetails as $bill)
                 <tr>
-                    <td style="border-top: 0px; border-bottom: 0px;">{{ $bill->utility_type }}</td>
+                    <td style="border-top: 0px; border-bottom: 0px;">{{ $bill->utility_type }} ({{ $bill->billing_months }})</td>
                     <td style="border-top: 0px; border-bottom: 0px;"></td>
                     <td class="text-center" style="border-top: 0px; border-bottom: 0px;">{{ number_format($bill->bill_payment, 2) }}</td>
                 </tr>
