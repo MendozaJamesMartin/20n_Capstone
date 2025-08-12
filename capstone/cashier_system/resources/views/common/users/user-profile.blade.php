@@ -6,6 +6,8 @@
 
         @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
+        @elseif(session('error'))
+        <div class="alert alert-success">{{ session('error') }}</div>
         @endif
 
         <div class="bg-light border" style="padding:2%">
@@ -108,13 +110,30 @@
                                 @csrf
                                 @method('POST')
 
-                                <label for="password" class="form-label">New Password: </label>
                                 <div class="mb-3">
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" id="password" name="password">
-                                        <button type="button" class="btn btn-outline-secondary toggle-password" tabindex="-1">
-                                            <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
-                                        </button>
+                                    {{-- Password with toggle --}}
+                                    <div class="mb-4 position-relative">
+                                        <label for="password" class="form-label">Password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="password" name="password" required>
+                                            <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password" tabindex="-1">
+                                                <i class="bi bi-eye-slash"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">
+                                            Password must be at least 8 characters and include uppercase, lowercase, number, and special character.
+                                        </small>
+                                    </div>
+
+                                    {{-- Confirm Password with toggle --}}
+                                    <div class="mb-4 position-relative">
+                                        <label for="password_confirmation" class="form-label">Confirm Password</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                                            <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password_confirmation" tabindex="-1">
+                                                <i class="bi bi-eye-slash"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -129,16 +148,25 @@
     </div>
 </main>
 
+{{-- Eye toggle script --}}
 <script>
-document.querySelector('.toggle-password').addEventListener('click', function () {
-    const passwordField = document.getElementById('password');
-    const icon = document.getElementById('togglePasswordIcon');
-    
-    const isPassword = passwordField.type === 'password';
-    passwordField.type = isPassword ? 'text' : 'password';
-    icon.classList.toggle('bi-eye', isPassword);
-    icon.classList.toggle('bi-eye-slash', !isPassword);
-});
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            const icon = this.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            }
+        });
+    });
 </script>
 
 @endsection

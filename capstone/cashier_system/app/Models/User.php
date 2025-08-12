@@ -22,7 +22,9 @@ class User extends Authenticatable implements Auditable
         'suffix',
         'email',
         'role',
-        'email_verified_at'];
+        'email_verified_at',
+        'password',  // Include password so it triggers audit on change
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -66,6 +68,22 @@ class User extends Authenticatable implements Auditable
     public function getNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->last_name}");
+    }
+
+    /**
+     * Modify audit data before it is saved.
+     */
+    public function transformAudit(array $data): array
+    {
+        // Mask password in old and new values if present
+        if (isset($data['old_values']['password'])) {
+            $data['old_values']['password'] = '***';
+        }
+        if (isset($data['new_values']['password'])) {
+            $data['new_values']['password'] = '***';
+        }
+
+        return $data;
     }
 
 }

@@ -69,20 +69,24 @@ class DashboardController extends Controller
             ->groupBy('month')
             ->orderBy('month')
             ->get();
+
         $chartLabels = $monthlyTrend->pluck('month');
         $chartData = $monthlyTrend->pluck('total');
 
         // Get all fees summed and ordered
         $allFees = DB::table('customer_transaction_details')
             ->join('fees', 'customer_transaction_details.fee_id', '=', 'fees.id')
-            ->select('fees.fee_name', DB::raw('SUM(customer_transaction_details.amount * customer_transaction_details.quantity) as total'))
+            ->select(
+                'fees.fee_name',
+                DB::raw('SUM(customer_transaction_details.amount * customer_transaction_details.quantity) as total')
+            )
             ->groupBy('fees.fee_name')
             ->orderByDesc('total')
             ->get();
 
         $fees = DB::table('fees')->whereNull('deleted_at')->orderBy('fee_name')->get();
 
-        // Take top 5 and calculate 'Others'
+        // Take top 10 fees and group the rest under "Others"
         $topFees = $allFees->take(10);
         $othersTotal = $allFees->skip(10)->sum('total');
 
@@ -93,12 +97,33 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Revenue by Customer Type
-        $revenueByType = DB::table('customer_transaction_details')
-            ->join('customers', 'customer_transaction_details.customer_id', '=', 'customers.id')
-            ->select('customers.customer_type', DB::raw('SUM(customer_transaction_details.amount * customer_transaction_details.quantity) as total'))
-            ->groupBy('customers.customer_type')
-            ->get();
+        $waterPayments = DB::table('view_water_bills')
+            ->join('concessionaire_transaction_details', 'view_water_bills.bill_id', '=', 'concessionaire_transaction_details.bill_id')
+            ->where('view_water_bills.utility_type', 'Water')
+            ->sum('concessionaire_transaction_details.amount_paid');
+
+        $overdueWaterAmount = DB::table('view_water_bills')
+            ->where('utility_type', 'Water')
+            ->where('status', '!=', 'Fully Paid')
+            ->where('due_date', '<', Carbon::today())
+            ->sum('total_amount_due');
+
+        $electricityPayments = DB::table('view_electricity_bills')
+            ->join('concessionaire_transaction_details', 'view_electricity_bills.bill_id', '=', 'concessionaire_transaction_details.bill_id')
+            ->where('view_electricity_bills.utility_type', 'Electricity')
+            ->sum('concessionaire_transaction_details.amount_paid');
+
+        $overdueElectricityAmount = DB::table('view_electricity_bills')
+            ->where('utility_type', 'Electricity')
+            ->where('status', '!=', 'Fully Paid')
+            ->where('due_date', '<', Carbon::today())
+            ->sum('total_amount_due');
+
+        // ========================
+        // Totals
+        // ========================
+        $totalOverdueAmount = $overdueWaterAmount + $overdueElectricityAmount;
+        $totalBillingPayments = $waterPayments + $electricityPayments;
 
         return view('common.analytics', compact(
             'totalRevenue',
@@ -108,7 +133,13 @@ class DashboardController extends Controller
             'chartData',
             'topFees',
             'fees',
-            'revenueByType',
+            'waterPayments',
+            'electricityPayments',
+            'overdueWaterAmount',
+            'overdueElectricityAmount',
+            'totalOverdueAmount',
+            'totalBillingPayments'
         ));
     }
+
 }

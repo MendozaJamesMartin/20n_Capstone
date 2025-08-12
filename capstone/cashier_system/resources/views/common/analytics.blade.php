@@ -90,18 +90,18 @@
         <div class="col-md-6">
             <div class="card bg-light border-primary">
                 <div class="card-body">
-                    <h5>Water Bills Issued</h5>
-                    <p>Total: ₱{{ number_format($waterBills, 2) }}</p>
-                    <p>Paid: ₱{{ number_format($paidWater, 2) }}</p>
+                    <h5>Water Bill Payments</h5>
+                    <p>Paid: ₱{{ number_format($waterPayments, 2) }}</p>
+                    <p class="text-danger">Overdue Amount: ₱{{ number_format($overdueWaterAmount, 2) }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card bg-light border-warning">
                 <div class="card-body">
-                    <h5>Electricity Bills Issued</h5>
-                    <p>Total: ₱{{ number_format($electricityBills, 2) }}</p>
-                    <p>Paid: ₱{{ number_format($paidElectricity, 2) }}</p>
+                    <h5>Electricity Bill Payments</h5>
+                    <p>Paid: ₱{{ number_format($electricityPayments, 2) }}</p>
+                    <p class="text-danger">Overdue Amount: ₱{{ number_format($overdueElectricityAmount, 2) }}</p>
                 </div>
             </div>
         </div>
@@ -109,8 +109,9 @@
 
     <div class="card mb-4">
         <div class="card-body text-danger">
-            <h5>Overdue Concessionaire Bills</h5>
-            <h3>{{ $overdueBills }} overdue</h3>
+            <h5>Total Overdue Concessionaire Bills</h5>
+            <h3>₱{{ number_format($totalOverdueAmount, 2) }}</h3>
+            <p>Total Payments (Water + Electricity): ₱{{ number_format($totalBillingPayments, 2) }}</p>
         </div>
     </div>
 

@@ -7,6 +7,7 @@ use App\Models\Fee;
 use App\Models\Receipt;
 use App\Models\ReceiptBatch;
 use App\Models\Transaction;
+use App\Services\AuditLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -90,6 +91,7 @@ class PaymentsController extends Controller
                 
                 $feeIds = array_keys($fees);
                 $quantities = array_values($fees);
+                $feeNames = Fee::whereIn('id', $feeIds)->pluck('fee_name', 'id')->toArray();
                 
                 // Use same keys to extract amounts
                 $amounts = array_map(function ($id) use ($validated) {
@@ -99,6 +101,18 @@ class PaymentsController extends Controller
                 $feeIdsStr = implode(',', $feeIds);
                 $quantitiesStr = implode(',', $quantities);
                 $amountsStr = implode(',', $amounts);
+
+                $readableFees = [];
+                foreach ($fees as $feeId => $qty) {
+                    $name = $feeNames[$feeId] ?? "Fee ID $feeId";
+                    $readableFees[$name] = $qty;  // store by name
+                }
+
+                $readableAmounts = [];
+                foreach ($readableFees as $name => $qty) {
+                    $amount = $validated['amounts'][array_search($name, $feeNames)] ?? '0.00'; // get amount by matching fee name key
+                    $readableAmounts[$name] = $amount;
+                }
 
                 Log::info("Stored Procedure call");
                 $results = DB::select("CALL CustomerPayment(?, ?, ?, ?, ?)", [
@@ -112,6 +126,21 @@ class PaymentsController extends Controller
                 $transactionId = $results[0]->transaction_id;
 
                 DB::commit();
+
+                // Use your AuditLogger to log the payment creation
+                AuditLogger::log(
+                    event: 'payment_created',
+                    auditableType: 'App\\Models\\Transaction',
+                    auditableId: $transactionId,
+                    oldValues: [],
+                    newValues: [
+                        'customer_name' => $validated['customer_name'],
+                        'contact'       => $validated['contact'],
+                        'fees'          => $readableFees,     // ['Fee Name 1' => quantity, 'Fee Name 2' => quantity, ...]
+                        'amounts'       => $readableAmounts,  // ['Fee Name 1' => amount, 'Fee Name 2' => amount, ...]
+                    ],
+                    tags: 'payment'
+                );
 
                 Log::info("return");
                 return redirect()->route('customer.transaction.details', ['id' => $transactionId]);
@@ -159,6 +188,7 @@ class PaymentsController extends Controller
                 
                 $feeIds = array_keys($fees);
                 $quantities = array_values($fees);
+                $feeNames = Fee::whereIn('id', $feeIds)->pluck('fee_name', 'id')->toArray();
                 
                 // Use same keys to extract amounts
                 $amounts = array_map(function ($id) use ($validated) {
@@ -168,6 +198,18 @@ class PaymentsController extends Controller
                 $feeIdsStr = implode(',', $feeIds);
                 $quantitiesStr = implode(',', $quantities);
                 $amountsStr = implode(',', $amounts);
+
+                $readableFees = [];
+                foreach ($fees as $feeId => $qty) {
+                    $name = $feeNames[$feeId] ?? "Fee ID $feeId";
+                    $readableFees[$name] = $qty;  // store by name
+                }
+
+                $readableAmounts = [];
+                foreach ($readableFees as $name => $qty) {
+                    $amount = $validated['amounts'][array_search($name, $feeNames)] ?? '0.00'; // get amount by matching fee name key
+                    $readableAmounts[$name] = $amount;
+                }
                 
                 Log::info("Stored Procedure call");
                 $results = DB::select("CALL CustomerPayment(?, ?, ?, ?, ?)", [
@@ -182,6 +224,22 @@ class PaymentsController extends Controller
                 $transaction_num = $results[0]->transaction_number;
 
                 DB::commit();
+
+                // Use your AuditLogger to log the payment creation
+                AuditLogger::log(
+                    event: 'payment_submitted_by_customer',
+                    auditableType: 'App\\Models\\Transaction',
+                    auditableId: $transactionId,
+                    oldValues: [],
+                    newValues: [
+                        'customer_name' => $validated['customer_name'],
+                        'contact'       => $validated['contact'],
+                        'fees'          => $readableFees,     // ['Fee Name 1' => quantity, 'Fee Name 2' => quantity, ...]
+                        'amounts'       => $readableAmounts,  // ['Fee Name 1' => amount, 'Fee Name 2' => amount, ...]
+                    ],
+                    tags: 'payment'
+                );
+
                 return redirect()->route('students.submitted', ['transaction_num' => $transaction_num]);
             }
         } catch (QueryException $e) {
@@ -269,16 +327,28 @@ class PaymentsController extends Controller
                 
                 $feeIds = array_keys($fees);
                 $quantities = array_values($fees);
+                $feeNames = Fee::whereIn('id', $feeIds)->pluck('fee_name', 'id')->toArray();
                 
                 // Use same keys to extract amounts
                 $amounts = array_map(function ($id) use ($validated) {
                     return $validated['amounts'][$id] ?? '0.00';
                 }, $feeIds);
-    
-                Log::info("Building fee ID and quantity strings");
+                
                 $feeIdsStr = implode(',', $feeIds);
                 $quantitiesStr = implode(',', $quantities);
                 $amountsStr = implode(',', $amounts);
+
+                $readableFees = [];
+                foreach ($fees as $feeId => $qty) {
+                    $name = $feeNames[$feeId] ?? "Fee ID $feeId";
+                    $readableFees[$name] = $qty;  // store by name
+                }
+
+                $readableAmounts = [];
+                foreach ($readableFees as $name => $qty) {
+                    $amount = $validated['amounts'][array_search($name, $feeNames)] ?? '0.00'; // get amount by matching fee name key
+                    $readableAmounts[$name] = $amount;
+                }
     
                 Log::info("Calling stored procedure to update fees for transaction $transactionId");
                 DB::statement("CALL UpdateUnpaidTransaction(?, ?, ?, ?)", [
@@ -289,6 +359,20 @@ class PaymentsController extends Controller
                 ]);
     
                 DB::commit();
+
+                // Use your AuditLogger to log the payment creation
+                AuditLogger::log(
+                    event: 'payment_edited_by_cashier',
+                    auditableType: 'App\\Models\\Transaction',
+                    auditableId: $transactionId,
+                    oldValues: [],
+                    newValues: [
+                        'fees'          => $readableFees,     // ['Fee Name 1' => quantity, 'Fee Name 2' => quantity, ...]
+                        'amounts'       => $readableAmounts,  // ['Fee Name 1' => amount, 'Fee Name 2' => amount, ...]
+                    ],
+                    tags: 'payment'
+                );
+
                 return redirect()->route('customer.transaction.details', ['id' => $transactionId]);
             }
     
@@ -319,6 +403,12 @@ class PaymentsController extends Controller
                 ->where('transaction_id', $id)
                 ->value('customer_id');
 
+            // Capture old values for audit before deletion
+            $oldValues = [
+                'transaction' => (array) $transaction,
+                'customer_id' => $customerId,
+            ];
+
             // Delete from customer_transaction_details
             DB::table('customer_transaction_details')->where('transaction_id', $id)->delete();
 
@@ -333,9 +423,23 @@ class PaymentsController extends Controller
             if ($remaining === 0) {
                 DB::table('student_details')->where('customer_id', $customerId)->delete();
                 DB::table('customers')->where('id', $customerId)->delete();
+                $oldValues['customer_deleted'] = true;
+            } else {
+                $oldValues['customer_deleted'] = false;
             }
 
+            // Log the disapproval and deletion
+            AuditLogger::log(
+                event: 'transaction_disapproved_and_deleted',
+                auditableType: 'App\\Models\\Transaction',
+                auditableId: $id,
+                oldValues: $oldValues,
+                newValues: [],
+                tags: 'transaction'
+            );
+
             DB::commit();
+            
             return redirect()->route('payments.pending')->with('success', 'Transaction disapproved and deleted successfully.');
 
         } catch (QueryException $e) {

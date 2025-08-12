@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Concessionaire;
 use App\Models\ReceiptBatch;
+use App\Services\AuditLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -117,6 +118,17 @@ class BillsController extends Controller
                 Log::info("Commit");
 
                 DB::commit();
+
+                // Audit log
+                AuditLogger::log(
+                    event: 'billing_created',
+                    auditableType: 'App\\Models\\ConcessionaireBill',
+                    auditableId: $validated['concessionaire_id'],
+                    oldValues: [],
+                    newValues: $validated,
+                    tags: $validated['utility_type']
+                );
+
                 return redirect()->back()->with('success', 'Billing created successfully!');
             }
         } catch (QueryException $e) {
@@ -124,18 +136,6 @@ class BillsController extends Controller
             Log::info("Concessionaire New Billing unsuccessful");
             return back()->with('error', 'Bill creation unsuccessful!');
         }
-    }
-
-    // ConcessionaireBillingController.php
-    public function checkFirstBill($concessionaire_id, $utility_type) {
-        $count = DB::table('concessionaire_bills')
-            ->where('concessionaire_id', $concessionaire_id)
-            ->where('utility_type', $utility_type)
-            ->count();
-    
-        return response()->json([
-            'isFirstBill' => $count === 0
-        ]);
     }
 
     public function electricityBillingStatement($id) {
@@ -158,6 +158,7 @@ class BillsController extends Controller
     {
         DB::beginTransaction();
         try {
+            Log::info("Open Bills Payment Window");
             if ($request->isMethod('get')) {
                 $concessionaires = Concessionaire::all();
 
@@ -171,6 +172,7 @@ class BillsController extends Controller
                 ]);
             }
 
+            Log::info("Validate");
             // Handle POST
             $validated = $request->validate([
                 'concessionaire_id' => 'required|exists:concessionaires,id',
@@ -180,6 +182,7 @@ class BillsController extends Controller
                 'amount_paid.*' => 'required|numeric|min:0.01'
             ]);
 
+            Log::info("Checking if unpaid bills exist");
             // Check if any unpaid bills exist for each utility type
             foreach ($validated['utility_type'] as $index => $type) {
                 $hasUnpaid = DB::table('concessionaire_bills')
@@ -193,23 +196,42 @@ class BillsController extends Controller
                 }
             }
 
+            Log::info("Convert input into arrays");
             // Convert arrays to CSV for stored procedure
             $utilityCSV = implode(',', $validated['utility_type']);
             $amountCSV = implode(',', $validated['amount_paid']);
 
+            Log::info("Utility CSV: $utilityCSV, Amount CSV: $amountCSV");
+
+            Log::info("Procedure call");
             // Call the stored procedure
             $results = DB::select("CALL ConcessionaireBillsPayment(?, ?, ?)", [
                 $validated['concessionaire_id'],
                 $utilityCSV,
                 $amountCSV
             ]);
+            Log::info("Procedure Success");
+
+            if (empty($results)) {
+                DB::rollBack();
+                return back()->with('error', 'Procedure did not return any result.');
+            }
 
             $transactionId = $results[0]->transaction_id ?? null;
+            $messages = $results[0]->message ?? '';
 
             DB::commit();
+            Log::info("Commit");
 
-            // Combine all SP messages
-            $messages = collect($results)->pluck('message')->implode("\n");
+            // Audit log
+            AuditLogger::log(
+                event: 'bills_payment',
+                auditableType: 'App\\Models\\Transaction',
+                auditableId: $transactionId,
+                oldValues: [],
+                newValues: $validated,
+                tags: 'payment'
+            );
 
             return redirect()->route('concessionaire.transaction.details', ['id' => $transactionId])
                             ->with('success', $messages);
@@ -220,4 +242,5 @@ class BillsController extends Controller
             return back()->with('error', 'Bills payment not successful');
         }
     }
+
 }

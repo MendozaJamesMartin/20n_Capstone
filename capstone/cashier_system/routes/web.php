@@ -108,8 +108,13 @@ Route::group(['middleware' => ['redirect.auth'], 'prefix' > '/admin'], function(
     Route::get('/login', [LoginController::class, 'login'])->name('login');
     Route::post('/login', [LoginController::class, 'loginPost'])->name('login.submit');
 
-    Route::get('/forgot/password', [LoginController::class, 'forgotPassword'])->name('forgot.password');
-    Route::post('/forgot/password', [LoginController::class, 'forgotPasswordPost'])->name('forgot.password');
+    Route::get('/forgot/password/enter/email', [LoginController::class, 'forgotPassword'])->name('forgot.password.email');
+    Route::post('/forgot/password/enter/email', [LoginController::class, 'forgotPasswordOtp'])->name('forgot.password.email');
+    
+    Route::get('/forgot/password/new', [LoginController::class, 'forgotPasswordForm'])->name('forgot.password.form');
+    Route::post('/forgot/password/new', [LoginController::class, 'forgotPasswordPost'])->name('forgot.password.form');
+
+    Route::post('/forgot-password/resend-otp', [LoginController::class, 'resendOtp'])->name('forgot.password.resendOtp');
 });
 
 Route::group(['middleware' => ['redirect.auth'], 'prefix' => '/customer'], function () {

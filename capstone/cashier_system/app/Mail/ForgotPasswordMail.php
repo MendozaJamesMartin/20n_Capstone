@@ -15,15 +15,15 @@ class ForgotPasswordMail extends Mailable
     use Queueable, SerializesModels;
 
     public $user;
-    public $newPassword;
+    public $otpCode;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(User $user, string $newPassword)
+    public function __construct(User $user, string $otpCode)
     {
         $this->user = $user;
-        $this->newPassword = $newPassword;
+        $this->otpCode = $otpCode;
     }
 
     /**
@@ -32,7 +32,7 @@ class ForgotPasswordMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Forgot Password Reset Request',
+            subject: 'Password Reset OTP',
         );
     }
 
@@ -45,7 +45,7 @@ class ForgotPasswordMail extends Mailable
             view: 'emails.new-password',
             with: [
                 'user' => $this->user,
-                'newPassword' => $this->newPassword,
+                'otpCode' => $this->otpCode,
             ],
         );
     }

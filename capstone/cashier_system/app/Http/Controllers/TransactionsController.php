@@ -11,6 +11,7 @@ use App\Models\ReceiptBatch;
 use App\Models\Student;
 use App\Models\StudentTransactionDetail;
 use App\Models\Transaction;
+use App\Services\AuditLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -169,9 +170,39 @@ class TransactionsController extends Controller
 
             $Cashier = Auth::user();
 
+            // Fetch the updated transaction after finalization for audit old/new values if needed
+            $transactionBeforeFinalize = DB::table('transactions')->where('id', $transactionId)->first();
+
             Log::info("Calling FinalizeTransaction SP");
             DB::statement("CALL FinalizeTransaction(?)", [$transactionId]);
             Log::info("Calling FinalizeTransaction SP Success");
+
+            // Fetch the updated transaction after finalization for audit old/new values if needed
+            $transactionAfterFinalize = DB::table('transactions')->where('id', $transactionId)->first();
+
+            if (!$transactionAfterFinalize) {
+                abort(404, 'Transaction not found after finalization.');
+            }
+
+            // Log the finalize event
+            AuditLogger::log(
+                event: 'transaction_finalized',
+                auditableType: 'App\\Models\\Transaction',
+                auditableId: $transactionId,
+                oldValues: [                    
+                    'transaction_date' => $transactionBeforeFinalize->transaction_date,
+                    'amount_paid' => $transactionBeforeFinalize->amount_paid,
+                    'balance_due' => $transactionBeforeFinalize->balance_due,
+                    'status' => 'pending',
+                ],  // If you have previous state, you can include here
+                newValues: [
+                    'transaction_date' => $transactionAfterFinalize->transaction_date,
+                    'amount_paid' => $transactionAfterFinalize->amount_paid,
+                    'balance_due' => $transactionAfterFinalize->balance_due,
+                    'status' => 'finalized',
+                ],
+                tags: 'transaction'
+            );
 
             DB::commit();
 

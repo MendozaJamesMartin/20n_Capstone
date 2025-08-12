@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Credential;
 use App\Models\User;
+use App\Rules\StrongPassword;
+use App\Services\AuditLogger;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -96,6 +98,11 @@ class UsersController extends Controller
 
         DB::beginTransaction();
         try {
+
+            $request->validate([
+                'password' => ['required', 'string', new StrongPassword, 'confirmed'],
+            ]);
+
             Log::info("Input new password");
             $userProfile->password = Hash::make($request->password); // Hash the password
             $userProfile->save();
@@ -111,6 +118,7 @@ class UsersController extends Controller
             Log::info("Credential created");
 
             DB::commit();
+
             return redirect()->route('user.profile')->with('success', 'Password changed successfully');
         } catch (QueryException $e) {
             DB::rollBack();

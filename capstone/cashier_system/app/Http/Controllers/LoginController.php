@@ -8,6 +8,8 @@ use App\Mail\ForgotPasswordMail;
 use App\Mail\SendOtpCode;
 use App\Models\Credential;
 use App\Models\User;
+use App\Rules\StrongPassword;
+use App\Services\AuditLogger;
 use Illuminate\Support\Str;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -28,6 +30,14 @@ class LoginController extends Controller
     
         DB::beginTransaction();
         try {
+            // Validate input
+            $request->validate([
+                'email' => 'required|email|unique:users,email',
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'password' => ['required', 'string', new StrongPassword, 'confirmed'],
+            ]);
+
             // Create and save User first
             $user = new User();
             $user->email = $request->email;
@@ -108,60 +118,95 @@ class LoginController extends Controller
     }
     
     public function forgotPassword() {
-        return view('login.forgot-password');
+        session()->forget('otp'); // clears old OTP so we start fresh
+        return view('login.forgot-password-email');
+    }
+
+    public function forgotPasswordOtp(Request $request) {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return back()->withErrors(['email' => 'No user found with that email.']);
+        }
+
+        $otp = rand(100000, 999999);
+
+        session([
+            'otp_email' => $request->email,
+            'otp_code' => $otp,
+            'otp_expires' => now()->addMinutes(5),
+        ]);
+
+        Mail::to($user->email)->send(new ForgotPasswordMail($user, $otp));
+
+        return redirect()->route('forgot.password.form')->with('success', 'OTP sent to your email.');
+    }
+
+    public function forgotPasswordForm() {
+        if (!session()->has('otp_email')) {
+            return redirect()->route('forgot.password.email.form');
+        }
+        return view('login.forgot-password-form');
     }
 
     public function forgotPasswordPost(Request $request) {
-        Log::info("Forgot Password start");
     
-        DB::beginTransaction();
-        try {
+        $request->validate([
+            'otp' => 'required',
+            'new_password' => ['required', 'string', new StrongPassword, 'confirmed'],
+        ]);
 
-            $request->validate([
-                'email' => 'required|email',
-            ]);
-
-            $user = User::where('email', $request->email)->first();
-
-            if (!$user) {
-                return back()->with('error', 'No user found with that email.');
-            }
-        
-            Log::info("User found with ID: " . $user->id);
-
-            // Generate a new random password
-            $newPassword = Str::random(10);
-
-            // Update user's password
-            $user->password = Hash::make($newPassword);
-            $user->save();
-    
-            // Save credentials
-            $credentials = new Credential();
-            $credentials->user_id = $user->id;
-            $credentials->is_deleted = 0;
-            $credentials->password = $user->password; // Already hashed above
-            $credentials->save();
-    
-            Log::info("Credential for new password created");
-    
-            DB::commit();
-
-            // Send the email
-            Mail::to($user->email)->send(new ForgotPasswordMail($user, $newPassword));
-
-            return redirect()->route('login')->with('success', 'Reset password due to forget, successful!');
-        } catch (QueryException $e) {
-            DB::rollBack();
-            Log::error("Password reset error: " . $e->getMessage());
-    
-            $message = "ERROR";
-            if ($e->errorInfo[1] == 1062) {
-                $message = "Email or Student ID already exists";
-            }
-    
-            return back()->with('error', $message);
+        if (
+            $request->otp != session('otp_code') ||
+            now()->greaterThan(session('otp_expires'))
+        ) {
+            return back()->withErrors(['otp' => 'Invalid or expired OTP.']);
         }
+
+        $user = User::where('email', session('otp_email'))->first();
+        if (!$user) {
+            return back()->withErrors(['email' => 'User not found.']);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        session()->forget(['otp_email', 'otp_code', 'otp_expires']);
+
+        return redirect()->route('login')->with('success', 'Password reset successfully.');
+    }
+
+    public function resendOtp(Request $request)
+    {
+        if (!session('otp_sent') || !session('otp_email')) {
+            return redirect()->route('forgot.password')->with('error', 'Please start the password reset process first.');
+        }
+
+        // Optional: prevent spamming (30 seconds cooldown)
+        if (session('otp_last_sent') && now()->diffInSeconds(session('otp_last_sent')) < 30) {
+            return back()->with('error', 'Please wait before requesting a new OTP.');
+        }
+
+        $user = User::where('email', session('otp_email'))->first();
+        if (!$user) {
+            return redirect()->route('forgot.password')->with('error', 'User not found.');
+        }
+
+        // Generate new OTP
+        $otp = rand(100000, 999999);
+
+        // Update session values
+        session([
+            'otp_code' => $otp,
+            'otp_expires' => now()->addMinutes(10),
+            'otp_last_sent' => now(),
+        ]);
+
+        // Send new OTP
+        Mail::to($user->email)->send(new ForgotPasswordMail($user, $otp));
+
+        return back()->with('success', 'A new OTP has been sent to your email.');
     }
 
     public function logout(Request $request) {
