@@ -12,7 +12,8 @@
         "laravel/tinker": "^2.9",
         "laravel/ui": "^4.6",
         "maatwebsite/excel": "3.1.x-dev",
-        "owen-it/laravel-auditing": "^14.0"
+        "owen-it/laravel-auditing": "^14.0",
+        "spatie/laravel-backup": "^9.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

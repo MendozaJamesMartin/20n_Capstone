@@ -61,6 +61,9 @@
                                             <label class="form-label">Amount</label>
                                             <input type="text" name="amount" class="form-control" value="{{ $fee->amount }}" required>
                                         </div>
+                                        <div class="mb-3 form-check">
+                                            <small class="text-muted">Set amount to 0 if this fee has variable amount</small>
+                                        </div>
                                         <button type="submit" class="btn btn-danger">Update Fee</button>
                                     </form>
                                 </div>
@@ -100,6 +103,7 @@
                                 <td>
                                     <input type="text" class="form-control" name="fees[0][amount]" placeholder="00.00" required>
                                 </td>
+                                <small class="text-muted">Set amount to 0 if this fee has variable amount</small>
                                 <td>
                                     <button type="button" class="btn btn-danger btn-sm remove-row">Remove</button>
                                 </td>
@@ -134,6 +138,9 @@
                 </td>
                 <td>
                     <input type="text" class="form-control" name="fees[${rowIndex}][amount]" placeholder="00.00" required>
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" class="form-check-input" name="fees[${rowIndex}][is_variable]" value="1">
                 </td>
                 <td>
                     <button type="button" class="btn btn-danger btn-sm remove-row">Remove</button>

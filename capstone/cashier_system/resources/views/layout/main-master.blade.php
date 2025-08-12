@@ -201,11 +201,15 @@
                 </div>
             </li>
 
-            <!-- Audit Logs -->
+            <!-- Maintenance -->
             <li class="nav-item mt-2">
-                <a class="nav-link" href="{{ route('audit.logs') }}">
-                    Audit Logs
+                <a class="nav-link" data-bs-toggle="collapse" href="#admincontrolsSubmenu" role="button" aria-expanded="false" aria-controls="admincontrolsSubmenu">
+                    Admin Controls
                 </a>
+                <div class="collapse ps-3" id="admincontrolsSubmenu">
+                    <a href="{{ route('audit.logs') }}" class="nav-link">Audit Logs</a>
+                    <a href="{{ route('backups.manage') }}" class="nav-link">Backups</a>
+                </div>
             </li>
 
             <!-- Account -->

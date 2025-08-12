@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BillsController;
 use App\Http\Controllers\ConcessionairesController;
 use App\Http\Controllers\DashboardController;
@@ -92,6 +93,12 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
 
         //Audit logs
         Route::get('/audit/logs', [AuditLogController::class, 'index'])->name('audit.logs');
+
+        //Backup and Restore
+        Route::get('/backups/manage', [BackupController::class, 'showManageView'])->name('backups.manage');
+        Route::get('/backups/export-db', [BackupController::class, 'exportDatabase'])->name('backups.export-db');
+        Route::post('/backups/restore', [BackupController::class, 'restoreDatabase'])->name('backups.restore');
+
     });
 
 });
