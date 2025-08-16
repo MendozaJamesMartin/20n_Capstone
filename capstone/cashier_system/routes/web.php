@@ -25,10 +25,6 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/analytics', [DashboardController::class, 'analytics'])->name('data.analytics');
 
-    //Fees Management
-    Route::get('fees/list', [FeesController::class, 'GetFeesList'])->name('fees.list');
-    Route::get('fees/list/deleted', [FeesController::class, 'deletedFeesList'])->name('fees.list.deleted');
-
     //Customer Payments
     Route::match(['get', 'post'], '/payments/new', [PaymentsController::class, 'CustomerPayment'])->name('payments.customer.new');
     //List of pending payments
@@ -71,7 +67,9 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     //Superadmin only pages
     Route::group(['prefix' => 'admin', 'middleware' => ['admin.auth:Superadmin']], function () {
         
-        //Fees Maintenance
+        //Fees Management
+        Route::get('fees/list', [FeesController::class, 'feesList'])->name('fees.list');
+        Route::get('fees/list/deleted', [FeesController::class, 'deletedFeesList'])->name('fees.list.deleted');
         Route::post('fees/add', [FeesController::class, 'AddFees'])->name('fees.add');
         Route::post('fees/{id}/update', [FeesController::class, 'UpdateFees'])->name('fees.update');
         Route::get('fees/{id}/delete', [FeesController::class, 'deleteFees'])->name('fees.delete');

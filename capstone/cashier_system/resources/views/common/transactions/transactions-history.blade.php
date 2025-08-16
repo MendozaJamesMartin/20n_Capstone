@@ -11,12 +11,7 @@
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <!-- Search Input -->
                 <form action="{{ url()->current() }}" method="GET" class="d-flex">
-                    <input type="text" name="search" class="form-control form-control-sm" placeholder="🔍 Search..."
-                        value="{{ request('search') }}">
-                    {{-- Preserve filters --}}
-                    @foreach(request()->except('search', 'page') as $key => $value)
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                    @endforeach
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search transactions...">
                 </form>
 
                 <!-- Filter Button -->
@@ -29,56 +24,14 @@
         <!-- Responsive Table -->
         <div class="card shadow-sm p-3 mb-4 bg-light rounded">
             <div class="table-responsive">
-                <table class="table table-striped align-middle text-center mb-0">
+                <table class="table table-striped align-middle text-center mb-0" id="historyTable">
                     <thead class="table-dark">
-                        @php
-                            // Get current sort state
-                            $sortBy = request('sort_by');
-                            $sortOrder = request('sort_order', 'default');
-
-                            // Function to cycle sort state
-                            function sortCycle($field) {
-                                $current = request('sort_by') === $field ? request('sort_order', 'default') : 'default';
-                                return match ($current) {
-                                    'asc' => 'desc',
-                                    'desc' => 'default',
-                                    default => 'asc',
-                                };
-                            }
-
-                            // Function to return icon
-                            function sortIcon($field) {
-                                if (request('sort_by') !== $field) return '';
-                                return match (request('sort_order')) {
-                                    'asc' => ' ▲',
-                                    'desc' => ' ▼',
-                                    default => '',
-                                };
-                            }
-                        @endphp
-                        <tr>
-                            @foreach ([
-                                'transaction_id' => 'Transaction ID',
-                                'receipt_number' => 'Receipt No.',
-                                'customer_name' => 'Customer Name',
-                                'customer_type' => 'Type',
-                                'total_amount' => 'Total',
-                                'transaction_date' => 'Transaction Date',
-                            ] as $field => $label)
-                                @php
-                                    $newOrder = sortCycle($field);
-                                    $params = array_merge(request()->except('sort_by', 'sort_order', 'page'), [
-                                        'sort_by' => $newOrder === 'default' ? null : $field,
-                                        'sort_order' => $newOrder === 'default' ? null : $newOrder,
-                                    ]);
-                                    $url = url()->current() . '?' . http_build_query(array_filter($params));
-                                @endphp
-                                <th>
-                                    <a href="{{ $url }}" class="text-white text-decoration-none">
-                                        {{ $label }}{!! sortIcon($field) !!}
-                                    </a>
-                                </th>
-                            @endforeach
+                            <th onclick="sortTable(0)">Transaction ID</th>
+                            <th onclick="sortTable(1)">Receipt Number</th>
+                            <th onclick="sortTable(2)">Customer Name</th>
+                            <th onclick="sortTable(3)">Customer Type</th>
+                            <th onclick="sortTable(4)">Total Amount</th>
+                            <th onclick="sortTable(5)">Transaction Date </th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -189,8 +142,7 @@
                             <label for="customer_type" class="form-label">Payor Type</label>
                             <select name="customer_type" class="form-select">
                                 <option value="">All</option>
-                                <option value="Student" {{ request('customer_type') == 'Student' ? 'selected' : '' }}>Student</option>
-                                <option value="Outsider" {{ request('customer_type') == 'Outsider' ? 'selected' : '' }}>Outsider</option>
+                                <option value="Student" {{ request('customer_type') == 'Customer' ? 'selected' : '' }}>Student</option>
                                 <option value="Concessionaire" {{ request('customer_type') == 'Concessionaire' ? 'selected' : '' }}>Concessionaire</option>
                             </select>
                         </div>
@@ -210,9 +162,44 @@
 </main>
 
 <script>
-    // Toggle sort order value on checkbox
-    document.getElementById('toggleSort').addEventListener('change', function () {
-        document.getElementById('sortOrderInput').value = this.checked ? 'asc' : 'desc';
+    let table = document.getElementById("historyTable");
+    let originalRows = Array.from(table.tBodies[0].rows);
+    let sortState = {}; // default, asc, desc
+
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#historyTable tbody tr");
+        rows.forEach(row => {
+            let text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
     });
+
+    function sortTable(n) {
+        let rows = Array.from(table.tBodies[0].rows);
+        let state = sortState[n] || 'default';
+
+        // Reset all header arrows
+        Array.from(table.tHead.rows[0].cells).forEach((cell, idx) => {
+            cell.innerText = cell.innerText.replace(/ ↑| ↓/g, '');
+        });
+
+        if (state === 'default') {
+            rows.sort((a, b) => a.cells[n].innerText.localeCompare(b.cells[n].innerText, undefined, {numeric: true}));
+            sortState[n] = 'asc';
+            table.tHead.rows[0].cells[n].innerText += ' ↑';
+        } else if (state === 'asc') {
+            rows.sort((a, b) => b.cells[n].innerText.localeCompare(a.cells[n].innerText, undefined, {numeric: true}));
+            sortState[n] = 'desc';
+            table.tHead.rows[0].cells[n].innerText += ' ↓';
+        } else {
+            rows = [...originalRows];
+            sortState[n] = 'default';
+        }
+
+        table.tBodies[0].innerHTML = '';
+        rows.forEach(row => table.tBodies[0].appendChild(row));
+    }
 </script>
+
 @endsection

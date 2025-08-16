@@ -9,8 +9,7 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <h2 class="fw-bold mb-0">Audit Logs</h2>
             <form method="GET" action="{{ url()->current() }}" class="d-flex gap-2 flex-wrap">
-                <input type="text" name="search" value="{{ request('search') }}" class="form-control form-control-sm" placeholder="🔍 Search user/event/model...">
-                <button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-search me-1"></i> Search</button>
+                <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search user/event/model...">
                 <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#filterModal">
                     <i class="fa-solid fa-filter me-1"></i> Filters
                 </button>
@@ -19,17 +18,17 @@
         </div>
 
         <!-- Table -->
-        <div class="card border-0 shadow-sm">
+        <div class="card shadow-sm p-3 mb-4 bg-light rounded">
             <div class="table-responsive">
-                <table class="table table-hover align-middle text-center mb-0">
+                <table class="table table-hover align-middle text-center mb-0" id="auditTable">
                     <thead class="table-dark">
                         <tr>
-                            <th>Date</th>
-                            <th>User</th>
-                            <th>Event</th>
-                            <th>Model</th>
-                            <th class="text-start">Old Values</th>
-                            <th class="text-start">New Values</th>
+                            <th onclick="sortTable(0)">Date</th>
+                            <th onclick="sortTable(1)">User</th>
+                            <th onclick="sortTable(2)">Event</th>
+                            <th onclick="sortTable(3)">Model</th>
+                            <th class="text-start" onclick="sortTable(4)">Old Values</th>
+                            <th class="text-start" onclick="sortTable(5)">New Values</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -166,5 +165,46 @@
         </div>
     </div>
 </main>
+
+<script>
+    let table = document.getElementById("auditTable");
+    let originalRows = Array.from(table.tBodies[0].rows);
+    let sortState = {}; // default, asc, desc
+
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#auditTable tbody tr");
+        rows.forEach(row => {
+            let text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+
+    function sortTable(n) {
+        let rows = Array.from(table.tBodies[0].rows);
+        let state = sortState[n] || 'default';
+
+        // Reset all header arrows
+        Array.from(table.tHead.rows[0].cells).forEach((cell, idx) => {
+            cell.innerText = cell.innerText.replace(/ ↑| ↓/g, '');
+        });
+
+        if (state === 'default') {
+            rows.sort((a, b) => a.cells[n].innerText.localeCompare(b.cells[n].innerText, undefined, {numeric: true}));
+            sortState[n] = 'asc';
+            table.tHead.rows[0].cells[n].innerText += ' ↑';
+        } else if (state === 'asc') {
+            rows.sort((a, b) => b.cells[n].innerText.localeCompare(a.cells[n].innerText, undefined, {numeric: true}));
+            sortState[n] = 'desc';
+            table.tHead.rows[0].cells[n].innerText += ' ↓';
+        } else {
+            rows = [...originalRows];
+            sortState[n] = 'default';
+        }
+
+        table.tBodies[0].innerHTML = '';
+        rows.forEach(row => table.tBodies[0].appendChild(row));
+    }
+</script>
 
 @endsection

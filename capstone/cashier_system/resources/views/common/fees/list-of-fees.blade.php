@@ -1,161 +1,218 @@
 @extends('layout.main-master')
+
 @section('content')
 
-<main style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
-    <div class="container bg-light" style="width:50%; padding:2%;">
+<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 2%;">
+<div class="container mt-4" style="width: 60%">
 
-        @if(session('success'))
-            <p style="color: green;">{{ session('success') }}</p>
-        @elseif(session('error'))
-            <p style="color: red;">{{ session('error') }}</p>
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Fees Management</h3>
+        @if($status === 'active')
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeeModal">
+                <i class="bi bi-plus-circle"></i> Add Fee
+            </button>
         @endif
+    </div>
 
-        <div class="mb-3 d-flex justify-content-between align-items-center">
-            <h1 class="mb-0">List of Fees</h1>
-            <div class="d-flex gap-2">
-                <a href="{{ route('fees.list.deleted') }}" class="btn btn-danger">🗑 Deleted Fees</a>
-                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addFeeModal">➕ Add Item</button>
-            </div>
-        </div>
+    <!-- Toggle Buttons -->
+    <div class="mb-3">
+        <a href="{{ route('fees.list', ['status' => 'active']) }}"
+           class="btn {{ $status === 'active' ? 'btn-dark' : 'btn-outline-dark' }}">
+           Active Fees
+        </a>
+        <a href="{{ route('fees.list', ['status' => 'deleted']) }}"
+           class="btn {{ $status === 'deleted' ? 'btn-dark' : 'btn-outline-dark' }}">
+           Deleted Fees
+        </a>
+    </div>
 
-        <table class="table table-striped border">
+    <!-- Search -->
+    <div class="mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search fees...">
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table table-striped table-hover" id="feesTable">
             <thead>
                 <tr>
-                    <th>Item ID</th>
-                    <th>Item Name</th>
-                    <th>Item Price</th>
+                    <th onclick="sortTable(0)">Fee Name</th>
+                    <th onclick="sortTable(1)">Amount</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($fees as $fee)
-                <tr>
-                    <td>{{ $fee->id }}</td>
-                    <td>{{ $fee->fee_name }}</td>
-                    <td>{{ $fee->amount }}</td>
-                    <td>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#updateFeeModal{{ $fee->id }}">Update</button>
-                            <a href="{{ route('fees.delete', $fee->id) }}" class="btn btn-warning btn-sm">Delete</a>
-                        </div>
-                    </td>
-                </tr>
+                    <tr>
+                        <td>{{ $fee->fee_name }}</td>
+                        <td>₱{{ number_format($fee->amount, 2) }}</td>
+                        <td>
+                            @if($status === 'active')
+                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                                    data-bs-target="#editFeeModal{{ $fee->id }}">
+                                    Edit
+                                </button>
+                                <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#deleteFeeModal{{ $fee->id }}">
+                                    Delete
+                                </button>
+                            @else
+                                <button class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                    data-bs-target="#restoreFeeModal{{ $fee->id }}">
+                                    Restore
+                                </button>
+                            @endif
+                        </td>
+                    </tr>
 
-                    <!-- Update Fee Modal -->
-                    <div class="modal fade" id="updateFeeModal{{ $fee->id }}" tabindex="-1" aria-labelledby="updateFeeModalLabel" aria-hidden="true">
+                    <!-- Edit Fee Modal -->
+                    <div class="modal fade" id="editFeeModal{{ $fee->id }}" tabindex="-1">
                         <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Update Fee</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form action="{{ route('fees.update', $fee->id) }}" method="POST">
-                                        @csrf
-                                        @method('POST')
+                            <form action="{{ route('fees.update', $fee->id) }}" method="POST">
+                                @csrf @method('PUT')
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Fee</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
                                         <div class="mb-3">
-                                            <label class="form-label">Fee Name</label>
+                                            <label>Fee Name</label>
                                             <input type="text" name="fee_name" class="form-control" value="{{ $fee->fee_name }}" required>
                                         </div>
                                         <div class="mb-3">
-                                            <label class="form-label">Amount</label>
-                                            <input type="text" name="amount" class="form-control" value="{{ $fee->amount }}" required>
+                                            <label>Amount</label>
+                                            <input type="number" step="0.01" name="amount" class="form-control" value="{{ $fee->amount }}" required>
                                         </div>
-                                        <div class="mb-3 form-check">
-                                            <small class="text-muted">Set amount to 0 if this fee has variable amount</small>
-                                        </div>
-                                        <button type="submit" class="btn btn-danger">Update Fee</button>
-                                    </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Update</button>
+                                    </div>
                                 </div>
-                            </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Delete Fee Modal -->
+                    <div class="modal fade" id="deleteFeeModal{{ $fee->id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <form action="{{ route('fees.delete', $fee->id) }}" method="POST">
+                                @csrf @method('GET')
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title">Delete Fee</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete "{{ $fee->fee_name }}"?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Restore Fee Modal -->
+                    <div class="modal fade" id="restoreFeeModal{{ $fee->id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <form action="{{ route('fees.restore', $fee->id) }}" method="POST">
+                                @csrf @method('GET')
+                                <div class="modal-content">
+                                    <div class="modal-header bg-success text-white">
+                                        <h5 class="modal-title">Restore Fee</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to restore "{{ $fee->fee_name }}"?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-success">Restore</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 @endforeach
             </tbody>
         </table>
     </div>
-</main>
-
-<!-- Add Fee Modal -->
-<div class="modal fade" id="addFeeModal" tabindex="-1" aria-labelledby="addFeeModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Fee</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('fees.add') }}" method="POST">
-                    @csrf
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Item Name</th>
-                                <th>Item Price</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="itemTableBody">
-                            <tr>
-                                <td>
-                                    <input type="text" class="form-control" name="fees[0][fee_name]" placeholder="Item Name" required>
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control" name="fees[0][amount]" placeholder="00.00" required>
-                                </td>
-                                <small class="text-muted">Set amount to 0 if this fee has variable amount</small>
-                                <td>
-                                    <button type="button" class="btn btn-danger btn-sm remove-row">Remove</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" class="text-center">
-                                    <button type="button" class="btn btn-warning btn-md" id="addRow">Add Row</button>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <button type="submit" class="btn btn-danger btn-md">Add Items</button>
-                </form>
-            </div>
-        </div>
-    </div>
 </div>
 
+<!-- Add Fee Modal -->
+<div class="modal fade" id="addFeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="{{ route('fees.add') }}" method="POST">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Add Fee</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Fee Name</label>
+                        <input type="text" name="fee_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Amount</label>
+                        <input type="number" step="0.01" name="amount" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</main>
+
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const tableBody = document.getElementById('itemTableBody');
-        const addRowButton = document.getElementById('addRow');
-        let rowIndex = 1;
+    let table = document.getElementById("feesTable");
+    let originalRows = Array.from(table.tBodies[0].rows);
+    let sortState = {}; // default, asc, desc
 
-        addRowButton.addEventListener('click', () => {
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td>
-                    <input type="text" class="form-control" name="fees[${rowIndex}][fee_name]" placeholder="Fee Name" required>
-                </td>
-                <td>
-                    <input type="text" class="form-control" name="fees[${rowIndex}][amount]" placeholder="00.00" required>
-                </td>
-                <td class="text-center">
-                    <input type="checkbox" class="form-check-input" name="fees[${rowIndex}][is_variable]" value="1">
-                </td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm remove-row">Remove</button>
-                </td>
-            `;
-            tableBody.appendChild(newRow);
-            rowIndex++;
-        });
-
-        tableBody.addEventListener('click', (e) => {
-            if (e.target.classList.contains('remove-row')) {
-                e.target.closest('tr').remove();
-            }
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#feesTable tbody tr");
+        rows.forEach(row => {
+            let text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
         });
     });
+
+    function sortTable(n) {
+        let rows = Array.from(table.tBodies[0].rows);
+        let state = sortState[n] || 'default';
+
+        // Reset all header arrows
+        Array.from(table.tHead.rows[0].cells).forEach((cell, idx) => {
+            cell.innerText = cell.innerText.replace(/ ↑| ↓/g, '');
+        });
+
+        if (state === 'default') {
+            rows.sort((a, b) => a.cells[n].innerText.localeCompare(b.cells[n].innerText, undefined, {numeric: true}));
+            sortState[n] = 'asc';
+            table.tHead.rows[0].cells[n].innerText += ' ↑';
+        } else if (state === 'asc') {
+            rows.sort((a, b) => b.cells[n].innerText.localeCompare(a.cells[n].innerText, undefined, {numeric: true}));
+            sortState[n] = 'desc';
+            table.tHead.rows[0].cells[n].innerText += ' ↓';
+        } else {
+            rows = [...originalRows];
+            sortState[n] = 'default';
+        }
+
+        table.tBodies[0].innerHTML = '';
+        rows.forEach(row => table.tBodies[0].appendChild(row));
+    }
 </script>
 
 @endsection

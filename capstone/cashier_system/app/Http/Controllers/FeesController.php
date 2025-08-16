@@ -10,14 +10,16 @@ use Illuminate\Support\Facades\Log;
 
 class FeesController extends Controller
 {
-    public function GetFeesList() {
-        $fees = Fee::all();
-        return view('common.fees.list-of-fees', compact('fees'));
-    }
+    public function feesList(Request $request) {
+        $status = $request->query('status', 'active'); // default to active
 
-    public function deletedFeesList() {
-        $fees = Fee::onlyTrashed()->get();
-        return view('common.fees.list-deleted', compact('fees'));
+        if ($status === 'deleted') {
+            $fees = Fee::onlyTrashed()->get();
+        } else {
+            $fees = Fee::all();
+        }
+
+        return view('common.fees.list-of-fees', compact('fees', 'status'));
     }
 
     public function AddFees(Request $request) {
@@ -91,6 +93,6 @@ class FeesController extends Controller
     public function restoreFees($id) {
         $fee = Fee::withTrashed()->findOrFail($id);
         $fee->restore(); // Triggers audit
-        return redirect()->route('fees.list.deleted')->with('success', 'Item restored successfully!');
+        return redirect()->route('fees.list')->with('success', 'Item restored successfully!');
     }
 }

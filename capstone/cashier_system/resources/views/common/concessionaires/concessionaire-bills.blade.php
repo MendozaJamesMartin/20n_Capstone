@@ -23,20 +23,20 @@
             <!-- Electricity Bills -->
             <div class="tab-pane fade show active" id="electricity" role="tabpanel">
                 <div class="table-responsive">
-                    <table class="table table-striped align-middle text-center mb-0">
+                    <table class="table table-striped align-middle text-center mb-0" id="billsTable">
                         <thead class="table-dark">
                             <tr>
-                                <th>Concessionaire</th>
-                                <th>Billing Period</th>
-                                <th>Bill Start Date</th>
-                                <th>Bill End Date</th>
-                                <th>kWh Used</th>
-                                <th>₱/kWh</th>
-                                <th>Current Charges</th>
-                                <th>Previous Unpaid</th>
-                                <th>Total Due</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
+                                <th onclick="sortTable(0)">Concessionaire</th>
+                                <th onclick="sortTable(1)">Billing Period</th>
+                                <th onclick="sortTable(2)">Bill Start Date</th>
+                                <th onclick="sortTable(3)">Bill End Date</th>
+                                <th onclick="sortTable(4)">kWh Used</th>
+                                <th onclick="sortTable(5)">₱/kWh</th>
+                                <th onclick="sortTable(6)">Current Charges</th>
+                                <th onclick="sortTable(7)">Previous Unpaid</th>
+                                <th onclick="sortTable(8)">Total Due</th>
+                                <th onclick="sortTable(9)">Due Date</th>
+                                <th onclick="sortTable(10)">Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -69,16 +69,16 @@
             <!-- Water Bills -->
             <div class="tab-pane fade" id="water" role="tabpanel">
                 <div class="table-responsive">
-                    <table class="table table-striped align-middle text-center mb-0">
+                    <table class="table table-striped align-middle text-center mb-0" id="billsTable">
                         <thead class="table-dark">
                             <tr>
-                                <th>Concessionaire</th>
-                                <th>Billing Period</th>
-                                <th>Current Charges</th>
-                                <th>Previous Unpaid</th>
-                                <th>Total Due</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
+                                <th onclick="sortTable(0)">Concessionaire</th>
+                                <th onclick="sortTable(1)">Billing Period</th>
+                                <th onclick="sortTable(2)">Current Charges</th>
+                                <th onclick="sortTable(3)">Previous Unpaid</th>
+                                <th onclick="sortTable(4)">Total Due</th>
+                                <th onclick="sortTable(5)">Due Date</th>
+                                <th onclick="sortTable(6)">Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -106,4 +106,46 @@
         </div>
     </div>
 </main>
+
+<script>
+    let table = document.getElementById("billsTable");
+    let originalRows = Array.from(table.tBodies[0].rows);
+    let sortState = {}; // default, asc, desc
+
+    document.getElementById('searchInput').addEventListener('keyup', function () {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll("#billsTable tbody tr");
+        rows.forEach(row => {
+            let text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+
+    function sortTable(n) {
+        let rows = Array.from(table.tBodies[0].rows);
+        let state = sortState[n] || 'default';
+
+        // Reset all header arrows
+        Array.from(table.tHead.rows[0].cells).forEach((cell, idx) => {
+            cell.innerText = cell.innerText.replace(/ ↑| ↓/g, '');
+        });
+
+        if (state === 'default') {
+            rows.sort((a, b) => a.cells[n].innerText.localeCompare(b.cells[n].innerText, undefined, {numeric: true}));
+            sortState[n] = 'asc';
+            table.tHead.rows[0].cells[n].innerText += ' ↑';
+        } else if (state === 'asc') {
+            rows.sort((a, b) => b.cells[n].innerText.localeCompare(a.cells[n].innerText, undefined, {numeric: true}));
+            sortState[n] = 'desc';
+            table.tHead.rows[0].cells[n].innerText += ' ↓';
+        } else {
+            rows = [...originalRows];
+            sortState[n] = 'default';
+        }
+
+        table.tBodies[0].innerHTML = '';
+        rows.forEach(row => table.tBodies[0].appendChild(row));
+    }
+</script>
+
 @endsection
