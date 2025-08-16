@@ -32,7 +32,7 @@ class BillsController extends Controller
 
                 Log::info("Get method to view UI");
 
-                $concessionaires = DB::table('concessionaires')->where('status', 'Active')->get();
+                $concessionaires = Concessionaire::all();
                 return view('common.concessionaires.billing-create', compact('concessionaires'));
 
                 // Check if the request is a POST (form submission)

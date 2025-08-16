@@ -50,7 +50,6 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     Route::get('/reports/monthly/export', [TransactionsController::class, 'exportMonthlyReport'])->name('reports.monthly.export');
 
     //Concessionaire Bills Management
-    Route::get('concessionaires/list', [ConcessionairesController::class, 'GetConcessionairesList'])->name('concessionaires.list');
     Route::get('concessionaires/billing/list', [BillsController::class, 'GetBillingList'])->name('concessionaires.billing.list');
     Route::match(['get', 'post'], 'concessionaires/billing/new', [BillsController::class, 'CreateNewBilling'])->name('concessionaires.billing.new');
     Route::match(['get', 'post'], 'concessionaires/billing/payment', [BillsController::class, 'BillsPayment'])->name('concessionaires.billing.payment');
@@ -69,7 +68,6 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
         
         //Fees Management
         Route::get('fees/list', [FeesController::class, 'feesList'])->name('fees.list');
-        Route::get('fees/list/deleted', [FeesController::class, 'deletedFeesList'])->name('fees.list.deleted');
         Route::post('fees/add', [FeesController::class, 'AddFees'])->name('fees.add');
         Route::post('fees/{id}/update', [FeesController::class, 'UpdateFees'])->name('fees.update');
         Route::get('fees/{id}/delete', [FeesController::class, 'deleteFees'])->name('fees.delete');
@@ -82,8 +80,11 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
         Route::post('/register', [LoginController::class, 'registerPost'])->name('register');
 
         //Concessionaires Management
+        Route::get('concessionaires/list', [ConcessionairesController::class, 'GetConcessionairesList'])->name('concessionaires.list');
         Route::post('concessionaires/add', [ConcessionairesController::class, 'AddNewConcessionaire'])->name('concessionaires.add');
         Route::post('concessionaires/update/{id}', [ConcessionairesController::class, 'updateConcessionaire'])->name('concessionaires.update');
+        Route::get('concessionaires/{id}/delete', [ConcessionairesController::class, 'deleteConcessionaire'])->name('concessionaires.delete');
+        Route::get('concessionaires/{id}/restore', [ConcessionairesController::class, 'restoreConcessionaire'])->name('concessionaires.restore');
 
         //Receipts Management
         Route::get('/admin/receipts', [ReceiptsController::class, 'manage'])->name('receipts.manage');

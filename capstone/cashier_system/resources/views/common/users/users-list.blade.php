@@ -19,6 +19,12 @@
             </div>
         </div>
 
+        @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+        @elseif(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
         <!-- Table Card -->
         <div class="card shadow-sm p-3 mb-4 bg-light rounded">
             <div class="table-responsive">

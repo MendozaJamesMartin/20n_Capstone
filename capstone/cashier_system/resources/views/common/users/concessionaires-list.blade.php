@@ -2,33 +2,50 @@
 
 @section('content')
 <main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 2%;">
-    <div class="container" style="width:50%">
+    <div class="container" style="width:60%">
 
-        <!-- Header: Title, Search, and Add Button -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <h2 class="mb-0">Concessionaires List</h2>
-
-            <div class="d-flex flex-wrap align-items-center gap-2">
-                <!-- Search Input -->
-                <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="🔍 Search...">
-
-                <!-- Add New Button -->
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Concessionaires Management</h3>
+            @if($status === 'active')
                 <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addConcessionaireModal">
                     <i class="fa-solid fa-plus me-1"></i> New
                 </button>
-            </div>
+            @endif
         </div>
 
-        <!-- Responsive Table -->
+        <!-- Toggle Buttons -->
+        <div class="mb-3">
+            <a href="{{ route('concessionaires.list', ['status' => 'active']) }}"
+               class="btn {{ $status === 'active' ? 'btn-dark' : 'btn-outline-dark' }}">
+               Active Concessionaires
+            </a>
+            <a href="{{ route('concessionaires.list', ['status' => 'deleted']) }}"
+               class="btn {{ $status === 'deleted' ? 'btn-dark' : 'btn-outline-dark' }}">
+               Inactive Concessionaires
+            </a>
+        </div>
+
+        <!-- Search -->
+        <div class="mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search...">
+        </div>
+
+        @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+        @elseif(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
+        <!-- Table -->
         <div class="card shadow-sm p-3 mb-4 bg-light rounded">
             <div class="table-responsive">
                 <table class="table table-striped align-middle text-center mb-0" id="feesTable">
                     <thead class="table-dark">
                         <tr>
-                            <th onclick="sortTable(0)" style="cursor:pointer">Concessionaire ID</th>
+                            <th onclick="sortTable(0)" style="cursor:pointer">ID</th>
                             <th onclick="sortTable(1)" style="cursor:pointer">Name</th>
                             <th onclick="sortTable(2)" style="cursor:pointer">Email</th>
-                            <th onclick="sortTable(3)" style="cursor:pointer">Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -39,23 +56,27 @@
                             <td>{{ $concessionaire->name }}</td>
                             <td>{{ $concessionaire->contact }}</td>
                             <td>
-                                @if($concessionaire->status === 'Active')
-                                    <span class="badge bg-success">{{ $concessionaire->status }}</span>
+                                @if($status === 'active')
+                                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#updateConcessionaireModal{{ $concessionaire->id }}">
+                                        <i class="fa-solid fa-pen-to-square"></i> Update
+                                    </button>
+
+                                    <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#deleteConcessionaireModal{{ $concessionaire->id }}">
+                                        <i class="fa-solid fa-trash"></i> Delete
+                                    </button>
                                 @else
-                                    <span class="badge bg-secondary">{{ $concessionaire->status }}</span>
+                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal"
+                                        data-bs-target="#restoreConcessionaireModal{{ $concessionaire->id }}">
+                                        <i class="fa-solid fa-rotate-left"></i> Restore
+                                    </button>
                                 @endif
-                            </td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#updateConcessionaireModal{{ $concessionaire->id }}">
-                                    <i class="fa-solid fa-pen-to-square"></i> Update
-                                </button>
                             </td>
                         </tr>
 
                         <!-- Update Modal -->
-                        <div class="modal fade" id="updateConcessionaireModal{{ $concessionaire->id }}" tabindex="-1"
-                            aria-labelledby="updateConcessionaireModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="updateConcessionaireModal{{ $concessionaire->id }}" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content p-3">
                                     <div class="modal-header">
@@ -66,8 +87,7 @@
                                     </div>
                                     <div class="modal-body">
                                         <form action="{{ route('concessionaires.update', $concessionaire->id) }}" method="POST">
-                                            @csrf
-                                            @method('POST')
+                                            @csrf @method('POST')
                                             <div class="mb-3">
                                                 <label class="form-label">Name</label>
                                                 <input type="text" name="name" class="form-control" value="{{ $concessionaire->name }}" required>
@@ -76,19 +96,56 @@
                                                 <label class="form-label">Email</label>
                                                 <input type="text" name="contact" class="form-control" value="{{ $concessionaire->contact }}" required>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Status</label>
-                                                <select class="form-select" name="status" required>
-                                                    <option value="Active" {{ $concessionaire->status == 'Active' ? 'selected' : '' }}>Active</option>
-                                                    <option value="Inactive" {{ $concessionaire->status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                                                </select>
-                                            </div>
                                             <button type="submit" class="btn btn-danger">
                                                 <i class="fa-solid fa-save me-1"></i> Save
                                             </button>
                                         </form>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Delete Modal -->
+                        <div class="modal fade" id="deleteConcessionaireModal{{ $concessionaire->id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <form action="{{ route('concessionaires.delete', $concessionaire->id) }}" method="POST">
+                                    @csrf @method('GET')
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title">Delete Concessionaire</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete "{{ $concessionaire->name }}"?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Restore Modal -->
+                        <div class="modal fade" id="restoreConcessionaireModal{{ $concessionaire->id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <form action="{{ route('concessionaires.restore', $concessionaire->id) }}" method="POST">
+                                    @csrf @method('GET')
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-success text-white">
+                                            <h5 class="modal-title">Restore Concessionaire</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to restore "{{ $concessionaire->name }}"?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-success">Restore</button>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                         @empty
@@ -105,7 +162,7 @@
 </main>
 
 <!-- Add Concessionaire Modal -->
-<div class="modal fade" id="addConcessionaireModal" tabindex="-1" aria-labelledby="addConcessionaireModalLabel" aria-hidden="true">
+<div class="modal fade" id="addConcessionaireModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content p-3">
             <div class="modal-header">
@@ -134,11 +191,11 @@
     </div>
 </div>
 
-<!-- Saved Script for Sorting & Searching -->
+<!-- Sorting & Searching Script -->
 <script>
     let table = document.getElementById("feesTable");
     let originalRows = Array.from(table.tBodies[0].rows);
-    let sortState = {}; // default, asc, desc
+    let sortState = {};
 
     document.getElementById('searchInput').addEventListener('keyup', function () {
         let filter = this.value.toLowerCase();
@@ -153,8 +210,7 @@
         let rows = Array.from(table.tBodies[0].rows);
         let state = sortState[n] || 'default';
 
-        // Reset all header arrows
-        Array.from(table.tHead.rows[0].cells).forEach((cell, idx) => {
+        Array.from(table.tHead.rows[0].cells).forEach(cell => {
             cell.innerText = cell.innerText.replace(/ ↑| ↓/g, '');
         });
 
