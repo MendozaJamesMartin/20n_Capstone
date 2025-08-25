@@ -89,6 +89,8 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
         //Receipts Management
         Route::get('/admin/receipts', [ReceiptsController::class, 'manage'])->name('receipts.manage');
         Route::post('/admin/receipts/add-batch', [ReceiptsController::class, 'addBatch'])->name('receipts.addBatch');
+        Route::put('/admin/receipts/edit-batch/{id}', [ReceiptsController::class, 'editBatch'])->name('receipts.editBatch');
+        Route::delete('/admin/receipts/delete-batch/{id}', [ReceiptsController::class, 'deleteBatch'])->name('receipts.deleteBatch');
 
         //Audit logs
         Route::get('/audit/logs', [AuditLogController::class, 'index'])->name('audit.logs');

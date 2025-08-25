@@ -70,4 +70,46 @@ class ReceiptsController extends Controller
         return redirect()->route('receipts.manage')->with('success', 'Receipt batch added.');
     }
 
+    public function editBatch(Request $request, $id) {
+        $batch = ReceiptBatch::findOrFail($id);
+
+        $validated = $request->validate([
+            'end_number' => 'required|integer|min:' . $batch->start_number,
+            'next_number' => 'required|integer|min:' . $batch->start_number . '|max:' . $request->end_number,
+        ]);
+
+        // Prevent conflicts with used receipts
+        $conflictInReceipts = DB::table('receipts')
+            ->whereBetween('receipt_number', [$validated['next_number'], $validated['end_number']])
+            ->exists();
+
+        if ($conflictInReceipts) {
+            return back()->with('error', 'Cannot edit: some numbers in this range are already used.');
+        }
+
+        // Apply changes
+        $batch->end_number = $validated['end_number'];
+        $batch->next_number = $validated['next_number'];
+        $batch->save();
+
+        return redirect()->route('receipts.manage')->with('success', 'Batch updated successfully.');
+    }
+
+    public function deleteBatch($id) {
+        $batch = ReceiptBatch::findOrFail($id);
+
+        // Check if any receipts from this batch were already used
+        $usedExists = DB::table('receipts')
+            ->whereBetween('receipt_number', [$batch->start_number, $batch->end_number])
+            ->exists();
+
+        if ($usedExists) {
+            return back()->with('error', 'Cannot delete this batch because some receipts are already used.');
+        }
+
+        $batch->delete();
+
+        return redirect()->route('receipts.manage')->with('success', 'Batch deleted successfully.');
+    }
+
 }
