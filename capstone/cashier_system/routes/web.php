@@ -95,8 +95,9 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
 
         //Backup and Restore
         Route::get('/backups/manage', [BackupController::class, 'showManageView'])->name('backups.manage');
-        Route::get('/backups/export-db', [BackupController::class, 'exportDatabase'])->name('backups.export-db');
-        Route::post('/backups/restore', [BackupController::class, 'restoreDatabase'])->name('backups.restore');
+        Route::post('/backups/export', [BackupController::class, 'exportDatabase'])->name('backups.export');
+        Route::post('/backups/restore/{id}', [BackupController::class, 'restoreBackup'])->name('backups.restore');
+        Route::delete('/backups/delete/{id}', [BackupController::class, 'deleteBackup'])->name('backups.delete');
 
     });
 

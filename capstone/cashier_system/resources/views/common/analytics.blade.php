@@ -46,7 +46,7 @@
     <div class="card mb-4">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Monthly Revenue Trend</h5>
+                <h5 class="mb-0">Monthly Revenue Report</h5>
                 <!-- Button to open modal -->
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
                     Export Report
@@ -74,10 +74,10 @@
                     <h5>Top Fees Paid</h5>
                     <ul class="list-group">
                         @foreach ($topFees as $fee)
-                            <li class="list-group-item d-flex justify-content-between">
-                                {{ $fee->fee_name }}
-                                <span class="badge bg-success">₱{{ number_format($fee->total, 2) }}</span>
-                            </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            {{ $fee->fee_name }}
+                            <span class="badge bg-success">₱{{ number_format($fee->total, 2) }}</span>
+                        </li>
                         @endforeach
                     </ul>
                 </div>
@@ -127,9 +127,9 @@
 
                     <div class="modal-body">
                         @php
-                            $now = \Carbon\Carbon::now();
-                            $startOfMonth = $now->copy()->startOfMonth()->toDateString();
-                            $endOfMonth = $now->copy()->endOfMonth()->toDateString();
+                        $now = \Carbon\Carbon::now();
+                        $startOfMonth = $now->copy()->startOfMonth()->toDateString();
+                        $endOfMonth = $now->copy()->endOfMonth()->toDateString();
                         @endphp
 
                         <!-- Start Date -->
@@ -146,13 +146,19 @@
 
                         <!-- Fee Selection -->
                         <div class="mb-3">
-                            <label for="fee_ids" class="form-label">Select Fees</label>
-                            <select name="fee_ids[]" id="fee_ids" class="form-select" multiple required>
+                            <label class="form-label">Select Fees</label>
+                            <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
                                 @foreach ($fees as $fee)
-                                    <option value="{{ $fee->id }}" selected>{{ $fee->fee_name }}</option>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="fee_ids[]"
+                                        value="{{ $fee->id }}" id="fee_{{ $fee->id }}" checked>
+                                    <label class="form-check-label" for="fee_{{ $fee->id }}">
+                                        {{ $fee->fee_name }}
+                                    </label>
+                                </div>
                                 @endforeach
-                            </select>
-                            <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</small>
+                            </div>
+                            <small class="text-muted">Uncheck any fees you don’t want to include.</small>
                         </div>
                     </div>
 
@@ -164,6 +170,7 @@
             </form>
         </div>
     </div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -172,27 +179,37 @@
     new Chart(ctxRevenue, {
         type: 'line',
         data: {
-            labels: {!! json_encode($chartLabels) !!},
+            labels: {
+                !!json_encode($chartLabels) !!
+            },
             datasets: [{
                 label: 'Monthly Revenue',
-                data: {!! json_encode($chartData) !!},
+                data: {
+                    !!json_encode($chartData) !!
+                },
                 borderColor: 'rgba(40,167,69,1)',
                 backgroundColor: 'rgba(40,167,69,0.1)',
                 fill: true,
                 tension: 0.4
             }]
         },
-        options: { responsive: true }
+        options: {
+            responsive: true
+        }
     });
 
     const ctxFee = document.getElementById('feeChart').getContext('2d');
     new Chart(ctxFee, {
         type: 'pie',
         data: {
-            labels: {!! json_encode($topFees->pluck('fee_name')) !!},
+            labels: {
+                !!json_encode($topFees - > pluck('fee_name')) !!
+            },
             datasets: [{
                 label: 'Top Fees',
-                data: {!! json_encode($topFees->pluck('total')) !!},
+                data: {
+                    !!json_encode($topFees - > pluck('total')) !!
+                },
                 backgroundColor: [
                     '#007bff', '#ffc107', '#28a745', '#dc3545', '#6610f2', '#6c757d'
                 ]

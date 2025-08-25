@@ -39,11 +39,16 @@ class BillsController extends Controller
             } elseif ($request->isMethod('post')) {
 
                 Log::info("Input Validation 1");
+
+                $currentYear = now()->year;
+                $startOfYear = now()->startOfYear()->toDateString(); // YYYY-01-01
+                $endOfYear   = now()->endOfYear()->toDateString();   // YYYY-12-31
+
                 $validated = $request->validate([
                     'concessionaire_id' => 'required|exists:concessionaires,id',
                     'utility_type' => 'required|in:Water,Electricity',
                     'billing_period' => 'required|integer|between:1,12',
-                    'due_date' => 'required|date',
+                    'due_date' => "required|date|after_or_equal:$startOfYear|before_or_equal:$endOfYear",
                 ]);
 
                 Log::info("Billing Period Validation ");
@@ -82,8 +87,8 @@ class BillsController extends Controller
                     // Step 2: Build validation rules dynamically
                     Log::info("Building Validation rules");
                     $electricityRules = [
-                        'bill_start_date' => 'required|date',
-                        'bill_end_date' => 'required|date|after_or_equal:bill_start_date',
+                        'bill_start_date' => "required|date|after_or_equal:$startOfYear|before_or_equal:$endOfYear",
+                        'bill_end_date' => "required|date|after_or_equal:bill_start_date|before_or_equal:$endOfYear",
                         'current_reading' => 'required|numeric|min:0',
                         'cost_per_kwh' => 'required|numeric|min:0',
                         'university_total_kwh' => 'required|numeric|min:0',

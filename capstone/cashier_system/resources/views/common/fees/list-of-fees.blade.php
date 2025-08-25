@@ -146,32 +146,44 @@
 
 <!-- Add Fee Modal -->
 <div class="modal fade" id="addFeeModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <form action="{{ route('fees.add') }}" method="POST">
             @csrf
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Add Fee</h5>
+                    <h5 class="modal-title">Add Fees</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
+
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label>Fee Name</label>
-                        <input type="text" name="fee_name" class="form-control" required>
+                    <div id="fees-container">
+                        <div class="row g-3 mb-3 fee-row">
+                            <div class="col-md-6">
+                                <label>Fee Name</label>
+                                <input type="text" name="fees[0][fee_name]" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Amount</label>
+                                <input type="number" step="0.01" name="fees[0][amount]" class="form-control" required>
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-danger remove-row w-100">Remove</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label>Amount</label>
-                        <input type="number" step="0.01" name="amount" class="form-control" required>
-                    </div>
+
+                    <button type="button" class="btn btn-success" id="add-row">+ Add Another Fee</button>
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add</button>
+                    <button type="submit" class="btn btn-primary">Save Fees</button>
                 </div>
             </div>
         </form>
     </div>
 </div>
+
 </main>
 
 <script>
@@ -185,6 +197,39 @@
         rows.forEach(row => {
             let text = row.textContent.toLowerCase();
             row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        let index = 1;
+
+        document.getElementById("add-row").addEventListener("click", function () {
+            const container = document.getElementById("fees-container");
+
+            const newRow = document.createElement("div");
+            newRow.classList.add("row", "g-3", "mb-3", "fee-row");
+            newRow.innerHTML = `
+                <div class="col-md-6">
+                    <label>Fee Name</label>
+                    <input type="text" name="fees[${index}][fee_name]" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label>Amount</label>
+                    <input type="number" step="0.01" name="fees[${index}][amount]" class="form-control" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger remove-row w-100">Remove</button>
+                </div>
+            `;
+            container.appendChild(newRow);
+            index++;
+        });
+
+        // Remove row handler
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("remove-row")) {
+                e.target.closest(".fee-row").remove();
+            }
         });
     });
 
