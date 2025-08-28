@@ -1,107 +1,134 @@
 @extends('layout.main-master')
 @section('content')
 
-<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: cover;">
-    <!-- Main Content -->
+<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 100vh;">
     <div class="flex-grow-1 p-4">
 
         <!-- Hero Section -->
-        <div class="hero">
-            <h1 class="text-white">Welcome to PUP-T Cashier System</h1>
-            <p class="text-white">Secure, fast, and convenient payment solutions for students.</p>
-            <a href="#quick-actions" class="btn btn-primary btn-lg mt-3">Get Started</a>
+        <div class="hero text-white position-relative mb-5">
+            <div class="overlay"></div>
+            <div class="content position-relative">
+                <h1 class="fw-bold">Welcome to PUP-T Cashier System</h1>
+                <p class="lead">Secure, fast, and convenient payment solutions for students.</p>
+                <a href="#quick-actions" class="btn btn-lg btn-light shadow-sm mt-3">🚀 Get Started</a>
+            </div>
         </div>
 
-    <div class="section">
-
         <!-- KPI Cards -->
-        <div class="row mb-4 section" id="quick-actions">
-            <div class="col-md-3 mb-3">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <p class="text-muted mb-1">Today’s Revenue</p>
-                        <h4>₱{{ number_format($todaysRevenue, 2) }}</h4>
+        <div class="row g-3 mb-5" id="quick-actions">
+            <div class="col-md-3">
+                <div class="card shadow-sm kpi-card h-100">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="icon-wrapper bg-success text-white me-3">
+                            <i class="bi bi-cash-stack fs-3"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted small mb-1">Today’s Revenue</p>
+                            <h4 class="fw-bold text-success">₱{{ number_format($todaysRevenue, 2) }}</h4>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <a href=" {{ route('payments.pending') }}" class="text-decoration-none text-reset">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <p class="text-muted mb-1">Pending Payments</p>
-                            <h4>{{ $unpaidCount }}</h4>
+            <div class="col-md-3">
+                <a href="{{ route('payments.pending') }}" class="text-decoration-none text-reset">
+                    <div class="card shadow-sm kpi-card h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="icon-wrapper bg-warning text-white me-3">
+                                <i class="bi bi-hourglass-split fs-3"></i>
+                            </div>
+                            <div>
+                                <p class="text-muted small mb-1">Pending Payments</p>
+                                <h4 class="fw-bold">{{ $unpaidCount }}</h4>
+                            </div>
                         </div>
                     </div>
                 </a>
             </div>
-            <div class="col-md-3 mb-3">
-                <a href=" {{ route('receipts.list') }}" class="text-decoration-none text-reset">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <p class="text-muted mb-1">Transactions Conducted Today</p>
-                            <h4>{{ $paidCount }}</h4>
+            <div class="col-md-3">
+                <a href="{{ route('receipts.list') }}" class="text-decoration-none text-reset">
+                    <div class="card shadow-sm kpi-card h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="icon-wrapper bg-primary text-white me-3">
+                                <i class="bi bi-receipt fs-3"></i>
+                            </div>
+                            <div>
+                                <p class="text-muted small mb-1">Transactions Today</p>
+                                <h4 class="fw-bold">{{ $paidCount }}</h4>
+                            </div>
                         </div>
                     </div>
                 </a>
             </div>
-            <div class="col-md-3 mb-3">
-                <a href=" {{ route('payments.pending') }}" class="text-decoration-none text-reset">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <p class="text-muted mb-1">Bills Due this week</p>
-                            <h4>{{ $billsDue }}</h4>
+            <div class="col-md-3">
+                <a href="{{ route('payments.pending') }}" class="text-decoration-none text-reset">
+                    <div class="card shadow-sm kpi-card h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="icon-wrapper bg-danger text-white me-3">
+                                <i class="bi bi-exclamation-triangle fs-3"></i>
+                            </div>
+                            <div>
+                                <p class="text-muted small mb-1">Bills Due This Week</p>
+                                <h4 class="fw-bold text-danger">{{ $billsDue }}</h4>
+                            </div>
                         </div>
                     </div>
+                </a>
             </div>
         </div>
 
-        <!-- Tables -->
-        <div class="row">
-            <div class="col-lg-6 mb-4">
-                <a href=" {{ route('receipts.list') }}" class="text-decoration-none text-reset">
-                    <div class="card shadow-sm">
+        <!-- Tables Section -->
+        <div class="row g-4">
+            <!-- Recent Payments -->
+            <div class="col-lg-6">
+                <a href="{{ route('receipts.list') }}" class="text-decoration-none text-reset">
+                    <div class="card shadow-sm h-100">
                         <div class="card-body">
-                            <h5 class="card-title">Recent Payments</h5>
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Customer</th>
-                                        <th>Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($recentPayments as $payment)
-                                    <tr>
-                                        <td>{{ $payment->receipt_print_date }}</td>
-                                        <td>{{ $payment->customer_name }}</td>
-                                        <td>₱{{ number_format($payment->total_amount, 2) }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            <h5 class="fw-bold mb-3">💳 Recent Payments</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Customer</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($recentPayments as $payment)
+                                            <tr>
+                                                <td>{{ $payment->receipt_print_date }}</td>
+                                                <td>{{ $payment->customer_name }}</td>
+                                                <td class="text-end">₱{{ number_format($payment->total_amount, 2) }}</td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted">No recent payments.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </a>
             </div>
-            <div class="col-lg-6 mb-4">
-                <a href=" {{ route('receipts.manage') }}" class="text-decoration-none text-reset">
-                    <div class="card shadow-sm">
+
+            <!-- Current Receipt Batch -->
+            <div class="col-lg-6">
+                <a href="{{ route('receipts.manage') }}" class="text-decoration-none text-reset">
+                    <div class="card shadow-sm h-100">
                         <div class="card-body">
-                            <h5 class="card-title">Current Receipt Batch</h5>
-                            <!-- Current Active Receipt Batch -->
+                            <h5 class="fw-bold mb-3">🧾 Current Receipt Batch</h5>
                             @if ($currentBatch)
-                                <div class="card mb-4">
-                                    <div class="card-body">
-                                        <p><strong>Start Number:</strong> {{ $currentBatch->start_number ?? 0 }}</p>
-                                        <p><strong>Current Receipt Number:</strong> {{ $currentBatch->display_next_number }}</p>
-                                        <p><strong>End Number:</strong> {{ $currentBatch->end_number ?? 0 }}</p>
-                                        <p><strong>Receipts Used:</strong> {{ $currentBatch->used_count }}</p>
-                                        <p><strong>Receipts Left:</strong> {{ $currentBatch->remaining_count }}</p>
-                                    </div>
-                                </div>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item"><strong>Start Number:</strong> {{ $currentBatch->start_number ?? 0 }}</li>
+                                    <li class="list-group-item"><strong>Current Receipt:</strong> {{ $currentBatch->display_next_number }}</li>
+                                    <li class="list-group-item"><strong>End Number:</strong> {{ $currentBatch->end_number ?? 0 }}</li>
+                                    <li class="list-group-item"><strong>Receipts Used:</strong> {{ $currentBatch->used_count }}</li>
+                                    <li class="list-group-item"><strong>Receipts Left:</strong> {{ $currentBatch->remaining_count }}</li>
+                                </ul>
                             @else
-                                <div class="alert alert-warning">No active receipt batch available.</div>
+                                <div class="alert alert-warning mb-0">⚠️ No active receipt batch available.</div>
                             @endif
                         </div>
                     </div>
@@ -110,32 +137,48 @@
         </div>
 
     </div>
-        
 </main>
 
 <style>
-    .card:hover {
-        transform: scale(1.05);
-    }
-
-    .card {
-        transition: transform 1;
-    }
-
     .hero {
         background-image: url('/bgpup2.jpg');
-        background-repeat: no-repeat;
         background-size: cover;
-        text-align: center;
-        padding: 80px 20px;
+        background-position: center;
+        padding: 100px 20px;
+        border-radius: 12px;
+        position: relative;
     }
 
-    .hero h1 {
-        font-size: 3rem;
+    .hero .overlay {
+        background: rgba(0,0,0,0.5);
+        position: absolute;
+        top:0; left:0; right:0; bottom:0;
+        border-radius: 12px;
     }
 
-    .section {
-        padding: 40px 20px;
+    .hero .content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .kpi-card {
+        transition: transform .2s ease, box-shadow .2s ease;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 18px rgba(0,0,0,0.1);
+    }
+
+    .icon-wrapper {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        flex-shrink: 0;
     }
 </style>
 

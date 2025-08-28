@@ -23,7 +23,6 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     
     //Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/analytics', [DashboardController::class, 'analytics'])->name('data.analytics');
 
     //Customer Payments
     Route::match(['get', 'post'], '/payments/new', [PaymentsController::class, 'CustomerPayment'])->name('payments.customer.new');
@@ -45,9 +44,6 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     //Receipt PDF Management
     Route::get('/customer/receipt/{id}', [TransactionsController::class, 'customerReceiptPDF'])->name('customer.receipt.pdf');
     Route::get('/concessionaire/receipt/{id}', [TransactionsController::class, 'concessionaireReceiptPDF'])->name('concessionaire.receipt.pdf');
-
-    //Transcations Monthly Report
-    Route::get('/reports/monthly/export', [TransactionsController::class, 'exportMonthlyReport'])->name('reports.monthly.export');
 
     //Concessionaire Bills Management
     Route::get('concessionaires/billing/list', [BillsController::class, 'GetBillingList'])->name('concessionaires.billing.list');
@@ -101,6 +97,9 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
         Route::post('/backups/restore/{id}', [BackupController::class, 'restoreBackup'])->name('backups.restore');
         Route::delete('/backups/delete/{id}', [BackupController::class, 'deleteBackup'])->name('backups.delete');
 
+        //Transactions Monthly Report
+        Route::get('/reports/monthly/export', [TransactionsController::class, 'exportMonthlyReport'])->name('reports.monthly.export');
+        Route::get('/analytics', [DashboardController::class, 'analytics'])->name('data.analytics');
     });
 
 });
