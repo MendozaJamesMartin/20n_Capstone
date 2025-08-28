@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class BillsController extends Controller
 {
-        public function GetBillingList(Request $request) {
+    public function GetBillingList(Request $request) {
         // Subquery to get latest electricity bill per concessionaire
         $electricityBills = DB::table('view_electricity_bills as eb1')->get();
 
@@ -23,8 +23,7 @@ class BillsController extends Controller
         return view('common.concessionaires.concessionaire-bills', compact('electricityBills', 'waterBills'));
     }
 
-    public function CreateNewBilling(Request $request)
-    {
+    public function CreateNewBilling(Request $request) {
         Log::info("CreateNewBilling method");
         DB::beginTransaction();
         try {
@@ -73,7 +72,6 @@ class BillsController extends Controller
                         $request->input('current_charges')
                     ]);
                     Log::info("Successful procedure call");
-
                 } elseif ($validated['utility_type'] === 'Electricity') {
 
                     // Step 1: Check if this concessionaire has any previous electricity bill
@@ -137,9 +135,18 @@ class BillsController extends Controller
                 return redirect()->back()->with('success', 'Billing created successfully!');
             }
         } catch (QueryException $e) {
-            DB::rollBack();
-            Log::info("Concessionaire New Billing unsuccessful");
-            return back()->with('error', 'Bill creation unsuccessful!');
+            // Always log the full details for debugging
+            Log::error("Concessionaire New Billing failed: " . $e->getMessage(), [
+                'sql' => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'code' => $e->getCode(),
+                'errorInfo' => $e->errorInfo,
+            ]);
+
+            // Default cashier-facing message
+            $message = 'Bill creation unsuccessful. Please review your input.';
+
+            return back()->with('error', $message);
         }
     }
 
@@ -159,8 +166,7 @@ class BillsController extends Controller
         return $pdf->stream("Water_Bill_{$id}.pdf");
     }
 
-    public function BillsPayment(Request $request)
-    {
+    public function BillsPayment(Request $request) {
         DB::beginTransaction();
         try {
             Log::info("Open Bills Payment Window");
@@ -239,13 +245,12 @@ class BillsController extends Controller
             );
 
             return redirect()->route('concessionaire.transaction.details', ['id' => $transactionId])
-                            ->with('success', $messages);
-            
+                ->with('success', $messages);
         } catch (QueryException $e) {
             DB::rollBack();
             Log::info("Concessionaire Payment unsuccessful");
             return back()->with('error', 'Bills payment not successful');
         }
     }
-
+    
 }

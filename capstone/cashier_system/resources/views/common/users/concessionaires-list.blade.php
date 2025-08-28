@@ -4,6 +4,22 @@
 <main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 2%;">
     <div class="container" style="width:60%">
 
+        @if(session('success'))
+        <div class="alert alert-success mt-3" style="white-space: pre-line;">{{ session('success') }}</div>
+        @elseif(session('error'))
+        <div class="alert alert-danger mt-3">{{ session('error') }}</div>
+        @endif
+
+        @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="mb-0">Concessionaires Management</h3>

@@ -9,15 +9,27 @@
                     <h1 class="card-title">Register</h1>
                 </div>
                 <div class="card-body">
+
                     @if(Session::has('success'))
-                        <div class="alert alert-success" role="alert">
-                            {{ Session::get('success') }}
-                        </div>
+                    <div class="alert alert-success" role="alert">
+                        {{ Session::get('success') }}
+                    </div>
                     @elseif (Session::has('error'))
-                        <div class="alert alert-danger" role="alert">
-                            {{ Session::get('error') }}
-                        </div>
+                    <div class="alert alert-danger" role="alert">
+                        {{ Session::get('error') }}
+                    </div>
                     @endif
+
+                    @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+
                     <form action="{{ route('register') }}" method="POST">
                         @csrf
                         <label for="full_name" class="form-label">Full Name:</label>

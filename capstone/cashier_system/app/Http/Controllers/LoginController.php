@@ -89,7 +89,14 @@ class LoginController extends Controller
         $remember = $request->filled('remember');
         $credentials = $request->only('email', 'password');
 
+        // Track login attempts per email
+        $attemptsKey = 'login_attempts_' . $request->email;
+        $attempts = session($attemptsKey, 0);
+
         if (Auth::attempt($credentials, $remember)) {
+            // Reset attempt counter after successful login
+            session()->forget($attemptsKey);
+        
             $user = Auth::user();
             session()->put('user', $user);
             session()->put('loginId', $user->id);
@@ -114,7 +121,18 @@ class LoginController extends Controller
         return redirect()->route('admin.dashboard');
     }
 
-    return redirect()->route('login')->with('error', 'Invalid Credentials');
+        // Increase attempts on failure
+        $attempts++;
+        session([$attemptsKey => $attempts]);
+
+        if ($attempts >= 3) {
+            // Redirect to forgot password page
+            session()->forget($attemptsKey); // optional: reset after redirect
+            return redirect()->route('forgot.password.email')
+                ->with('error', 'Too many failed login attempts. Please reset your password.');
+        }
+
+        return back()->with('error', 'Invalid login credentials. Attempt ' . $attempts . ' of 3.');
     }
     
     public function forgotPassword() {

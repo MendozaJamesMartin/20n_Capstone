@@ -10,6 +10,7 @@
                     <h1 class="card-title">Login</h1>
                 </div>
                 <div class="card-body">
+
                     @if(Session::has('success'))
                     <div class="alert alert-success" role="alert">
                         {{ Session::get('success') }}
@@ -19,6 +20,17 @@
                         {{ Session::get('error') }}
                     </div>
                     @endif
+
+                    @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+
                     <form method="POST" action=" {{ route('login.submit') }} ">
                         @csrf
                         <div class="mb-4">
@@ -51,15 +63,15 @@
 </main>
 
 <script>
-document.querySelector('.toggle-password').addEventListener('click', function () {
-    const passwordField = document.getElementById('password');
-    const icon = document.getElementById('togglePasswordIcon');
-    
-    const isPassword = passwordField.type === 'password';
-    passwordField.type = isPassword ? 'text' : 'password';
-    icon.classList.toggle('bi-eye', isPassword);
-    icon.classList.toggle('bi-eye-slash', !isPassword);
-});
+    document.querySelector('.toggle-password').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const icon = document.getElementById('togglePasswordIcon');
+
+        const isPassword = passwordField.type === 'password';
+        passwordField.type = isPassword ? 'text' : 'password';
+        icon.classList.toggle('bi-eye', isPassword);
+        icon.classList.toggle('bi-eye-slash', !isPassword);
+    });
 </script>
 
 @endsection
