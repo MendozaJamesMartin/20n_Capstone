@@ -23,7 +23,7 @@
                             <i class="bi bi-cash-stack fs-3"></i>
                         </div>
                         <div>
-                            <p class="text-muted small mb-1">Today’s Revenue</p>
+                            <p class="text-muted small mb-1">Today’s Collection</p>
                             <h4 class="fw-bold text-success">₱{{ number_format($todaysRevenue, 2) }}</h4>
                         </div>
                     </div>

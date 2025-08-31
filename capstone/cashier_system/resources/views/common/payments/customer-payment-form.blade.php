@@ -9,15 +9,15 @@
             <h1>Customer Payment Form</h1>
 
             @if(session('success'))
-                <p class="text-success">{{ session('success') }}</p>
+            <p class="text-success">{{ session('success') }}</p>
             @elseif(session('error'))
-                <p class="text-danger">{{ session('error') }}</p>
+            <p class="text-danger">{{ session('error') }}</p>
             @endif
 
             @if (!$hasActiveBatch)
-                <div class="alert alert-danger">
-                    🚫 Cannot finalize transaction. No receipt numbers available. Please load a new batch first.
-                </div>
+            <div class="alert alert-danger">
+                🚫 Cannot finalize transaction. No receipt numbers available. Please load a new batch first.
+            </div>
             @endif
 
             <form method="POST" action="{{ route('payments.customer.new') }}" id="paymentForm">
@@ -39,9 +39,10 @@
                 <table class="table table-bordered align-middle text-center" id="fees-table">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 60%">Fee Name</th>
+                            <th style="width: 35%">Fee Name</th>
                             <th style="width: 15%">Amount</th>
                             <th style="width: 15%">Quantity</th>
+                            <th style="width: 25%">Fee Label</th>
                             <th style="width: 10%">Remove</th>
                         </tr>
                     </thead>
@@ -64,8 +65,8 @@
             <!-- Datalist for fee name autocomplete -->
             <datalist id="feeSuggestions">
                 @foreach($fees as $fee)
-                    <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
-                @endforeach
+                <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
+                    @endforeach
             </datalist>
 
         </div>
@@ -105,6 +106,15 @@
                 <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="1" min="1">
             </td>
             <td>
+                <select class="form-select fee-label" name="fee_labels_temp[]">
+                    <option value="">-- Select Label --</option>
+                    <option value="Certification Fee">Certification Fee</option>
+                    <option value="Certified True Copy">Certified True Copy</option>
+                    <option value="Others">Others (specify)</option>
+                </select>
+                <input type="text" class="form-control mt-2 fee-label-other d-none" placeholder="Enter label">
+            </td>
+            <td>
                 <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
             </td>
         `;
@@ -120,7 +130,7 @@
             const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
             if (fee) {
                 amountInput.value = parseFloat(fee.amount).toFixed(2);
-                amountInput.readOnly = !fee.is_variable;  // ✅ editable only if variable
+                amountInput.readOnly = !fee.is_variable; // ✅ editable only if variable
                 feeIdInput.value = fee.id;
                 nameInput.classList.remove('is-invalid');
             } else {
@@ -129,6 +139,18 @@
                 nameInput.classList.add('is-invalid');
             }
             updateTotal();
+        });
+
+        const labelSelect = tr.querySelector('.fee-label');
+        const labelOther = tr.querySelector('.fee-label-other');
+
+        labelSelect.addEventListener('change', () => {
+            if (labelSelect.value === 'Others') {
+                labelOther.classList.remove('d-none');
+            } else {
+                labelOther.classList.add('d-none');
+                labelOther.value = '';
+            }
         });
 
         amountInput.addEventListener('input', updateTotal); // listen for manual typing
@@ -144,7 +166,7 @@
 
     document.getElementById('addFeeRow').addEventListener('click', createRow);
 
-    document.getElementById('confirmPaymentButton').addEventListener('click', function () {
+    document.getElementById('confirmPaymentButton').addEventListener('click', function() {
 
         // Validate all fee name inputs
         const nameInputs = document.querySelectorAll('.fee-name');
@@ -165,32 +187,54 @@
             return;
         }
 
-        // Before submission, create hidden inputs for quantities[fee_id]
+        // Before submission, create hidden inputs as sequential arrays
         const form = document.getElementById('paymentForm');
         document.querySelectorAll('.dynamic-quantity').forEach(e => e.remove());
 
         const feeIds = form.querySelectorAll('.fee-id');
         const quantities = form.querySelectorAll('.fee-quantity');
         const amounts = form.querySelectorAll('.fee-amount');
+        const labelsSelect = form.querySelectorAll('.fee-label');
+        const labelsOther = form.querySelectorAll('.fee-label-other');
 
         feeIds.forEach((idInput, i) => {
             const feeId = idInput.value;
             const quantity = quantities[i].value;
             const amount = amounts[i].value;
-            if (feeId && quantity > 0 && amount) {
-                const qtyInput = document.createElement('input');
-                qtyInput.type = 'hidden';
-                qtyInput.name = `quantities[${feeId}]`;
-                qtyInput.value = quantity;
-                qtyInput.classList.add('dynamic-quantity');
-                form.appendChild(qtyInput);
 
-                const amtInput = document.createElement('input');
-                amtInput.type = 'hidden';
-                amtInput.name = `amounts[${feeId}]`;
-                amtInput.value = amount;
-                amtInput.classList.add('dynamic-quantity');
-                form.appendChild(amtInput);
+            let finalLabel = labelsSelect[i].value;
+            if (finalLabel === 'Others') {
+                finalLabel = labelsOther[i].value.trim();
+            }
+
+            if (feeId && quantity > 0 && amount) {
+                const idHidden = document.createElement('input');
+                idHidden.type = 'hidden';
+                idHidden.name = 'fee_ids[]';
+                idHidden.value = feeId;
+                idHidden.classList.add('dynamic-quantity');
+                form.appendChild(idHidden);
+
+                const qtyHidden = document.createElement('input');
+                qtyHidden.type = 'hidden';
+                qtyHidden.name = 'quantities[]';
+                qtyHidden.value = quantity;
+                qtyHidden.classList.add('dynamic-quantity');
+                form.appendChild(qtyHidden);
+
+                const amtHidden = document.createElement('input');
+                amtHidden.type = 'hidden';
+                amtHidden.name = 'amounts[]';
+                amtHidden.value = amount;
+                amtHidden.classList.add('dynamic-quantity');
+                form.appendChild(amtHidden);
+
+                const lblHidden = document.createElement('input');
+                lblHidden.type = 'hidden';
+                lblHidden.name = 'labels[]';
+                lblHidden.value = finalLabel || '';
+                lblHidden.classList.add('dynamic-quantity');
+                form.appendChild(lblHidden);
             }
         });
 

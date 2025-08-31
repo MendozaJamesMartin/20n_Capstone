@@ -127,7 +127,7 @@
 
     {{-- Itemized Section --}}
     @php
-        $maxRows = 13;
+        $maxRows = 12;
         $itemCount = count($TransactionDetails);
         $blankRows = $maxRows - $itemCount;
     @endphp
@@ -141,14 +141,34 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($TransactionDetails as $fees)
+
+            @php
+                // Group fees by fee_label
+                $grouped = $TransactionDetails->groupBy('fee_label');
+            @endphp
+
+            @foreach($grouped as $label => $feesGroup)
+                <!-- Label Row -->
                 <tr>
-                    <td class="cell-wrap">{{ $fees->fee_name }}</td>
-                    <td></td>
-                    <td class="text-center">{{ number_format($fees->subtotal, 2) }}</td>
+                    <td colspan="3"><strong>{{ $label }}</strong></td>
                 </tr>
+
+                <!-- Fee Rows under this label -->
+                @foreach($feesGroup as $fee)
+                    @php
+                        $unitPrice = $fee->quantity > 0 ? $fee->subtotal / $fee->quantity : $fee->subtotal;
+                    @endphp
+
+                    @for ($i = 0; $i < $fee->quantity; $i++)
+                        <tr>
+                            <td colspan="2" class="cell-wrap ps-4">- {{ $fee->fee_name }}</td>
+                            <td class="text-center">{{ number_format($unitPrice, 2) }}</td>
+                        </tr>
+                    @endfor
+                @endforeach
             @endforeach
 
+            <!-- Blank rows filler if needed -->
             @for ($i = 0; $i < $blankRows; $i++)
                 <tr>
                     <td>&nbsp;</td>

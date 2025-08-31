@@ -19,7 +19,7 @@
         <div class="col-md-4">
             <div class="card bg-success text-white">
                 <div class="card-body">
-                    <h5>Total Revenue</h5>
+                    <h5>Total Collection</h5>
                     <h3>₱{{ number_format($totalRevenue, 2) }}</h3>
                 </div>
             </div>
@@ -27,7 +27,7 @@
         <div class="col-md-4">
             <div class="card bg-primary text-white">
                 <div class="card-body">
-                    <h5>This Month's Revenue</h5>
+                    <h5>This Month's Collection</h5>
                     <h3>₱{{ number_format($monthlyRevenue, 2) }}</h3>
                 </div>
             </div>
@@ -42,11 +42,11 @@
         </div>
     </div>
 
-    <!-- Monthly Revenue Trend + Report Export -->
+    <!-- Monthly Collection Trend + Report Export -->
     <div class="card mb-4">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Monthly Revenue Report</h5>
+                <h5 class="mb-0">Monthly Collection Report</h5>
                 <!-- Button to open modal -->
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
                     Export Report

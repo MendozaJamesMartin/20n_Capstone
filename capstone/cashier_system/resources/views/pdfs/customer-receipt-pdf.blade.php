@@ -123,7 +123,7 @@
 
     {{-- Itemized Section --}}
     @php
-        $maxRows = 13;
+        $maxRows = 12;
         $itemCount = count($TransactionDetails);
         $blankRows = $maxRows - $itemCount;
     @endphp
@@ -137,21 +137,43 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($TransactionDetails as $fees)
+
+            @php
+                // Group fees by fee_label
+                $grouped = $TransactionDetails->groupBy('fee_label');
+            @endphp
+
+            @foreach($grouped as $label => $feesGroup)
+                <!-- Label Row -->
                 <tr>
-                    <td class="cell-wrap" style="border-top: 0px; border-bottom: 0px;">{{ $fees->fee_name }}</td>
-                    <td style="border-top: 0px; border-bottom: 0px;"></td>
-                    <td class="text-center" style="border-top: 0px; border-bottom: 0px;">{{ number_format($fees->subtotal, 2) }}</td>
+                    <td style="border-top: 0px; border-bottom: 0px;"><strong>{{ $label }}</strong></td>
+                    <td style="border-top: 0px; border-bottom: 0px;"><strong></strong></td>
+                    <td style="border-top: 0px; border-bottom: 0px;"><strong></strong></td>
                 </tr>
+
+                <!-- Fee Rows under this label -->
+                @foreach($feesGroup as $fee)
+                    @php
+                        $unitPrice = $fee->quantity > 0 ? $fee->subtotal / $fee->quantity : $fee->subtotal;
+                    @endphp
+
+                    @for ($i = 0; $i < $fee->quantity; $i++)
+                        <tr>
+                            <td colspan="1" class="cell-wrap ps-4" style="border-top: 0px; border-bottom: 0px;">- {{ $fee->fee_name }}</td>
+                            <td class="text-center" style="border-top: 0px; border-bottom: 0px;">{{ number_format($unitPrice, 2) }}</td>
+                        </tr>
+                    @endfor
+                @endforeach
             @endforeach
 
-            @for ($i = 0; $i < $blankRows; $i++)
-                <tr>
-                    <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
-                    <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
-                    <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
-                </tr>
-            @endfor
+        <!-- Blank rows filler if needed -->
+        @for ($i = 0; $i < $blankRows; $i++)
+            <tr>
+                <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
+                <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
+                <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
+            </tr>
+        @endfor
 
             <tr>
                 <td colspan="2" class="text-center"><strong>TOTAL</strong></td>

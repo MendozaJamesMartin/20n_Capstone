@@ -18,7 +18,8 @@ use Illuminate\Support\Facades\Mail;
 
 class PaymentsController extends Controller
 {
-    public function GetPendingPaymentsList(Request $request) {
+    public function GetPendingPaymentsList(Request $request)
+    {
         $timeframe = $request->input('timeframe', 'all');
         $search = $request->input('search', '');
 
@@ -54,7 +55,8 @@ class PaymentsController extends Controller
         return view('common.payments.pending-payments', compact('result'));
     }
 
-    public function CustomerPayment(Request $request) {
+    public function CustomerPayment(Request $request)
+    {
         Log::info("Payment form accessed");
         DB::beginTransaction();
         try {
@@ -73,61 +75,73 @@ class PaymentsController extends Controller
                 Log::info("Input Validation");
                 $validated = $request->validate([
                     'customer_name' => 'required|string',
-                    'contact' => 'nullable|string|email',
-                    'quantities' => 'required|array',
-                    'amounts' => 'required|array',
+                    'contact'       => 'nullable|string|email',
+                    'fee_ids'       => 'required|array',
+                    'quantities'    => 'required|array',
+                    'amounts'       => 'required|array',
+                    'labels'        => 'required|array',
                 ]);
 
-                Log::info("Filtering Items with 0 quantity");
-                // Filter out fees with zero quantity
+                Log::info("Filtering items with 0 quantity");
 
-                $fees = array_filter($validated['quantities'], function ($qty) {
-                    return $qty > 0;
-                });
-                
-                if (empty($fees)) {
+                $feeIdsRaw    = $validated['fee_ids'];
+                $quantitiesRaw = $validated['quantities'];
+                $amountsRaw    = $validated['amounts'];
+                $labelsRaw     = $validated['labels'];
+
+                $finalFeeIds = [];
+                $finalQuantities = [];
+                $finalAmounts = [];
+                $finalLabels = [];
+
+                foreach ($feeIdsRaw as $i => $feeId) {
+                    $qty = $quantitiesRaw[$i] ?? 0;
+                    $amt = $amountsRaw[$i] ?? 0;
+                    $lbl = $labelsRaw[$i] ?? '';
+
+                    if (!empty($feeId) && $qty > 0) {
+                        $finalFeeIds[]   = $feeId;
+                        $finalQuantities[] = $qty;
+                        $finalAmounts[]    = $amt;
+                        $finalLabels[]     = $lbl;
+                    }
+                }
+
+                if (empty($finalFeeIds)) {
                     return back()->with('error', 'Please select at least one fee.');
                 }
-                
-                $feeIds = array_keys($fees);
-                $quantities = array_values($fees);
-                $feeNames = Fee::whereIn('id', $feeIds)->pluck('fee_name', 'id')->toArray();
-                
-                // Use same keys to extract amounts
-                $amounts = array_map(function ($id) use ($validated) {
-                    return $validated['amounts'][$id] ?? '0.00';
-                }, $feeIds);
-                
-                $feeIdsStr = implode(',', $feeIds);
-                $quantitiesStr = implode(',', $quantities);
-                $amountsStr = implode(',', $amounts);
+
+                $feeIdsStr    = implode(',', $finalFeeIds);
+                $quantitiesStr = implode(',', $finalQuantities);
+                $amountsStr    = implode(',', $finalAmounts);
+                $labelsStr     = implode(',', $finalLabels);
+
+                // Fetch fee names for logging
+                $feeNames = Fee::whereIn('id', $finalFeeIds)->pluck('fee_name', 'id')->toArray();
 
                 $readableFees = [];
-                foreach ($fees as $feeId => $qty) {
-                    $name = $feeNames[$feeId] ?? "Fee ID $feeId";
-                    $readableFees[$name] = $qty;  // store by name
-                }
-
                 $readableAmounts = [];
-                foreach ($readableFees as $name => $qty) {
-                    $amount = $validated['amounts'][array_search($name, $feeNames)] ?? '0.00'; // get amount by matching fee name key
-                    $readableAmounts[$name] = $amount;
+                foreach ($finalFeeIds as $idx => $id) {
+                    $name = $feeNames[$id] ?? "Fee ID $id";
+                    $readableFees[$name] = $finalQuantities[$idx];
+                    $readableAmounts[$name] = $finalAmounts[$idx];
                 }
 
                 Log::info("Stored Procedure call");
-                $results = DB::select("CALL CustomerPayment(?, ?, ?, ?, ?)", [
+                $results = DB::select("CALL CustomerPayment(?, ?, ?, ?, ?, ?)", [
                     $validated['customer_name'],
                     $validated['contact'],
                     $feeIdsStr,
                     $quantitiesStr,
-                    $amountsStr
+                    $amountsStr,
+                    $labelsStr
                 ]);
 
                 $transactionId = $results[0]->transaction_id;
 
                 DB::commit();
 
-                // Use your AuditLogger to log the payment creation
+                // Audit log
                 AuditLogger::log(
                     event: 'payment_created',
                     auditableType: 'App\\Models\\Transaction',
@@ -136,8 +150,9 @@ class PaymentsController extends Controller
                     newValues: [
                         'customer_name' => $validated['customer_name'],
                         'contact'       => $validated['contact'],
-                        'fees'          => $readableFees,     // ['Fee Name 1' => quantity, 'Fee Name 2' => quantity, ...]
-                        'amounts'       => $readableAmounts,  // ['Fee Name 1' => amount, 'Fee Name 2' => amount, ...]
+                        'fees'          => $readableFees,
+                        'amounts'       => $readableAmounts,
+                        'labels'        => $finalLabels
                     ],
                     tags: 'payment'
                 );
@@ -152,7 +167,8 @@ class PaymentsController extends Controller
         }
     }
 
-    public function selfServiceStudentPayment(Request $request) {
+    public function selfServiceStudentPayment(Request $request)
+    {
         Log::info("Payment form accessed");
         DB::beginTransaction();
         try {
@@ -174,27 +190,27 @@ class PaymentsController extends Controller
                     'contact' => 'nullable|string|email',
                     'quantities' => 'required|array',
                     'amounts' => 'required|array',
-                ]);      
+                ]);
 
                 Log::info("Filtering Items with 0 quantity");
                 // Filter out fees with zero quantity
                 $fees = array_filter($validated['quantities'], function ($qty) {
                     return $qty > 0;
                 });
-                
+
                 if (empty($fees)) {
                     return back()->with('error', 'Please select at least one fee.');
                 }
-                
+
                 $feeIds = array_keys($fees);
                 $quantities = array_values($fees);
                 $feeNames = Fee::whereIn('id', $feeIds)->pluck('fee_name', 'id')->toArray();
-                
+
                 // Use same keys to extract amounts
                 $amounts = array_map(function ($id) use ($validated) {
                     return $validated['amounts'][$id] ?? '0.00';
                 }, $feeIds);
-                
+
                 $feeIdsStr = implode(',', $feeIds);
                 $quantitiesStr = implode(',', $quantities);
                 $amountsStr = implode(',', $amounts);
@@ -210,7 +226,7 @@ class PaymentsController extends Controller
                     $amount = $validated['amounts'][array_search($name, $feeNames)] ?? '0.00'; // get amount by matching fee name key
                     $readableAmounts[$name] = $amount;
                 }
-                
+
                 Log::info("Stored Procedure call");
                 $results = DB::select("CALL CustomerPayment(?, ?, ?, ?, ?)", [
                     $validated['customer_name'],
@@ -219,7 +235,7 @@ class PaymentsController extends Controller
                     $quantitiesStr,
                     $amountsStr
                 ]);
-                
+
                 $transactionId = $results[0]->transaction_id;
                 $transaction_num = $results[0]->transaction_number;
 
@@ -248,16 +264,17 @@ class PaymentsController extends Controller
             return back()->with('error', 'Student payment submission failed');
         }
     }
-    
-    public function updateUnpaidTransaction (Request $request, $transactionId) {
+
+    public function updateUnpaidTransaction(Request $request, $transactionId)
+    {
         Log::info("Accessed transaction update form for transaction ID: $transactionId");
         DB::beginTransaction();
-    
+
         try {
             if ($request->isMethod('get')) {
                 // Get all fees
                 $fees = Fee::all();
-    
+
                 // Get transaction details
                 $transactionDetails = DB::table('customer_transaction_receipt as ctr')
                     ->join('customers as c', 'ctr.customer_id', '=', 'c.id')
@@ -306,34 +323,32 @@ class PaymentsController extends Controller
                     'transactionId',
                     'customerInfo'
                 ));
-            }
-    
-            elseif ($request->isMethod('put')) {
+            } elseif ($request->isMethod('put')) {
                 Log::info("Validating update form input");
                 $validated = $request->validate([
                     'quantities' => 'required|array',
                     'amounts' => 'required|array',
                 ]);
-    
+
                 Log::info("Filtering Items with 0 quantity");
                 // Filter out fees with zero quantity
                 $fees = array_filter($validated['quantities'], function ($qty) {
                     return $qty > 0;
                 });
-                
+
                 if (empty($fees)) {
                     return back()->with('error', 'Please select at least one fee.');
                 }
-                
+
                 $feeIds = array_keys($fees);
                 $quantities = array_values($fees);
                 $feeNames = Fee::whereIn('id', $feeIds)->pluck('fee_name', 'id')->toArray();
-                
+
                 // Use same keys to extract amounts
                 $amounts = array_map(function ($id) use ($validated) {
                     return $validated['amounts'][$id] ?? '0.00';
                 }, $feeIds);
-                
+
                 $feeIdsStr = implode(',', $feeIds);
                 $quantitiesStr = implode(',', $quantities);
                 $amountsStr = implode(',', $amounts);
@@ -349,7 +364,7 @@ class PaymentsController extends Controller
                     $amount = $validated['amounts'][array_search($name, $feeNames)] ?? '0.00'; // get amount by matching fee name key
                     $readableAmounts[$name] = $amount;
                 }
-    
+
                 Log::info("Calling stored procedure to update fees for transaction $transactionId");
                 DB::statement("CALL UpdateUnpaidTransaction(?, ?, ?, ?)", [
                     $transactionId,
@@ -357,7 +372,7 @@ class PaymentsController extends Controller
                     $quantitiesStr,
                     $amountsStr,
                 ]);
-    
+
                 DB::commit();
 
                 // Use your AuditLogger to log the payment creation
@@ -375,15 +390,15 @@ class PaymentsController extends Controller
 
                 return redirect()->route('customer.transaction.details', ['id' => $transactionId]);
             }
-    
         } catch (QueryException $e) {
             DB::rollBack();
             Log::error("Transaction update failed: " . $e->getMessage());
             return back()->with('error', 'Transaction update failed.');
         }
     }
-    
-    public function disapproveTransaction($id) {
+
+    public function disapproveTransaction($id)
+    {
         Log::info("Begin Transaction disapproval");
         DB::beginTransaction();
         try {
@@ -392,7 +407,7 @@ class PaymentsController extends Controller
             if (
                 !$transaction ||
                 !is_null($transaction->transaction_date) || // already finalized
-                $transaction->amount_paid != 0 || 
+                $transaction->amount_paid != 0 ||
                 $transaction->balance_due != $transaction->total_amount
             ) {
                 return redirect()->route('payments.pending')->with('error', 'Only unfinalized and unpaid transactions can be disapproved.');
@@ -439,15 +454,12 @@ class PaymentsController extends Controller
             );
 
             DB::commit();
-            
-            return redirect()->route('payments.pending')->with('success', 'Transaction disapproved and deleted successfully.');
 
+            return redirect()->route('payments.pending')->with('success', 'Transaction disapproved and deleted successfully.');
         } catch (QueryException $e) {
             DB::rollBack();
             Log::info("Failed to Delete Transaction");
             return redirect()->route('payments.pending')->with('error', 'Failed to delete transaction');
         }
-
     }
-
 }
