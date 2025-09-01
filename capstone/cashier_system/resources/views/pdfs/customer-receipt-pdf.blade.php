@@ -38,7 +38,7 @@
             overflow: hidden;
             word-wrap: break-word;
             line-height: 1.1;
-            font-size: 9px;
+            font-size: 12px;
         }
 
         .item-table .cell-wrap {
@@ -154,15 +154,17 @@
                 <!-- Fee Rows under this label -->
                 @foreach($feesGroup as $fee)
                     @php
-                        $unitPrice = $fee->quantity > 0 ? $fee->subtotal / $fee->quantity : $fee->subtotal;
+                        $displayName = $fee->fee_name;
+                        if ($fee->quantity > 1) {
+                            $displayName .= " ({$fee->quantity})";
+                        }
                     @endphp
 
-                    @for ($i = 0; $i < $fee->quantity; $i++)
-                        <tr>
-                            <td colspan="1" class="cell-wrap ps-4" style="border-top: 0px; border-bottom: 0px;">- {{ $fee->fee_name }}</td>
-                            <td class="text-center" style="border-top: 0px; border-bottom: 0px;">{{ number_format($unitPrice, 2) }}</td>
-                        </tr>
-                    @endfor
+                    <tr>
+                        <td colspan="1" class="cell-wrap ps-4" style="border-top: 0px; border-bottom: 0px;">- {{ $displayName }}</td>
+                        <td class="text-center" style="border-top: 0px; border-bottom: 0px;"></td>
+                        <td class="text-center" style="border-top: 0px; border-bottom: 0px;">{{ number_format($fee->subtotal, 2) }}</td>
+                    </tr>
                 @endforeach
             @endforeach
 

@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: "Times New Roman", serif;
-            font-size: 12px;
+            font-size: 14px;
             padding: 40px;
         }
         .header {

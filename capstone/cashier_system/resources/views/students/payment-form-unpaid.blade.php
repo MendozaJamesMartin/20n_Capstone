@@ -5,7 +5,7 @@
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
     <div class="container-fluid">
         <div class="bg-light p-4 p-md-5 rounded mx-auto" style="max-width: 900px;">
-            <h1 class="mb-4">Student Payment Form</h1>
+            <h1 class="mb-4">Payment Form</h1>
 
             @if(session('success'))
                 <p class="text-success">{{ session('success') }}</p>

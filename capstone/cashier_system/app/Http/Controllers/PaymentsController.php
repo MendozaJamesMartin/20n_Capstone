@@ -80,6 +80,7 @@ class PaymentsController extends Controller
                     'quantities'    => 'required|array',
                     'amounts'       => 'required|array',
                     'labels'        => 'required|array',
+                    'labels.*' => 'required|string|min:1', // each label must not be empty
                 ]);
 
                 Log::info("Filtering items with 0 quantity");
@@ -214,6 +215,7 @@ class PaymentsController extends Controller
                 $feeIdsStr = implode(',', $feeIds);
                 $quantitiesStr = implode(',', $quantities);
                 $amountsStr = implode(',', $amounts);
+                $labelsStr = implode(',', array_fill(0, count($feeIds), ''));
 
                 $readableFees = [];
                 foreach ($fees as $feeId => $qty) {
@@ -228,12 +230,13 @@ class PaymentsController extends Controller
                 }
 
                 Log::info("Stored Procedure call");
-                $results = DB::select("CALL CustomerPayment(?, ?, ?, ?, ?)", [
+                $results = DB::select("CALL CustomerPayment(?, ?, ?, ?, ?, ?)", [
                     $validated['customer_name'],
                     $validated['contact'],
                     $feeIdsStr,
                     $quantitiesStr,
-                    $amountsStr
+                    $amountsStr,
+                    $labelsStr, // all empty
                 ]);
 
                 $transactionId = $results[0]->transaction_id;
@@ -326,32 +329,54 @@ class PaymentsController extends Controller
             } elseif ($request->isMethod('put')) {
                 Log::info("Validating update form input");
                 $validated = $request->validate([
-                    'quantities' => 'required|array',
-                    'amounts' => 'required|array',
+                    'fee_ids'   => 'required|array',
+                    'quantities'=> 'required|array',
+                    'amounts'   => 'required|array',
+                    'labels'    => 'required|array',
+                    'labels.*'  => 'required|string|min:1',
                 ]);
 
                 Log::info("Filtering Items with 0 quantity");
-                // Filter out fees with zero quantity
-                $fees = array_filter($validated['quantities'], function ($qty) {
-                    return $qty > 0;
-                });
 
-                if (empty($fees)) {
-                    return back()->with('error', 'Please select at least one fee.');
+                // Keep aligned arrays
+                $feeIds = [];
+                $quantities = [];
+                $amounts = [];
+                $labels = [];
+
+                foreach ($validated['fee_ids'] as $i => $feeId) {
+                    $qty = $validated['quantities'][$i] ?? 0;
+                    $amt = $validated['amounts'][$i] ?? null;
+                    $lbl = $validated['labels'][$i] ?? '';
+
+                    if ($qty > 0 && $amt !== null) {
+                        $feeIds[] = $feeId;
+                        $quantities[] = $qty;
+                        $amounts[] = $amt;
+                        $labels[] = ($lbl === 'Other')
+                            ? ($request->custom_labels[$i] ?? '')
+                            : $lbl;
+                    }
                 }
 
-                $feeIds = array_keys($fees);
-                $quantities = array_values($fees);
-                $feeNames = Fee::whereIn('id', $feeIds)->pluck('fee_name', 'id')->toArray();
+                if (empty($feeIds)) {
+                    return back()->with('error', 'Please select at least one valid fee.');
+                }
 
-                // Use same keys to extract amounts
-                $amounts = array_map(function ($id) use ($validated) {
-                    return $validated['amounts'][$id] ?? '0.00';
-                }, $feeIds);
-
-                $feeIdsStr = implode(',', $feeIds);
+                $feeIdsStr     = implode(',', $feeIds);
                 $quantitiesStr = implode(',', $quantities);
-                $amountsStr = implode(',', $amounts);
+                $amountsStr    = implode(',', $amounts);
+                $labelsStr     = implode(',', $labels);
+
+                $fees = [];
+                foreach ($validated['fee_ids'] as $i => $feeId) {
+                    $qty = $validated['quantities'][$i] ?? 0;
+                    if ($qty > 0) {
+                        $fees[$feeId] = $qty; // key = fee_id, value = quantity
+                    }
+                }
+
+                $feeNames = Fee::whereIn('id', $feeIds)->pluck('fee_name', 'id')->toArray();
 
                 $readableFees = [];
                 foreach ($fees as $feeId => $qty) {
@@ -366,11 +391,12 @@ class PaymentsController extends Controller
                 }
 
                 Log::info("Calling stored procedure to update fees for transaction $transactionId");
-                DB::statement("CALL UpdateUnpaidTransaction(?, ?, ?, ?)", [
+                DB::statement("CALL UpdateUnpaidTransaction(?, ?, ?, ?, ?)", [
                     $transactionId,
                     $feeIdsStr,
                     $quantitiesStr,
                     $amountsStr,
+                    $labelsStr,
                 ]);
 
                 DB::commit();

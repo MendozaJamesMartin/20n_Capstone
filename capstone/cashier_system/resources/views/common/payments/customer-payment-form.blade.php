@@ -14,6 +14,16 @@
             <p class="text-danger">{{ session('error') }}</p>
             @endif
 
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @if (!$hasActiveBatch)
             <div class="alert alert-danger">
                 🚫 Cannot finalize transaction. No receipt numbers available. Please load a new batch first.
@@ -97,7 +107,7 @@
         tr.innerHTML = `
             <td>
                 <input list="feeSuggestions" class="form-control fee-name" placeholder="Type to search">
-                <input type="hidden" class="fee-id" name="fee_ids[]">
+                <input type="hidden" class="fee-id" name="fee_ids[]" required>
             </td>
             <td>
                 <input type="number" step="0.01" class="form-control fee-amount" readonly>
@@ -106,7 +116,7 @@
                 <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="1" min="1">
             </td>
             <td>
-                <select class="form-select fee-label" name="fee_labels_temp[]">
+                <select class="form-select fee-label" name="fee_labels_temp[]" required>
                     <option value="">-- Select Label --</option>
                     <option value="Certification Fee">Certification Fee</option>
                     <option value="Certified True Copy">Certified True Copy</option>

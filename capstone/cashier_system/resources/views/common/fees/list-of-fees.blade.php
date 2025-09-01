@@ -39,7 +39,7 @@
             </a>
             <a href="{{ route('fees.list', ['status' => 'deleted']) }}"
                 class="btn {{ $status === 'deleted' ? 'btn-dark' : 'btn-outline-dark' }}">
-                Deleted Fees
+                Inactive Fees
             </a>
         </div>
 

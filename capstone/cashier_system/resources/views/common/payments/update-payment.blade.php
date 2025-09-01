@@ -6,12 +6,22 @@
 
     <div class="container" style="width:75%">
         <div class="bg-light p-5">
-            <h1>Student Payment Form</h1>
+            <h1>Finalize Payment Form</h1>
 
             @if(session('success'))
-                <p class="text-success">{{ session('success') }}</p>
+            <p class="text-success">{{ session('success') }}</p>
             @elseif(session('error'))
-                <p class="text-danger">{{ session('error') }}</p>
+            <p class="text-danger">{{ session('error') }}</p>
+            @endif
+
+            @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
             @endif
 
             <form method="POST" action="{{ route('payments.update', ['transactionId' => $transactionId]) }}" id="paymentForm">
@@ -21,12 +31,14 @@
                 <!-- Student Info -->
                 <label class="form-label">Student Full Name</label>
                 <div class="mb-3 d-flex gap-2">
-                    <input type="text" class="form-control" name="customer_name" value="{{ old('customer_name', $transactionDetails[0]->customer_name ?? '') }}">
+                    <input type="text" class="form-control" name="customer_name" 
+                           value="{{ old('customer_name', $transactionDetails[0]->customer_name ?? '') }}">
                 </div>
 
                 <div class="mb-4">
                     <label for="email" class="form-label">Email</label>
-                    <input type="text" class="form-control" name="email" value="{{ old('email', $transactionDetails[0]->email ?? '') }}">
+                    <input type="text" class="form-control" name="email" 
+                           value="{{ old('email', $transactionDetails[0]->email ?? '') }}">
                 </div>
 
                 <!-- Fee Selection -->
@@ -34,36 +46,51 @@
                 <table class="table table-bordered align-middle text-center" id="fees-table">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 60%">Fee Name</th>
+                            <th style="width: 35%">Fee Name</th>
                             <th style="width: 15%">Amount</th>
                             <th style="width: 15%">Quantity</th>
+                            <th style="width: 25%">Fee Label</th>
                             <th style="width: 10%">Remove</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if(!empty($selectedFees) && $selectedFeeDetails->isNotEmpty())
-                            @foreach($selectedFees as $feeId => $quantity)
-                                @php
-                                    $fee = $selectedFeeDetails->firstWhere('id', $feeId);
-                                @endphp
-                                @if($fee)
-                                    <tr class="fee-row">
-                                        <td>
-                                            <input list="feeSuggestions" class="form-control fee-name" value="{{ $fee->fee_name }}">
-                                            <input type="hidden" class="fee-id" name="fee_ids[]" value="{{ $fee->id }}">
-                                        </td>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control fee-amount" value="{{ number_format($fee->amount, 2, '.', '') }}">
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="{{ $quantity }}" min="1">
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
-                                        </td>
-                                    </tr>
-                                @endif
-                            @endforeach
+                        @foreach($selectedFees as $feeId => $quantity)
+                            @php
+                                $fee = $selectedFeeDetails->firstWhere('id', $feeId);
+                            @endphp
+                            @if($fee)
+                            <tr class="fee-row">
+                                <td>
+                                    <input list="feeSuggestions" class="form-control fee-name" value="{{ $fee->fee_name }}">
+                                    <input type="hidden" class="fee-id" name="fee_ids[]" value="{{ $fee->id }}">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" class="form-control fee-amount" 
+                                           value="{{ number_format($fee->amount, 2, '.', '') }}" 
+                                           {{ $fee->is_variable ? '' : 'readonly' }}>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control fee-quantity" name="quantities_temp[]" 
+                                           value="{{ $quantity }}" min="1">
+                                </td>
+                                <td>
+                                    <select class="form-select fee-label" name="fee_labels_temp[]" required>
+                                        <option value="">-- Select Label --</option>
+                                        <option value="Certification Fee" {{ $fee->fee_label == 'Certification Fee' ? 'selected' : '' }}>Certification Fee</option>
+                                        <option value="Certified True Copy" {{ $fee->fee_label == 'Certified True Copy' ? 'selected' : '' }}>Certified True Copy</option>
+                                        <option value="Others" {{ !in_array($fee->fee_label, ['Certification Fee','Certified True Copy']) ? 'selected' : '' }}>Others (specify)</option>
+                                    </select>
+                                    <input type="text" name="custom_labels[]" class="form-control mt-2 fee-label-other {{ !in_array($fee->fee_label, ['Certification Fee','Certified True Copy']) ? '' : 'd-none' }}" 
+                                           value="{{ !in_array($fee->fee_label, ['Certification Fee','Certified True Copy']) ? $fee->fee_label : '' }}" 
+                                           placeholder="Enter label">
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
+                                </td>
+                            </tr>
+                            @endif
+                        @endforeach
                         @endif
                     </tbody>
                 </table>
@@ -78,19 +105,21 @@
                     Approve
                 </button>
             </form>
-            
-                <form action="{{ route('payments.disapprove', ['id' => $transactionDetails[0]->transaction_id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to disapprove and delete this transaction?');" style="display:inline;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger mt-3" title="Disapprove Payment">
-                        Disapprove
-                    </button>
-                </form>
+
+            <form action="{{ route('payments.disapprove', ['id' => $transactionDetails[0]->transaction_id]) }}" method="POST" 
+                  onsubmit="return confirm('Are you sure you want to disapprove and delete this transaction?');" 
+                  style="display:inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger mt-3" title="Disapprove Payment">
+                    Disapprove
+                </button>
+            </form>
 
             <!-- Datalist for fee name autocomplete -->
             <datalist id="feeSuggestions">
                 @foreach($fees as $fee)
-                    <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
+                <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
                 @endforeach
             </datalist>
         </div>
@@ -116,12 +145,15 @@
         const amountInput = row.querySelector('.fee-amount');
         const quantityInput = row.querySelector('.fee-quantity');
         const feeIdInput = row.querySelector('.fee-id');
+        const labelSelect = row.querySelector('.fee-label');
+        const labelOther = row.querySelector('.fee-label-other');
 
         if (nameInput) {
             nameInput.addEventListener('change', () => {
                 const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
                 if (fee) {
                     amountInput.value = parseFloat(fee.amount).toFixed(2);
+                    amountInput.readOnly = !fee.is_variable;
                     feeIdInput.value = fee.id;
                     nameInput.classList.remove('is-invalid');
                 } else {
@@ -135,6 +167,17 @@
 
         if (quantityInput) {
             quantityInput.addEventListener('input', updateTotal);
+        }
+
+        if (labelSelect) {
+            labelSelect.addEventListener('change', () => {
+                if (labelSelect.value === 'Others') {
+                    labelOther.classList.remove('d-none');
+                } else {
+                    labelOther.classList.add('d-none');
+                    labelOther.value = '';
+                }
+            });
         }
 
         const removeBtn = row.querySelector('.remove-row');
@@ -163,6 +206,15 @@
                 <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="1" min="1">
             </td>
             <td>
+                <select class="form-select fee-label" name="fee_labels_temp[]" required>
+                    <option value="">-- Select Label --</option>
+                    <option value="Certification Fee">Certification Fee</option>
+                    <option value="Certified True Copy">Certified True Copy</option>
+                    <option value="Others">Others (specify)</option>
+                </select>
+                <input type="text" class="form-control mt-2 fee-label-other d-none" placeholder="Enter label">
+            </td>
+            <td>
                 <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
             </td>
         `;
@@ -173,9 +225,8 @@
 
     document.getElementById('addFeeRow').addEventListener('click', createRow);
 
-    document.getElementById('confirmPaymentButton').addEventListener('click', function () {
-
-        // Validate all fee name inputs
+    document.getElementById('confirmPaymentButton').addEventListener('click', function(e) {
+        // Validate fee names
         const nameInputs = document.querySelectorAll('.fee-name');
         let hasInvalid = false;
 
@@ -190,43 +241,63 @@
         });
 
         if (hasInvalid) {
+            e.preventDefault();
             alert("Please correct invalid fee names before submitting.");
             return;
         }
 
-        // Before submission, create hidden inputs for quantities[fee_id]
+        // Sync hidden inputs
         const form = document.getElementById('paymentForm');
         document.querySelectorAll('.dynamic-quantity').forEach(e => e.remove());
 
         const feeIds = form.querySelectorAll('.fee-id');
         const quantities = form.querySelectorAll('.fee-quantity');
         const amounts = form.querySelectorAll('.fee-amount');
+        const labelsSelect = form.querySelectorAll('.fee-label');
+        const labelsOther = form.querySelectorAll('.fee-label-other');
 
         feeIds.forEach((idInput, i) => {
             const feeId = idInput.value;
             const quantity = quantities[i].value;
             const amount = amounts[i].value;
-            if (feeId && quantity > 0 && amount) {
-                const qtyInput = document.createElement('input');
-                qtyInput.type = 'hidden';
-                qtyInput.name = `quantities[${feeId}]`;
-                qtyInput.value = quantity;
-                qtyInput.classList.add('dynamic-quantity');
-                form.appendChild(qtyInput);
 
-                const amtInput = document.createElement('input');
-                amtInput.type = 'hidden';
-                amtInput.name = `amounts[${feeId}]`;
-                amtInput.value = amount;
-                amtInput.classList.add('dynamic-quantity');
-                form.appendChild(amtInput);
+            let finalLabel = labelsSelect[i].value;
+            if (finalLabel === 'Others') {
+                finalLabel = labelsOther[i].value.trim();
+            }
+
+            if (feeId && quantity > 0 && amount) {
+                const idHidden = document.createElement('input');
+                idHidden.type = 'hidden';
+                idHidden.name = 'fee_ids[]';
+                idHidden.value = feeId;
+                idHidden.classList.add('dynamic-quantity');
+                form.appendChild(idHidden);
+
+                const qtyHidden = document.createElement('input');
+                qtyHidden.type = 'hidden';
+                qtyHidden.name = 'quantities[]';
+                qtyHidden.value = quantity;
+                qtyHidden.classList.add('dynamic-quantity');
+                form.appendChild(qtyHidden);
+
+                const amtHidden = document.createElement('input');
+                amtHidden.type = 'hidden';
+                amtHidden.name = 'amounts[]';
+                amtHidden.value = amount;
+                amtHidden.classList.add('dynamic-quantity');
+                form.appendChild(amtHidden);
+
+                const lblHidden = document.createElement('input');
+                lblHidden.type = 'hidden';
+                lblHidden.name = 'labels[]';
+                lblHidden.value = finalLabel || '';
+                lblHidden.classList.add('dynamic-quantity');
+                form.appendChild(lblHidden);
             }
         });
-
-        form.submit();
     });
 
-    // On page load: bind events to existing rows and update total
     window.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.fee-row').forEach(bindEventsToRow);
         updateTotal();

@@ -10,6 +10,16 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
+        @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
         <div class="bg-light border" style="padding:2%">
 
             <h3><strong>User Profile</strong></h3>
@@ -339,39 +349,46 @@
                     <div class="modal-content">
 
                         <div class="modal-header">
-                            <h5 class="modal-title" id="updatePasswordModalLabel">Update User Details</h5> <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h5 class="modal-title" id="updatePasswordModalLabel">Update Password</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
 
                         <div class="modal-body">
-                            <form action="{{ route('new.password.save') }}" method="POST"> @csrf @method('POST')
-                                <div class="mb-3"> {{-- Password with toggle --}}
-                                    <div class="mb-4 position-relative">
-                                        <label for="password" class="form-label">Password</label>
-                                        <div class="input-group">
-                                            <input type="password" class="form-control" id="password" name="password" required>
-                                            <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password" tabindex="-1">
-                                                <i class="bi bi-eye-slash"></i>
-                                            </button>
-                                        </div>
-                                        <small class="text-muted"> Password must be at least 8 characters and include uppercase, lowercase, number, and special character. </small>
-                                    </div>
+                            <form action="{{ route('new.password.save') }}" method="POST" id="passwordForm">
+                                @csrf
+                                @method('POST')
 
-                                    {{-- Confirm Password with toggle --}}
-                                    <div class="mb-4 position-relative">
-                                        <label for="password_confirmation" class="form-label">Confirm Password</label>
-                                        <div class="input-group">
-                                            <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
-                                            <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password_confirmation" tabindex="-1">
-                                                <i class="bi bi-eye-slash"></i>
-                                            </button>
-                                        </div>
+                                <div class="mb-4">
+                                    <label for="password" class="form-label">New Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="password" name="password" required>
+                                        <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password" tabindex="-1">
+                                            <i class="bi bi-eye-slash"></i>
+                                        </button>
                                     </div>
-
                                 </div>
 
-                                <button type="submit" class="btn btn-danger">Save</button>
-                            </form>
+                                <ul id="passwordRequirements" class="text-muted small mb-3">
+                                    <li id="length">❌ At least 8 characters</li>
+                                    <li id="uppercase">❌ Uppercase letter</li>
+                                    <li id="lowercase">❌ Lowercase letter</li>
+                                    <li id="number">❌ Number</li>
+                                    <li id="special">❌ Special character (!@#$%^&*)</li>
+                                </ul>
 
+                                <div class="mb-4">
+                                    <label for="password_confirmation" class="form-label">Confirm Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                                        <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password_confirmation" tabindex="-1">
+                                            <i class="bi bi-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                    <small id="matchMessage" class="text-danger d-none">❌ Passwords do not match</small>
+                                </div>
+
+                                <button type="submit" class="btn btn-danger w-100" id="submitBtn" disabled>Save</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -400,6 +417,57 @@
             }
         });
     });
+
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("password_confirmation");
+    const requirements = {
+        length: /.{8,}/,
+        uppercase: /[A-Z]/,
+        lowercase: /[a-z]/,
+        number: /[0-9]/,
+        special: /[!@#$%^&*(),.?":{}|<>]/
+    };
+
+    const reqElements = {
+        length: document.getElementById("length"),
+        uppercase: document.getElementById("uppercase"),
+        lowercase: document.getElementById("lowercase"),
+        number: document.getElementById("number"),
+        special: document.getElementById("special")
+    };
+
+    const matchMessage = document.getElementById("matchMessage");
+    const submitBtn = document.getElementById("submitBtn");
+
+    function validatePassword() {
+        let valid = true;
+
+        for (let rule in requirements) {
+            if (requirements[rule].test(password.value)) {
+                reqElements[rule].textContent = "✅ " + reqElements[rule].textContent.slice(2);
+                reqElements[rule].classList.remove("text-danger");
+                reqElements[rule].classList.add("text-success");
+            } else {
+                reqElements[rule].textContent = "❌ " + reqElements[rule].textContent.slice(2);
+                reqElements[rule].classList.remove("text-success");
+                reqElements[rule].classList.add("text-danger");
+                valid = false;
+            }
+        }
+
+        // Check confirm password
+        if (password.value && password.value === confirmPassword.value) {
+            matchMessage.classList.add("d-none");
+        } else {
+            matchMessage.classList.remove("d-none");
+            valid = false;
+        }
+
+        submitBtn.disabled = !valid;
+    }
+
+    password.addEventListener("input", validatePassword);
+    confirmPassword.addEventListener("input", validatePassword);
 </script>
 
 @endsection

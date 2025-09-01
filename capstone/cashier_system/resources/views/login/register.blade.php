@@ -45,7 +45,7 @@
                             <input type="email" name="email" class="form-control" id="email" placeholder="name@example.com" required>
                         </div>
 
-                        {{-- Password with toggle --}}
+                        {{-- Password with toggle + live validation --}}
                         <div class="mb-4 position-relative">
                             <label for="password" class="form-label">Password</label>
                             <div class="input-group">
@@ -54,9 +54,14 @@
                                     <i class="bi bi-eye-slash"></i>
                                 </button>
                             </div>
-                            <small class="text-muted">
-                                Password must be at least 8 characters and include uppercase, lowercase, number, and special character.
-                            </small>
+                            <small class="text-muted">Password must meet all the rules below:</small>
+                            <ul class="list-unstyled small mt-2" id="passwordRules">
+                                <li id="rule-length" class="text-danger">❌ At least 8 characters</li>
+                                <li id="rule-upper" class="text-danger">❌ At least 1 uppercase letter</li>
+                                <li id="rule-lower" class="text-danger">❌ At least 1 lowercase letter</li>
+                                <li id="rule-number" class="text-danger">❌ At least 1 number</li>
+                                <li id="rule-special" class="text-danger">❌ At least 1 special character</li>
+                            </ul>
                         </div>
 
                         {{-- Confirm Password with toggle --}}
@@ -68,6 +73,7 @@
                                     <i class="bi bi-eye-slash"></i>
                                 </button>
                             </div>
+                            <small id="confirmMessage" class="text-danger d-none">❌ Passwords do not match</small>
                         </div>
 
                         <div class="mb-3">
@@ -101,6 +107,54 @@
             }
         });
     });
+
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('password_confirmation');
+    const registerBtn = document.getElementById('registerBtn');
+    const confirmMessage = document.getElementById('confirmMessage');
+
+    const rules = {
+        length: document.getElementById('rule-length'),
+        upper: document.getElementById('rule-upper'),
+        lower: document.getElementById('rule-lower'),
+        number: document.getElementById('rule-number'),
+        special: document.getElementById('rule-special'),
+    };
+
+    function validatePassword() {
+        const value = passwordInput.value;
+        let valid = true;
+
+        // Rules
+        if (value.length >= 8) { rules.length.textContent = "✅ At least 8 characters"; rules.length.classList.replace('text-danger','text-success'); }
+        else { rules.length.textContent = "❌ At least 8 characters"; rules.length.classList.replace('text-success','text-danger'); valid = false; }
+
+        if (/[A-Z]/.test(value)) { rules.upper.textContent = "✅ At least 1 uppercase letter"; rules.upper.classList.replace('text-danger','text-success'); }
+        else { rules.upper.textContent = "❌ At least 1 uppercase letter"; rules.upper.classList.replace('text-success','text-danger'); valid = false; }
+
+        if (/[a-z]/.test(value)) { rules.lower.textContent = "✅ At least 1 lowercase letter"; rules.lower.classList.replace('text-danger','text-success'); }
+        else { rules.lower.textContent = "❌ At least 1 lowercase letter"; rules.lower.classList.replace('text-success','text-danger'); valid = false; }
+
+        if (/[0-9]/.test(value)) { rules.number.textContent = "✅ At least 1 number"; rules.number.classList.replace('text-danger','text-success'); }
+        else { rules.number.textContent = "❌ At least 1 number"; rules.number.classList.replace('text-success','text-danger'); valid = false; }
+
+        if (/[^A-Za-z0-9]/.test(value)) { rules.special.textContent = "✅ At least 1 special character"; rules.special.classList.replace('text-danger','text-success'); }
+        else { rules.special.textContent = "❌ At least 1 special character"; rules.special.classList.replace('text-success','text-danger'); valid = false; }
+
+        // Confirm match
+        if (value && confirmInput.value && value !== confirmInput.value) {
+            confirmMessage.classList.remove('d-none');
+            valid = false;
+        } else {
+            confirmMessage.classList.add('d-none');
+        }
+
+        // Enable button only if valid
+        registerBtn.disabled = !valid;
+    }
+
+    passwordInput.addEventListener('input', validatePassword);
+    confirmInput.addEventListener('input', validatePassword);
 </script>
 
 @endsection

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 
 class LoginController extends Controller
 {
@@ -89,20 +90,25 @@ class LoginController extends Controller
         $remember = $request->filled('remember');
         $credentials = $request->only('email', 'password');
 
-        // Track login attempts per email
-        $attemptsKey = 'login_attempts_' . $request->email;
-        $attempts = session($attemptsKey, 0);
+        $key = Str::lower($request->email).'|'.$request->ip(); // unique key per email + IP
+
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            return back()->withErrors([
+                'email' => "Too many login attempts. Please try again in {$seconds} seconds or reset your password.",
+            ]);
+        }
 
         if (Auth::attempt($credentials, $remember)) {
-            // Reset attempt counter after successful login
-            session()->forget($attemptsKey);
-        
+            // Clear attempts
+            RateLimiter::clear($key);
+
             $user = Auth::user();
             session()->put('user', $user);
             session()->put('loginId', $user->id);
 
             if (is_null($user->email_verified_at)) {
-                // Generate OTP and send email
                 $otp = rand(100000, 999999);
 
                 session([
@@ -118,21 +124,13 @@ class LoginController extends Controller
                 return redirect()->route('otp.verify.form');
             }
 
-        return redirect()->route('admin.dashboard');
-    }
-
-        // Increase attempts on failure
-        $attempts++;
-        session([$attemptsKey => $attempts]);
-
-        if ($attempts >= 3) {
-            // Redirect to forgot password page
-            session()->forget($attemptsKey); // optional: reset after redirect
-            return redirect()->route('forgot.password.email')
-                ->with('error', 'Too many failed login attempts. Please reset your password.');
+            return redirect()->route('admin.dashboard');
         }
 
-        return back()->with('error', 'Invalid login credentials. Attempt ' . $attempts . ' of 3.');
+        // Failed attempt → hit limiter
+        RateLimiter::hit($key, 300); // 300 seconds = 5 mins lockout after max attempts
+
+        return back()->with('error', 'Invalid login credentials.');
     }
     
     public function forgotPassword() {
