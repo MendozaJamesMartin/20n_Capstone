@@ -66,13 +66,25 @@
             width: 60px;
         }
 
-        .sidebar .toggle-btn {
+        /* Remove border/background completely */
+        .toggle-btn {
             background: none;
             border: none;
+            outline: none;
+            box-shadow: none;
             font-size: 1.5rem;
-            color: white;
-            margin-bottom: 1rem;
-            padding: 0;
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        /* Make icon solid white */
+        .toggle-btn i {
+            color: #fff !important;
+        }
+
+        /* Hover state: softer white */
+        .toggle-btn:hover {
+            color: #4d0006ff; /* light red/soft white tint */
         }
 
         .sidebar .nav-link {
@@ -128,8 +140,8 @@
     <!-- Top Navbar -->
     <nav class="navbar navbar-danger bg-danger px-3 no-print">
 
-        <button id="toggleSidebar" class="toggle-btn">
-            <i class="fas fa-bars"></i>
+        <button id="toggleSidebar" class="toggle-btn"> 
+            <i class="fas fa-bars"></i> 
         </button>
 
         <a class="navbar-brand text-light" href=" {{ route('admin.dashboard') }}">PUPTeC</a>
