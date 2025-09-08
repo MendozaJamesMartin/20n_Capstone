@@ -4,9 +4,10 @@
 
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
 
-    <div class="container" style="width:75%">
-        <div class="bg-light p-5">
-            <h1>Finalize Payment Form</h1>
+    <div class="container" style="width:90%">
+        <div class="bg-light p-5 rounded shadow">
+
+            <h1 class="mb-4">Finalize Payment</h1>
 
             @if(session('success'))
             <p class="text-success">{{ session('success') }}</p>
@@ -24,103 +25,136 @@
             </div>
             @endif
 
-            <form method="POST" action="{{ route('payments.update', ['transactionId' => $transactionId]) }}" id="paymentForm">
-                @csrf
-                @method('PUT')
+            <div class="row">
+                <!-- Left Column: Student Submission -->
+                <div class="col-md-5">
+                    <h3>Student Submission</h3>
+                    <div class="card p-3 mb-4">
+                        <p><strong>Name:</strong> {{ $transactionDetails[0]->customer_name ?? 'N/A' }}</p>
+                        <p><strong>Email:</strong> {{ $transactionDetails[0]->email ?? 'N/A' }}</p>
 
-                <!-- Student Info -->
-                <label class="form-label">Student Full Name</label>
-                <div class="mb-3 d-flex gap-2">
-                    <input type="text" class="form-control" name="customer_name" 
-                           value="{{ old('customer_name', $transactionDetails[0]->customer_name ?? '') }}">
+                        <h5 class="mt-3">Submitted Fees</h5>
+                        <table class="table table-sm table-bordered text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Fee Name</th>
+                                    <th>Amount</th>
+                                    <th>Qty</th>
+                                    <th>Label</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($transactionDetails as $detail)
+                                <tr>
+                                    <td>{{ $detail->fee_name }}</td>
+                                    <td>₱{{ number_format($detail->amount, 2) }}</td>
+                                    <td>{{ $detail->quantity }}</td>
+                                    <td>{{ $detail->fee_label ?? '—' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="mb-4">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="text" class="form-control" name="email" 
-                           value="{{ old('email', $transactionDetails[0]->email ?? '') }}">
+                <!-- Right Column: Cashier Finalization -->
+                <div class="col-md-7">
+                    <h3>Cashier Finalization</h3>
+
+                    <form method="POST" action="{{ route('payments.update', ['transactionId' => $transactionId]) }}" id="paymentForm">
+                        @csrf
+                        @method('PUT')
+
+                        <!-- Student Info -->
+                        <div class="mb-3">
+                            <label class="form-label">Student Full Name</label>
+                            <input type="text" class="form-control" name="customer_name"
+                                value="{{ old('customer_name', $transactionDetails[0]->customer_name ?? '') }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="text" class="form-control" name="email"
+                                value="{{ old('email', $transactionDetails[0]->email ?? '') }}">
+                        </div>
+
+                        <!-- Fee Selection -->
+                        <h5>Fees</h5>
+                        <table class="table table-bordered align-middle text-center" id="fees-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 35%">Fee Name</th>
+                                    <th style="width: 15%">Amount</th>
+                                    <th style="width: 15%">Quantity</th>
+                                    <th style="width: 25%">Fee Label</th>
+                                    <th style="width: 10%">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($transactionDetails as $detail)
+                                <tr class="fee-row">
+                                    <td>
+                                        <input list="feeSuggestions" class="form-control fee-name" value="{{ $detail->fee_name }}">
+                                        <input type="hidden" class="fee-id" name="fee_ids[]" value="{{ $detail->fee_id }}">
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.01" class="form-control fee-amount"
+                                            value="{{ number_format($detail->amount, 2, '.', '') }}"
+                                            {{ $detail->is_variable ? '' : 'readonly' }}>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control fee-quantity" name="quantities_temp[]"
+                                            value="{{ $detail->quantity }}" min="1">
+                                    </td>
+                                    <td>
+                                        <select class="form-select fee-label" name="fee_labels_temp[]" required>
+                                            <option value="">-- Select Label --</option>
+                                            <option value="Certification Fee" {{ $detail->fee_label == 'Certification Fee' ? 'selected' : '' }}>Certification Fee</option>
+                                            <option value="Certified True Copy" {{ $detail->fee_label == 'Certified True Copy' ? 'selected' : '' }}>Certified True Copy</option>
+                                            <option value="Others" {{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy']) ? 'selected' : '' }}>Others (specify)</option>
+                                        </select>
+                                        <input type="text" name="custom_labels[]" class="form-control mt-2 fee-label-other {{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy']) ? '' : 'd-none' }}"
+                                            value="{{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy']) ? $detail->fee_label : '' }}"
+                                            placeholder="Enter label">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+
+                        <button type="button" class="btn btn-success btn-sm mb-3" id="addFeeRow">+ Add Fee</button>
+
+                        <div class="mt-3">
+                            <h4>Total Amount: ₱<span id="total-amount">0.00</span></h4>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
+                            Approve
+                        </button>
+                    </form>
+
+                    <!-- Disapprove -->
+                    <form action="{{ route('payments.disapprove', ['id' => $transactionDetails[0]->transaction_id]) }}" method="POST"
+                        onsubmit="return confirm('Are you sure you want to disapprove and delete this transaction?');"
+                        class="mt-2">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger" title="Disapprove Payment">
+                            Disapprove
+                        </button>
+                    </form>
+
                 </div>
-
-                <!-- Fee Selection -->
-                <h3>Fees</h3>
-                <table class="table table-bordered align-middle text-center" id="fees-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 35%">Fee Name</th>
-                            <th style="width: 15%">Amount</th>
-                            <th style="width: 15%">Quantity</th>
-                            <th style="width: 25%">Fee Label</th>
-                            <th style="width: 10%">Remove</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if(!empty($selectedFees) && $selectedFeeDetails->isNotEmpty())
-                        @foreach($selectedFees as $feeId => $quantity)
-                            @php
-                                $fee = $selectedFeeDetails->firstWhere('id', $feeId);
-                            @endphp
-                            @if($fee)
-                            <tr class="fee-row">
-                                <td>
-                                    <input list="feeSuggestions" class="form-control fee-name" value="{{ $fee->fee_name }}">
-                                    <input type="hidden" class="fee-id" name="fee_ids[]" value="{{ $fee->id }}">
-                                </td>
-                                <td>
-                                    <input type="number" step="0.01" class="form-control fee-amount" 
-                                           value="{{ number_format($fee->amount, 2, '.', '') }}" 
-                                           {{ $fee->is_variable ? '' : 'readonly' }}>
-                                </td>
-                                <td>
-                                    <input type="number" class="form-control fee-quantity" name="quantities_temp[]" 
-                                           value="{{ $quantity }}" min="1">
-                                </td>
-                                <td>
-                                    <select class="form-select fee-label" name="fee_labels_temp[]" required>
-                                        <option value="">-- Select Label --</option>
-                                        <option value="Certification Fee" {{ $fee->fee_label == 'Certification Fee' ? 'selected' : '' }}>Certification Fee</option>
-                                        <option value="Certified True Copy" {{ $fee->fee_label == 'Certified True Copy' ? 'selected' : '' }}>Certified True Copy</option>
-                                        <option value="Others" {{ !in_array($fee->fee_label, ['Certification Fee','Certified True Copy']) ? 'selected' : '' }}>Others (specify)</option>
-                                    </select>
-                                    <input type="text" name="custom_labels[]" class="form-control mt-2 fee-label-other {{ !in_array($fee->fee_label, ['Certification Fee','Certified True Copy']) ? '' : 'd-none' }}" 
-                                           value="{{ !in_array($fee->fee_label, ['Certification Fee','Certified True Copy']) ? $fee->fee_label : '' }}" 
-                                           placeholder="Enter label">
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
-                                </td>
-                            </tr>
-                            @endif
-                        @endforeach
-                        @endif
-                    </tbody>
-                </table>
-
-                <button type="button" class="btn btn-success btn-sm mb-3" id="addFeeRow">+ Add Fee</button>
-
-                <div class="mt-3">
-                    <h4>Total Amount: ₱<span id="total-amount">0.00</span></h4>
-                </div>
-
-                <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
-                    Approve
-                </button>
-            </form>
-
-            <form action="{{ route('payments.disapprove', ['id' => $transactionDetails[0]->transaction_id]) }}" method="POST" 
-                  onsubmit="return confirm('Are you sure you want to disapprove and delete this transaction?');" 
-                  style="display:inline;">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger mt-3" title="Disapprove Payment">
-                    Disapprove
-                </button>
-            </form>
+            </div>
 
             <!-- Datalist for fee name autocomplete -->
             <datalist id="feeSuggestions">
                 @foreach($fees as $fee)
                 <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
-                @endforeach
+                    @endforeach
             </datalist>
         </div>
     </div>
@@ -165,6 +199,11 @@
             });
         }
 
+        if (amountInput) {
+            // ✅ New: recalc when typing into variable amounts
+            amountInput.addEventListener('input', updateTotal);
+        }
+
         if (quantityInput) {
             quantityInput.addEventListener('input', updateTotal);
         }
@@ -188,6 +227,7 @@
             });
         }
     }
+
 
     function createRow() {
         const tbody = document.querySelector('#fees-table tbody');

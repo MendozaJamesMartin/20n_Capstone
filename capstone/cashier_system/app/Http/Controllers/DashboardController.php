@@ -86,6 +86,24 @@ class DashboardController extends Controller
 
         $fees = DB::table('fees')->whereNull('deleted_at')->orderBy('fee_name')->get();
 
+        //Receipt Analytics
+        $receiptBatches = DB::table('receipt_batches')
+            ->select(
+                'id',
+                'start_number',
+                'end_number',
+                'next_number',
+                DB::raw('(next_number - start_number) as used_count'),
+                DB::raw('GREATEST(0, end_number - next_number + 1) as remaining_count'),
+                'exhausted_at',
+                'created_at'
+            )
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $totalReceiptsIssued = $receiptBatches->sum('used_count');
+        $totalReceiptsRemaining = $receiptBatches->sum('remaining_count');
+
         // Take top 10 fees and group the rest under "Others"
         $topFees = $allFees->take(10);
         $othersTotal = $allFees->skip(10)->sum('total');
@@ -138,7 +156,10 @@ class DashboardController extends Controller
             'overdueWaterAmount',
             'overdueElectricityAmount',
             'totalOverdueAmount',
-            'totalBillingPayments'
+            'totalBillingPayments',
+            'receiptBatches',
+            'totalReceiptsIssued',
+            'totalReceiptsRemaining'
         ));
     }
 

@@ -85,6 +85,50 @@
         </div>
     </div>
 
+    <!-- Receipts Analytics -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>Receipt Batches</h5>
+            <p><strong>Total Receipts Issued:</strong> {{ $totalReceiptsIssued }}</p>
+            <p><strong>Total Remaining:</strong> {{ $totalReceiptsRemaining }}</p>
+
+            <div class="table-responsive">
+                <table class="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Batch</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Next</th>
+                            <th>Used</th>
+                            <th>Remaining</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($receiptBatches as $batch)
+                            <tr>
+                                <td>#{{ $batch->id }}</td>
+                                <td>{{ $batch->start_number }}</td>
+                                <td>{{ $batch->end_number }}</td>
+                                <td>{{ $batch->next_number > $batch->end_number ? '—' : $batch->next_number }}</td>
+                                <td>{{ $batch->used_count }}</td>
+                                <td>{{ $batch->remaining_count }}</td>
+                                <td>
+                                    @if($batch->exhausted_at)
+                                        <span class="badge bg-danger">Exhausted</span>
+                                    @else
+                                        <span class="badge bg-success">Active</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Concessionaire Billing -->
     <div class="row g-3 mb-4">
         <div class="col-md-6">
@@ -179,14 +223,10 @@
     new Chart(ctxRevenue, {
         type: 'line',
         data: {
-            labels: {
-                !!json_encode($chartLabels) !!
-            },
+            labels: {!! json_encode($chartLabels) !!},
             datasets: [{
-                label: 'Monthly Revenue',
-                data: {
-                    !!json_encode($chartData) !!
-                },
+                label: 'Monthly Collection',
+                data: {!! json_encode($chartData) !!},
                 borderColor: 'rgba(40,167,69,1)',
                 backgroundColor: 'rgba(40,167,69,0.1)',
                 fill: true,
@@ -202,16 +242,13 @@
     new Chart(ctxFee, {
         type: 'pie',
         data: {
-            labels: {
-                !!json_encode($topFees - > pluck('fee_name')) !!
-            },
+            labels: {!! json_encode($topFees->pluck('fee_name')) !!},
             datasets: [{
                 label: 'Top Fees',
-                data: {
-                    !!json_encode($topFees - > pluck('total')) !!
-                },
+                data: {!! json_encode($topFees->pluck('total')) !!},
                 backgroundColor: [
-                    '#007bff', '#ffc107', '#28a745', '#dc3545', '#6610f2', '#6c757d'
+                    '#007bff', '#ffc107', '#28a745', '#dc3545', '#6610f2', '#6c757d',
+                    '#20c997', '#fd7e14', '#17a2b8', '#6f42c1'
                 ]
             }]
         },

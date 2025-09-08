@@ -26,7 +26,7 @@
             <div class="table-responsive">
                 <table class="table table-striped align-middle text-center mb-0" id="pendingTable">
                     <thead class="table-dark">
-                            <th onclick="sortTable(0)">Transaction ID</th>
+                            <th onclick="sortTable(0)">Transaction #</th>
                             <th onclick="sortTable(1)">Customer Name</th>
                             <th onclick="sortTable(2)">Total Amount</th>
                             <th onclick="sortTable(3)">Amount Paid</th>

@@ -127,6 +127,20 @@
             updateTotal();
         });
 
+        nameInput.addEventListener('input', () => {
+            const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
+            if (fee) {
+                amountInput.value = parseFloat(fee.amount).toFixed(2);
+                feeIdInput.value = fee.id;
+                nameInput.classList.remove('is-invalid');
+            } else {
+                amountInput.value = '';
+                feeIdInput.value = '';
+                nameInput.classList.add('is-invalid');
+            }
+            updateTotal();
+        });
+
         quantityInput.addEventListener('input', updateTotal);
 
         tr.querySelector('.remove-row').addEventListener('click', () => {
