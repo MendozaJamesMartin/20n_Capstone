@@ -104,24 +104,20 @@ class LoginController extends Controller
             // Clear attempts
             RateLimiter::clear($key);
 
+            /** @var \App\Models\User $user */
             $user = Auth::user();
             session()->put('user', $user);
             session()->put('loginId', $user->id);
 
             if (is_null($user->email_verified_at)) {
-                $otp = rand(100000, 999999);
+                return $this->sendVerificationOtp($user, 'Please verify your email via OTP.');
+            }
 
-                session([
-                    'otp_code' => $otp,
-                    'otp_expires_at' => now()->addMinutes(10),
-                    'otp_attempts' => 0,
-                    'otp_user_id' => $user->id,
-                    'otp_email' => $user->email,
-                ]);
+            if ($user->email_verified_at->lt(now()->subDays(7))) {
+                $user->email_verified_at = null; // reset
+                $user->save();
 
-                Mail::to($user->email)->send(new SendOtpCode($otp));
-
-                return redirect()->route('otp.verify.form');
+                return $this->sendVerificationOtp($user, 'Your verification has expired. A new OTP was sent.');
             }
 
             return redirect()->route('admin.dashboard');
@@ -133,6 +129,22 @@ class LoginController extends Controller
         return back()->with('error', 'Invalid login credentials.');
     }
     
+    protected function sendVerificationOtp($user, $message) {
+        $otp = rand(100000, 999999);
+
+        session([
+            'otp_code' => $otp,
+            'otp_expires_at' => now()->addMinutes(10),
+            'otp_attempts' => 0,
+            'otp_user_id' => $user->id,
+            'otp_email' => $user->email,
+        ]);
+
+        Mail::to($user->email)->send(new SendOtpCode($otp));
+
+        return redirect()->route('otp.verify.form')->withErrors(['otp_code' => $message]);
+    }
+
     public function forgotPassword() {
         session()->forget('otp'); // clears old OTP so we start fresh
         return view('login.forgot-password-email');
