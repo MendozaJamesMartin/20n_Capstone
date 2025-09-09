@@ -120,6 +120,20 @@ class LoginController extends Controller
                 return $this->sendVerificationOtp($user, 'Your verification has expired. A new OTP was sent.');
             }
 
+                // Audit log
+                AuditLogger::log(
+                    event: 'user_login',
+                    auditableType: 'App\\Models\\User',
+                    auditableId: $user->id,
+                    oldValues: [],
+                    newValues: [                
+                            'message' => 'User Login',
+                            'user' => $user->email,
+                            'timestamp' => now()->toDateTimeString(),
+                        ],
+                    tags: 'login'
+                );
+
             return redirect()->route('admin.dashboard');
         }
 
@@ -239,12 +253,29 @@ class LoginController extends Controller
 
     public function logout(Request $request) {
 
+        $user = Auth::user();
+
+            // Audit log
+            AuditLogger::log(
+                event: 'user_logout',
+                auditableType: 'App\\Models\\User',
+                auditableId: $user->id,
+                oldValues: [],
+                newValues: [                
+                        'message' => 'User Logout',
+                        'user' => $user->email,
+                        'timestamp' => now()->toDateTimeString(),
+                    ],
+                tags: 'logout'
+            );
+
             $request->session()->flush();
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
-
+            
             return redirect()->route('login');
 
     }
+
 }
