@@ -3,13 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Exports\MonthlyTransactionReportExport;
-use App\Mail\PaymentReceiptMail;
-use App\Models\Concessionaire;
-use App\Models\ConcessionaireBill;
 use App\Models\Receipt;
 use App\Models\ReceiptBatch;
-use App\Models\Student;
-use App\Models\StudentTransactionDetail;
 use App\Models\Transaction;
 use App\Services\AuditLogger;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -19,18 +14,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionsController extends Controller
 {
-    public function GetTransactionsHistory(Request $request)
-    {
+    public function GetTransactionsHistory(Request $request) {
+
         $timeframe = $request->input('timeframe', 'all');
         $search = $request->input('search', '');
+        $show = $request->input('show', 'active'); // active or cancelled
 
-        $query = DB::table('universal_transaction_history')
-            ->select();
+        $query = DB::table('universal_transaction_history')->select();
+
+        if ($show === 'cancelled') {
+            $query->where('receipt_status', '=', 'Cancelled');
+        } else {
+            $query->where('receipt_status', '!=', 'Cancelled');
+        }
 
         // Apply transaction date filter
         if ($timeframe === 'today') {
@@ -41,7 +41,7 @@ class TransactionsController extends Controller
             $query->where('universal_transaction_history.transaction_date', '>=', Carbon::now()->subMonth());
         }
 
-        // Apply date of receipt printing filter
+        // Apply receipt print date filter
         if ($timeframe === 'today') {
             $query->where('universal_transaction_history.receipt_print_date', '>=', Carbon::now()->subDay());
         } elseif ($timeframe === 'this_week') {
@@ -56,23 +56,18 @@ class TransactionsController extends Controller
         }
 
         // Apply sorting method
-        $sortBy = $request->input('sort_by', 'receipt_print_date'); // Default: sort by transaction date
-        $sortOrder = $request->input('sort_order', 'DESC'); // Default: descending
-
-        // Validate sorting parameters
+        $sortBy = $request->input('sort_by', 'receipt_print_date');
+        $sortOrder = $request->input('sort_order', 'DESC');
         $validSortColumns = ['transaction_date', 'customer_type', 'customer_name', 'total_amount', 'receipt_print_date'];
         if (!in_array($sortBy, $validSortColumns)) {
-            $sortBy = 'receipt_print_date'; // Fallback to default sorting column
+            $sortBy = 'receipt_print_date';
         }
 
-        // Apply sorting to the query
         $query->orderBy($sortBy, $sortOrder);
 
-        // Paginate results
         $result = $query->paginate(10)->appends(request()->except('page'));
 
-        // Return the view with sorted and filtered results
-        return view('common.transactions.transactions-history', compact('result'));
+        return view('common.transactions.transactions-history', compact('result', 'show'));
     }
 
     public function GetCustomerTransactionDetails ($id) {
@@ -170,7 +165,7 @@ class TransactionsController extends Controller
 
             $Cashier = Auth::user();
 
-            // Fetch the updated transaction after finalization for audit old/new values if needed
+            // Fetch the updated transaction before finalization for audit old/new values if needed
             $transactionBeforeFinalize = DB::table('transactions')->where('id', $transactionId)->first();
 
             Log::info("Calling FinalizeTransaction SP");
@@ -220,6 +215,48 @@ class TransactionsController extends Controller
             Log::error("Failed to finalize transaction : " . $e->getMessage());
             return back()->with('error', 'Transaction failed.');
         }
+    }
+
+    public function cancelReceipt($id) {
+        
+        DB::beginTransaction();
+
+        $receiptBeforeCancel = Receipt::where('transaction_id', $id)->firstOrFail();
+
+        if ($receiptBeforeCancel) {
+            try {
+                
+                DB::statement("CALL CancelTransaction(?)", [$id]);
+
+                $receiptAfterCancel = Receipt::where('transaction_id', $id)->firstOrFail();
+
+                // Log the finalize event
+                AuditLogger::log(
+                    event: 'receipt_cancelled',
+                    auditableType: 'App\\Models\\Receipt',
+                    auditableId: $id,
+                    oldValues: [                    
+                        'status' => $receiptBeforeCancel->status
+                    ],  // If you have previous state, you can include here
+                    newValues: [
+                        'status' => $receiptAfterCancel->status
+                    ],
+                    tags: 'transaction'
+                );
+
+                DB::commit();
+
+                return back()->with('success', 'Receipt has been cancelled.');
+
+            } catch (QueryException $e) {
+                DB::rollBack();
+                Log::error("Failed to cancel receipt : " . $e->getMessage());
+                return back()->with('error', 'Receipt cancellation failed.');
+            }
+        } else {
+            return back()->with('error', 'Receipt not found.');
+        }
+
     }
 
     public function exportMonthlyReport(Request $request)

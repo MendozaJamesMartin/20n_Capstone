@@ -3,7 +3,25 @@
 @section('content')
 <main class="py-5 px-3" style="min-height: 85vh; background-color: #f9f9f9;">
     <div class="container" style="max-width: 800px;">
+
+            @if(session('success'))
+            <div class="alert alert-success mt-3" style="white-space: pre-line;">{{ session('success') }}</div>
+            @elseif(session('error'))
+            <div class="alert alert-danger mt-3">{{ session('error') }}</div>
+            @endif
+
+            @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
         <div class="card shadow">
+
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">Transaction Details</h4>
             </div>
@@ -25,32 +43,37 @@
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
                         <strong>Status:</strong>
-                        @if ($TransactionDetails[0]->amount_paid == 0)
-                            <span id="tx-status" class="badge bg-warning text-dark">Pending</span>
-                        @else
-                            <span id="tx-status" class="badge bg-success text-white">Complete</span>
+                        @if ($TransactionDetails[0]->payment_status == "Pending")
+                        <span id="tx-status" class="badge bg-warning text-dark">Pending</span>
+                        @elseif ($TransactionDetails[0]->payment_status == "Completed")
+                        <span id="tx-status" class="badge bg-success text-white">Complete</span>
+                        @elseif ($TransactionDetails[0]->payment_status == "Cancelled")
+                        <span id="tx-status" class="badge bg-danger text-white">Cancelled</span>
                         @endif
                     </li>
                 </ul>
 
-                <div class="text-end">
+                <div class="text-end">       
+                    @if ($TransactionDetails[0]->receipt_status == "Issued")             
+                    <form id="cancelReceipt" method="POST" action="{{ route('cancel.receipt', ['id' => $TransactionDetails[0]->transaction_id]) }}" style="display: inline;">
+                        @csrf
+                        @method('PUT')
+                        <button type="submit" id="cancelReceiptBtn" class="btn btn-danger">
+                            Cancel Receipt
+                        </button>
+                    </form>
+                    @endif
                     @if (!$hasActiveBatch)
-                        <div class="alert alert-danger">
-                            🚫 Cannot finalize transaction. No receipt numbers available. Please load a new batch first.
-                        </div>
-                    @elseif ($TransactionDetails[0]->amount_paid == 0)
-                        <form id="finalizeForm" method="POST" action="{{ route('finalize.transation', ['id' => $TransactionDetails[0]->transaction_id]) }}" target="_blank" style="display: inline;">
-                            @csrf
-                            <button type="submit" id="finalizeBtn" class="btn btn-success">
-                                <i class="bi bi-check-circle"></i> Finalize and Print Receipt
-                            </button>
-                        </form>
-                    @else
-                        <a href="{{ route('customer.receipt.pdf', ['id' => $TransactionDetails[0]->transaction_id]) }}"
-                           target="_blank"
-                           class="btn btn-outline-primary">
-                            🖨 View Receipt
-                        </a>
+                    <div class="alert alert-danger">
+                        🚫 Cannot finalize transaction. No receipt numbers available. Please load a new batch first.
+                    </div>
+                    @elseif ($TransactionDetails[0]->payment_status == "Pending")
+                    <form id="finalizeForm" method="POST" action="{{ route('finalize.transation', ['id' => $TransactionDetails[0]->transaction_id]) }}" target="_blank" style="display: inline;">
+                        @csrf
+                        <button type="submit" id="finalizeBtn" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Finalize and Print Receipt
+                        </button>
+                    </form>
                     @endif
                 </div>
             </div>
@@ -61,7 +84,7 @@
 <script>
     const form = document.getElementById('finalizeForm');
     if (form) {
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', function(e) {
             const confirmFinalize = confirm("Are you sure you want to finalize this transaction?");
             if (!confirmFinalize) {
                 e.preventDefault();

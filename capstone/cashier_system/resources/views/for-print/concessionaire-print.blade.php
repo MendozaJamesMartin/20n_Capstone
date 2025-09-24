@@ -37,7 +37,7 @@
             overflow: hidden;
             word-wrap: break-word;
             line-height: 1.1;
-            font-size: 9px;
+            font-size: 12px;
         }
 
         .item-table .cell-wrap {
@@ -73,6 +73,13 @@
 
         .invisible-text {
             color: transparent;
+
+                    /* padding-start (left) utilities similar to bootstrap ps-* */
+        .ps-1 { padding-left: 4px !important; }
+        .ps-2 { padding-left: 8px !important; }
+        .ps-3 { padding-left: 16px !important; }
+        .ps-4 { padding-left: 32px !important; }
+        .ps-5 { padding-left: 64px !important; }
         }
     </style>
 </head>
@@ -128,7 +135,7 @@
 
     {{-- Itemized Section --}}
     @php
-        $maxRows = 13;
+        $maxRows = 12;
         $itemCount = count($TransactionDetails);
         $blankRows = $maxRows - $itemCount;
     @endphp
@@ -144,8 +151,7 @@
         <tbody>
             @foreach($TransactionDetails as $bill)
                 <tr>
-                    <td style="border-top: 0px; border-bottom: 0px;">{{ $bill->utility_type }} ({{ $bill->billing_months }})</td>
-                    <td style="border-top: 0px; border-bottom: 0px;"></td>
+                    <td colspan="2" class="cell-wrap ps-5" style="border-top: 0px; border-bottom: 0px;">{{ $bill->utility_type }} ({{ $bill->billing_months }})</td>
                     <td class="text-center" style="border-top: 0px; border-bottom: 0px;">{{ number_format($bill->bill_payment, 2) }}</td>
                 </tr>
             @endforeach
@@ -212,7 +218,12 @@
         <tr>
             <td style="border-top: 0px; border-right: 0px;" ></td>
             <td style="border-top: 0px; border-left: 0px;" class="text-center">
-                <strong>{{ $Cashier->first_name }} {{ $Cashier->last_name }}</strong>
+                <strong>
+                    {{ $Cashier->first_name }}
+                    {{ $Cashier->middle_name ? strtoupper(substr(trim($Cashier->middle_name), 0, 1)) . '.' : '' }}
+                    {{ $Cashier->last_name }}
+                    {{ $Cashier->suffix ? ' ' . $Cashier->suffix : '' }}
+                </strong>
                 <br>
                 <span style="visibility: hidden;">Collecting Officer</span>
             </td>

@@ -40,6 +40,7 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     
     //Finalize Customer Transaction
     Route::post('/transactions/finalize/{id}', [TransactionsController::class, 'finalizeTransaction'])->name('finalize.transation');
+    Route::put('/transaction/cancel/receipt/{id}', [TransactionsController::class, 'cancelReceipt'])->name('cancel.receipt');
 
     //Receipt PDF Management
     Route::get('/customer/receipt/{id}', [TransactionsController::class, 'customerReceiptPDF'])->name('customer.receipt.pdf');

@@ -12,33 +12,39 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index() {
-
+    public function index()
+    {
         $today = Carbon::now();
 
-        // Total revenue today
+        // Revenue today (exclude cancelled)
         $todaysRevenue = Transaction::whereDate('transaction_date', Carbon::today())
+            ->whereHas('receipt', fn($q) => $q->where('status', '!=', 'Cancelled'))
             ->sum('total_amount');
 
-        // Unpaid transactions
-        $unpaidCount = Transaction::where('amount_paid', '0')->count();
-
-        // Paid transactions (this month)
-        $paidCount = Receipt::whereDate('printed_at', Carbon::today())
+        // Unpaid transactions (still unpaid, exclude cancelled)
+        $unpaidCount = Transaction::where('amount_paid', '0')
+            ->whereHas('receipt', fn($q) => $q->where('status', '!=', 'Cancelled'))
             ->count();
 
-        // Bills due soon (within 7 days, assuming `due_date`)
+        // Paid transactions (today, exclude cancelled)
+        $paidCount = Receipt::whereDate('printed_at', Carbon::today())
+            ->where('status', '!=', 'Cancelled')
+            ->count();
+
+        // Bills due soon
         $billsDue = ConcessionaireBill::where('status', '!=', 'Fully Paid')
             ->whereBetween('due_date', [$today, $today->copy()->addDays(7)])
             ->count();
 
-        // Recent payments
+        // Recent payments (exclude cancelled)
         $recentPayments = DB::table('universal_transaction_history')
             ->where('balance_due', '0')
+            ->where('receipt_status', '!=', 'Cancelled') // assuming you expose this in the history view
             ->orderBy('receipt_print_date', 'desc')
             ->limit(5)
             ->get();
 
+        // Current batch
         $currentBatch = ReceiptBatch::whereNotNull('next_number')
             ->whereColumn('next_number', '<=', 'end_number')
             ->orderBy('created_at', 'desc')
@@ -54,18 +60,31 @@ class DashboardController extends Controller
         ));
     }
 
-    public function analytics() {
-        // Revenue Overview
-        $totalRevenue = DB::table('transactions')->sum('amount_paid');
-        $monthlyRevenue = DB::table('transactions')
-            ->whereBetween('transaction_date', [now()->startOfMonth(), now()->endOfMonth()])
-            ->sum('amount_paid');
-        $unpaidRevenue = DB::table('transactions')->sum('balance_due');
+    public function analytics()
+    {
+        // Revenue overview (exclude cancelled)
+        $totalRevenue = DB::table('transactions')
+            ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
+            ->where('receipts.status', '!=', 'Cancelled')
+            ->sum('transactions.amount_paid');
 
-        // Monthly Revenue Trend (Last 6 Months)
+        $monthlyRevenue = DB::table('transactions')
+            ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
+            ->where('receipts.status', '!=', 'Cancelled')
+            ->whereBetween('transactions.transaction_date', [now()->startOfMonth(), now()->endOfMonth()])
+            ->sum('transactions.amount_paid');
+
+        $unpaidRevenue = DB::table('transactions')
+            ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
+            ->where('receipts.status', '!=', 'Cancelled')
+            ->sum('transactions.balance_due');
+
+        // Monthly trend (exclude cancelled)
         $monthlyTrend = DB::table('transactions')
-            ->selectRaw("DATE_FORMAT(transaction_date, '%Y-%m') as month, SUM(amount_paid) as total")
-            ->where('transaction_date', '>=', now()->subMonths(6))
+            ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
+            ->selectRaw("DATE_FORMAT(transactions.transaction_date, '%Y-%m') as month, SUM(transactions.amount_paid) as total")
+            ->where('receipts.status', '!=', 'Cancelled')
+            ->where('transactions.transaction_date', '>=', now()->subMonths(6))
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -73,9 +92,12 @@ class DashboardController extends Controller
         $chartLabels = $monthlyTrend->pluck('month');
         $chartData = $monthlyTrend->pluck('total');
 
-        // Get all fees summed and ordered
+        // Fees (exclude cancelled)
         $allFees = DB::table('customer_transaction_details')
             ->join('fees', 'customer_transaction_details.fee_id', '=', 'fees.id')
+            ->join('transactions', 'customer_transaction_details.transaction_id', '=', 'transactions.id')
+            ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
+            ->where('receipts.status', '!=', 'Cancelled')
             ->select(
                 'fees.fee_name',
                 DB::raw('SUM(customer_transaction_details.amount * customer_transaction_details.quantity) as total')
@@ -86,7 +108,7 @@ class DashboardController extends Controller
 
         $fees = DB::table('fees')->whereNull('deleted_at')->orderBy('fee_name')->get();
 
-        //Receipt Analytics
+        // Receipt batches
         $receiptBatches = DB::table('receipt_batches')
             ->select(
                 'id',
@@ -104,10 +126,9 @@ class DashboardController extends Controller
         $totalReceiptsIssued = $receiptBatches->sum('used_count');
         $totalReceiptsRemaining = $receiptBatches->sum('remaining_count');
 
-        // Take top 10 fees and group the rest under "Others"
+        // Top fees + group others
         $topFees = $allFees->take(10);
         $othersTotal = $allFees->skip(10)->sum('total');
-
         if ($othersTotal > 0) {
             $topFees->push((object)[
                 'fee_name' => 'Others',
@@ -115,8 +136,12 @@ class DashboardController extends Controller
             ]);
         }
 
+        // Bills (exclude cancelled receipts)
         $waterPayments = DB::table('view_water_bills')
             ->join('concessionaire_transaction_details', 'view_water_bills.bill_id', '=', 'concessionaire_transaction_details.bill_id')
+            ->join('transactions', 'concessionaire_transaction_details.transaction_id', '=', 'transactions.id')
+            ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
+            ->where('receipts.status', '!=', 'Cancelled')
             ->where('view_water_bills.utility_type', 'Water')
             ->sum('concessionaire_transaction_details.amount_paid');
 
@@ -124,10 +149,13 @@ class DashboardController extends Controller
             ->where('utility_type', 'Water')
             ->where('status', '!=', 'Fully Paid')
             ->where('due_date', '<', Carbon::today())
-            ->sum('total_amount_due');
+            ->sum('total_due');
 
         $electricityPayments = DB::table('view_electricity_bills')
             ->join('concessionaire_transaction_details', 'view_electricity_bills.bill_id', '=', 'concessionaire_transaction_details.bill_id')
+            ->join('transactions', 'concessionaire_transaction_details.transaction_id', '=', 'transactions.id')
+            ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
+            ->where('receipts.status', '!=', 'Cancelled')
             ->where('view_electricity_bills.utility_type', 'Electricity')
             ->sum('concessionaire_transaction_details.amount_paid');
 
@@ -135,13 +163,16 @@ class DashboardController extends Controller
             ->where('utility_type', 'Electricity')
             ->where('status', '!=', 'Fully Paid')
             ->where('due_date', '<', Carbon::today())
-            ->sum('total_amount_due');
+            ->sum('total_due');
 
-        // ========================
-        // Totals
-        // ========================
         $totalOverdueAmount = $overdueWaterAmount + $overdueElectricityAmount;
         $totalBillingPayments = $waterPayments + $electricityPayments;
+
+        // Cancelled receipts stats
+        $cancelledReceipts = Receipt::where('status', 'Cancelled')->count();
+        $cancelledRevenue = Transaction::join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
+            ->where('receipts.status', 'Cancelled')
+            ->sum('transactions.amount_paid');
 
         return view('common.analytics', compact(
             'totalRevenue',
@@ -159,7 +190,9 @@ class DashboardController extends Controller
             'totalBillingPayments',
             'receiptBatches',
             'totalReceiptsIssued',
-            'totalReceiptsRemaining'
+            'totalReceiptsRemaining',
+            'cancelledReceipts',
+            'cancelledRevenue'
         ));
     }
 

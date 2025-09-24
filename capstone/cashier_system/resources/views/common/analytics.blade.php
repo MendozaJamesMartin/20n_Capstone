@@ -5,7 +5,6 @@
     .card:hover {
         transform: scale(1.01);
     }
-
     .card {
         transition: transform 0.2s;
     }
@@ -16,7 +15,7 @@
 
     <!-- Summary Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h5>Total Collection</h5>
@@ -24,7 +23,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <h5>This Month's Collection</h5>
@@ -32,11 +31,19 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-warning text-white">
                 <div class="card-body">
                     <h5>Unpaid Amount</h5>
                     <h3>₱{{ number_format($unpaidRevenue, 2) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5>Cancelled Receipts</h5>
+                    <h3>{{ $cancelledReceipts }}</h3>
                 </div>
             </div>
         </div>
@@ -233,9 +240,7 @@
                 tension: 0.4
             }]
         },
-        options: {
-            responsive: true
-        }
+        options: { responsive: true }
     });
 
     const ctxFee = document.getElementById('feeChart').getContext('2d');
@@ -252,9 +257,7 @@
                 ]
             }]
         },
-        options: {
-            responsive: true
-        }
+        options: { responsive: true }
     });
 </script>
 

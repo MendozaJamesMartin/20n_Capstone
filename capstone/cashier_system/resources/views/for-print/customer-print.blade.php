@@ -73,6 +73,13 @@
 
         .invisible-text {
             color: transparent;
+
+        /* padding-start (left) utilities similar to bootstrap ps-* */
+        .ps-1 { padding-left: 4px !important; }
+        .ps-2 { padding-left: 8px !important; }
+        .ps-3 { padding-left: 16px !important; }
+        .ps-4 { padding-left: 32px !important; }
+        .ps-5 { padding-left: 64px !important; }
         }
     </style>
 </head>
@@ -111,7 +118,7 @@
     <table class="section">
         <tr>
             <td style="width: 35%;" class="invisible-text">Fund</td>
-            <td style="width: 65%;" class="text-right">{{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('Y-m-d') }}</td>
+            <td style="width: 65%;" class="text-right">{{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('m-d-Y') }}</td>
         </tr>
     </table>
 
@@ -150,7 +157,7 @@
             @foreach($grouped as $label => $feesGroup)
                 <!-- Label Row -->
                 <tr>
-                    <td colspan="3"><strong>{{ $label }}</strong></td>
+                    <td colspan="3" class="cell-wrap ps-4"><strong>{{ $label }}</strong></td>
                 </tr>
 
                 <!-- Fee Rows under this label -->
@@ -162,7 +169,7 @@
                         }
                     @endphp
                     <tr>
-                        <td colspan="2" class="cell-wrap ps-4">- {{ $displayName }}</td>
+                        <td colspan="2" class="cell-wrap ps-5">- {{ $displayName }}</td>
                         <td class="text-center">{{ number_format($fee->subtotal, 2) }}</td>
                     </tr>
                 @endforeach
@@ -229,7 +236,12 @@
         <tr>
             <td></td>
             <td class="text-center">
-                <strong>{{ $Cashier->first_name }} {{ $Cashier->last_name }}</strong>
+                <strong>
+                    {{ $Cashier->first_name }}
+                    {{ $Cashier->middle_name ? strtoupper(substr(trim($Cashier->middle_name), 0, 1)) . '.' : '' }}
+                    {{ $Cashier->last_name }}
+                    {{ $Cashier->suffix ? ' ' . $Cashier->suffix : '' }}
+                </strong>
                 <br>
                 <span style="visibility: hidden;">Collecting Officer</span>
             </td>
