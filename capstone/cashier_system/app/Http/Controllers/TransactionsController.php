@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use NumberFormatter;
 
 class TransactionsController extends Controller
 {
@@ -99,15 +100,25 @@ class TransactionsController extends Controller
         ->where('transaction_id', $id)
         ->get();
 
-        $Cashier = Auth::user();
-
         if ($TransactionDetails->isEmpty()) {
             abort(404, 'Transaction not found');
         }
 
-        $pdf = Pdf::loadView('pdfs.customer-receipt-pdf', [
+        // 🔹 Update receipt status from Pending → Issued
+        DB::table('receipts')
+            ->where('transaction_id', $id)
+            ->where('status', 'Pending')
+            ->update(['status' => 'Issued']);
+
+        $total = $TransactionDetails->first()->total_amount ?? 0;
+        $amountInWords = $this->numberToWords($total);
+
+        $Cashier = Auth::user();
+
+        $pdf = Pdf::loadView('for-print.customer-print', [
             'TransactionDetails' => $TransactionDetails,
             'Cashier' => $Cashier,
+            'amountInWords' => $amountInWords,
             'printMode' => false,
         ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
 
@@ -120,15 +131,25 @@ class TransactionsController extends Controller
         ->where('transaction_id', $id)
         ->get();
 
-        $Cashier = Auth::user();
-
         if ($TransactionDetails->isEmpty()) {
             abort(404, 'Transaction not found');
         }
 
-        $pdf = Pdf::loadView('pdfs.concessionaire-receipt-pdf', [
+        // 🔹 Update receipt status from Pending → Issued
+        DB::table('receipts')
+            ->where('transaction_id', $id)
+            ->where('status', 'Pending')
+            ->update(['status' => 'Issued']);
+
+        $total = $TransactionDetails->first()->total_amount ?? 0;
+        $amountInWords = $this->numberToWords($total);
+        
+        $Cashier = Auth::user();
+
+        $pdf = Pdf::loadView('for-print.concessionaire-print', [
             'TransactionDetails' => $TransactionDetails,
             'Cashier' => $Cashier,
+            'amountInWords' => $amountInWords,
             'printMode' => false,
         ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
 
@@ -201,14 +222,7 @@ class TransactionsController extends Controller
 
             DB::commit();
 
-            Log::info("generate PDF");
-            $pdf = Pdf::loadView($viewName, [
-                'TransactionDetails' => $TransactionDetails,
-                'Cashier' => $Cashier,
-                'printMode' => true,
-            ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
-
-            return $pdf->stream("Receipt_{$transactionId}.pdf");
+            return redirect()->back()->with('success', 'Transaction finalized successfully.');
             
         } catch (QueryException $e) {
             DB::rollBack();
@@ -278,4 +292,30 @@ class TransactionsController extends Controller
         );
     }
     
+    private function numberToWords($number): string
+    {
+        $peso = floor($number);
+        $centavos = round(($number - $peso) * 100);
+
+        $formatter = new NumberFormatter("en", NumberFormatter::SPELLOUT);
+
+        // Convert pesos
+        $pesoWords = ucfirst($formatter->format($peso)) . ' peso';
+        if ($peso != 1) {
+            $pesoWords .= 's';
+        }
+
+        // Add centavos only if > 0
+        if ($centavos > 0) {
+            $centavosWords = strtolower($formatter->format($centavos)) . ' centavo';
+            if ($centavos != 1) {
+                $centavosWords .= 's';
+            }
+            return $pesoWords . ' and ' . $centavosWords . ' only';
+        }
+
+        // No centavos
+        return $pesoWords . ' only';
+    }
+
 }

@@ -74,12 +74,19 @@
         .invisible-text {
             color: transparent;
 
-                    /* padding-start (left) utilities similar to bootstrap ps-* */
+        /* padding-start (left) utilities similar to bootstrap ps-* */
         .ps-1 { padding-left: 4px !important; }
         .ps-2 { padding-left: 8px !important; }
         .ps-3 { padding-left: 16px !important; }
         .ps-4 { padding-left: 32px !important; }
         .ps-5 { padding-left: 64px !important; }
+
+        /* padding-end (right) utilities similar to bootstrap pe-* */
+        .pe-1 { padding-right: 4px !important; }
+        .pe-2 { padding-right: 8px !important; }
+        .pe-3 { padding-right: 16px !important; }
+        .pe-4 { padding-right: 32px !important; }
+        .pe-5 { padding-right: 64px !important; }
         }
     </style>
 </head>
@@ -166,7 +173,7 @@
 
             <tr>
                 <td colspan="2" class="text-center invisible-text"><strong>TOTAL</strong></td>
-                <td class="text-center"><strong>{{ number_format($TransactionDetails->sum('bill_payment'), 2) }}</strong></td>
+                <td class="text-center"><strong>{{ number_format($TransactionDetails[0]->total_amount, 2) }}</strong></td>
             </tr>
         </tbody>
     </table>
@@ -174,8 +181,9 @@
     {{-- Total --}}
     <table class="section">
         <tr>
-            <td class="invisible-text">
-                Amount in Words
+            <td colspan="2"></td>
+            <td class="pe-4 text-right">
+                <strong>{{ $amountInWords }}</strong>
             </td>
         </tr>
     </table>

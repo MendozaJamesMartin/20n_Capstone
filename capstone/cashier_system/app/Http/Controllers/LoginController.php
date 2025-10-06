@@ -113,7 +113,7 @@ class LoginController extends Controller
                 return $this->sendVerificationOtp($user, 'Please verify your email via OTP.');
             }
 
-            if ($user->email_verified_at->lt(now()->subDays(7))) {
+            if ($user->email_verified_at->lt(now()->subMonth(1))) {
                 $user->email_verified_at = null; // reset
                 $user->save();
 

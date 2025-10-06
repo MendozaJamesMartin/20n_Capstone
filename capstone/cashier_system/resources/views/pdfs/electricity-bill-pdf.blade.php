@@ -69,10 +69,10 @@
 
             <p>Concessionaire’s Consumption = {{ number_format($bill->concessionaire_kwh_used, 2) }}</p>
             <p>x Cost per kWh = {{ number_format($bill->cost_per_kwh, 4) }}</p>
-            <p><strong>Total Amount: P {{ number_format($bill->concessionaire_total_amount, 2) }}</strong></p>
+            <p><strong>Total Amount: P {{ number_format($bill->total_due, 2) }}</strong></p>
 
             <p>Previous Unpaid Amount: P {{ number_format($bill->previous_unpaid, 2) }}</p>
-            <p><strong>Total Amount Due: P {{ number_format($bill->total_amount_due, 2) }}</strong></p>
+            <p><strong>Total Amount Due: P {{ number_format($bill->total_due, 2) }}</strong></p>
         </div>
     </div>
 

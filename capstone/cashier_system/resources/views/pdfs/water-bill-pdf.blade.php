@@ -50,7 +50,7 @@
     <div class="section text-center">
         <p>Current Charges: <strong>P {{ number_format($bill->current_charges, 2) }}</strong></p>
         <p>Previous Unpaid Amount: <strong>{{ number_format($bill->previous_unpaid, 2) }}</strong></p>
-        <p>Total Amount Due: <strong>P <u>{{ number_format($bill->total_amount_due, 2) }}</u></strong></p>
+        <p>Total Amount Due: <strong>P <u>{{ number_format($bill->total_due, 2) }}</u></strong></p>
     </div>
 
     <div class="note">

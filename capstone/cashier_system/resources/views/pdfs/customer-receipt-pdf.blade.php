@@ -179,7 +179,7 @@
 
             <tr>
                 <td colspan="2" class="text-center"><strong>TOTAL</strong></td>
-                <td class="text-center"><strong>{{ number_format($TransactionDetails->sum('subtotal'), 2) }}</strong></td>
+                <td class="text-center"><strong>{{ number_format($TransactionDetails[0]->total_amount, 2) }}</strong></td>
             </tr>
         </tbody>
     </table>
@@ -187,7 +187,9 @@
     {{-- Amount in Words --}}
     <table class="section">
         <tr>
-            <td>Amount in Words</td>
+            <td>
+                Amount in Words
+            </td>
         </tr>
     </table>
 
