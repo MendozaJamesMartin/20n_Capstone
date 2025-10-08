@@ -5,6 +5,7 @@
     .card:hover {
         transform: scale(1.01);
     }
+
     .card {
         transition: transform 0.2s;
     }
@@ -114,21 +115,21 @@
                     </thead>
                     <tbody>
                         @foreach($receiptBatches as $batch)
-                            <tr>
-                                <td>#{{ $batch->id }}</td>
-                                <td>{{ $batch->start_number }}</td>
-                                <td>{{ $batch->end_number }}</td>
-                                <td>{{ $batch->next_number > $batch->end_number ? '—' : $batch->next_number }}</td>
-                                <td>{{ $batch->used_count }}</td>
-                                <td>{{ $batch->remaining_count }}</td>
-                                <td>
-                                    @if($batch->exhausted_at)
-                                        <span class="badge bg-danger">Exhausted</span>
-                                    @else
-                                        <span class="badge bg-success">Active</span>
-                                    @endif
-                                </td>
-                            </tr>
+                        <tr>
+                            <td>#{{ $batch->id }}</td>
+                            <td>{{ $batch->start_number }}</td>
+                            <td>{{ $batch->end_number }}</td>
+                            <td>{{ $batch->next_number > $batch->end_number ? '—' : $batch->next_number }}</td>
+                            <td>{{ $batch->used_count }}</td>
+                            <td>{{ $batch->remaining_count }}</td>
+                            <td>
+                                @if($batch->exhausted_at)
+                                <span class="badge bg-danger">Exhausted</span>
+                                @else
+                                <span class="badge bg-success">Active</span>
+                                @endif
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>
@@ -168,11 +169,11 @@
 
     <!-- Export Modal -->
     <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-md">
             <form method="GET" action="{{ route('reports.monthly.export') }}">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exportModalLabel">Export Custom Report</h5>
+                        <h5 class="modal-title" id="exportModalLabel">Export Report by Date Range</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
@@ -183,38 +184,23 @@
                         $endOfMonth = $now->copy()->endOfMonth()->toDateString();
                         @endphp
 
-                        <!-- Start Date -->
-                        <div class="mb-3">
-                            <label for="start_date" class="form-label">Start Date</label>
-                            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ $startOfMonth }}" required>
-                        </div>
-
-                        <!-- End Date -->
-                        <div class="mb-3">
-                            <label for="end_date" class="form-label">End Date</label>
-                            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ $endOfMonth }}" required>
-                        </div>
-
-                        <!-- Fee Selection -->
-                        <div class="mb-3">
-                            <label class="form-label">Select Fees</label>
-                            <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
-                                @foreach ($fees as $fee)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="fee_ids[]"
-                                        value="{{ $fee->id }}" id="fee_{{ $fee->id }}" checked>
-                                    <label class="form-check-label" for="fee_{{ $fee->id }}">
-                                        {{ $fee->fee_name }}
-                                    </label>
-                                </div>
-                                @endforeach
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" name="start_date" id="start_date" class="form-control"
+                                    value="{{ $startOfMonth }}" required>
                             </div>
-                            <small class="text-muted">Uncheck any fees you don’t want to include.</small>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" name="end_date" id="end_date" class="form-control"
+                                    value="{{ $endOfMonth }}" required>
+                            </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Export</button>
+                        <button type="submit" class="btn btn-success">Export Report</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>
@@ -230,34 +216,46 @@
     new Chart(ctxRevenue, {
         type: 'line',
         data: {
-            labels: {!! json_encode($chartLabels) !!},
+            labels: {
+                !!json_encode($chartLabels) !!
+            },
             datasets: [{
                 label: 'Monthly Collection',
-                data: {!! json_encode($chartData) !!},
+                data: {
+                    !!json_encode($chartData) !!
+                },
                 borderColor: 'rgba(40,167,69,1)',
                 backgroundColor: 'rgba(40,167,69,0.1)',
                 fill: true,
                 tension: 0.4
             }]
         },
-        options: { responsive: true }
+        options: {
+            responsive: true
+        }
     });
 
     const ctxFee = document.getElementById('feeChart').getContext('2d');
     new Chart(ctxFee, {
         type: 'pie',
         data: {
-            labels: {!! json_encode($topFees->pluck('fee_name')) !!},
+            labels: {
+                !!json_encode($topFees - > pluck('fee_name')) !!
+            },
             datasets: [{
                 label: 'Top Fees',
-                data: {!! json_encode($topFees->pluck('total')) !!},
+                data: {
+                    !!json_encode($topFees - > pluck('total')) !!
+                },
                 backgroundColor: [
                     '#007bff', '#ffc107', '#28a745', '#dc3545', '#6610f2', '#6c757d',
                     '#20c997', '#fd7e14', '#17a2b8', '#6f42c1'
                 ]
             }]
         },
-        options: { responsive: true }
+        options: {
+            responsive: true
+        }
     });
 </script>
 

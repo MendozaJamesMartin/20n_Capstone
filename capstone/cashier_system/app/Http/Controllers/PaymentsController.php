@@ -113,7 +113,7 @@ class PaymentsController extends Controller
                 $results = DB::select("CALL UpsertTransaction(?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     0, // always new when cashier creates
                     $validated['customer_name'],
-                    $validated['contact'],
+                    $validated['contact'] ?? null,
                     $feeIdsStr,
                     $quantitiesStr,
                     $amountsStr,
@@ -152,7 +152,7 @@ class PaymentsController extends Controller
                     oldValues: [],
                     newValues: [
                         'customer_name' => $validated['customer_name'],
-                        'contact'       => $validated['contact'],
+                        'contact'       => $validated['contact'] ?? null,
                         'fees'          => $readableFees,     // ['Fee Name' => qty]
                         'amounts'       => $readableAmounts,  // ['Fee Name' => amount]
                         'labels'        => $labelsStr,
@@ -213,7 +213,7 @@ class PaymentsController extends Controller
                 $results = DB::select("CALL UpsertTransaction(?, ?, ?, ?, ?, ?, ?, ?, ?)", [
                     0,
                     $validated['customer_name'],
-                    $validated['contact'],
+                    $validated['contact'] ?? null,
                     $feeIdsStr,
                     $quantitiesStr,
                     $amountsStr,
@@ -249,7 +249,7 @@ class PaymentsController extends Controller
                     oldValues: [],
                     newValues: [
                         'customer_name' => $validated['customer_name'],
-                        'contact'       => $validated['contact'],
+                        'contact'       => $validated['contact'] ?? null,
                         'fees'          => $readableFees,     // ['Fee Name' => qty]
                         'amounts'       => $readableAmounts,  // ['Fee Name' => amount]
                     ],

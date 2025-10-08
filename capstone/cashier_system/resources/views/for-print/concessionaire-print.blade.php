@@ -96,8 +96,7 @@
     <table class="section invisible-text">
         <tr>
             <td>
-                <strong>ACCOUNTABLE FORM N. 51-C <br>
-                    <br>
+                <strong>ACCOUNTABLE FORM N. 51-C <br><br>
                     Revised January, 1992 (ORIGINAL)<br>
                 </strong>
             </td>
@@ -124,6 +123,9 @@
 
     {{-- Date --}}
     <table class="section">
+        <tr>
+            <td>&nbsp;</td>
+        </tr>
         <tr>
             <td style="width: 35%;" class="invisible-text">Fund</td>
             <td style="width: 65%;" class="text-right">{{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('Y-m-d') }}</td>
@@ -170,7 +172,18 @@
                     <td style="border-top: 0px; border-bottom: 0px;">&nbsp;</td>
                 </tr>
             @endfor
-
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
             <tr>
                 <td colspan="2" class="text-center invisible-text"><strong>TOTAL</strong></td>
                 <td class="text-center"><strong>{{ number_format($TransactionDetails[0]->total_amount, 2) }}</strong></td>
@@ -234,25 +247,6 @@
                 </strong>
                 <br>
                 <span style="visibility: hidden;">Collecting Officer</span>
-            </td>
-        </tr>
-    </table>
-
-    {{-- Notes --}}
-    <table class="section invisible-text">
-        <tr>
-            <td>
-                NOTE: Write the number and date of this receipt on the back of check/money<br>
-                order when received.
-            </td>
-        </tr>
-    </table>
-
-    {{-- University Footer --}}
-    <table>
-        <tr>
-            <td class="text-center invisible-text">
-                <strong>"THE COUNTRY'S 1ST POLYTECHNIC U"</strong>
             </td>
         </tr>
     </table>

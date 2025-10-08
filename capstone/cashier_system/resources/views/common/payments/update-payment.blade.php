@@ -150,12 +150,6 @@
                 </div>
             </div>
 
-            <!-- Datalist for fee name autocomplete -->
-            <datalist id="feeSuggestions">
-                @foreach($fees as $fee)
-                <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
-                    @endforeach
-            </datalist>
         </div>
     </div>
 
@@ -163,6 +157,55 @@
 
 <script>
     const feesData = @json($fees);
+
+    // Enhanced Fee Name Autocomplete (with instant suggestions)
+    function attachFeeSearch(input, amountInput, feeIdInput) {
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        input.parentNode.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        const suggestionBox = document.createElement('div');
+        suggestionBox.className = 'suggestion-box bg-white border rounded shadow-sm position-absolute w-100 mt-1';
+        suggestionBox.style.zIndex = '1000';
+        suggestionBox.style.maxHeight = '180px';
+        suggestionBox.style.overflowY = 'auto';
+        suggestionBox.style.display = 'none';
+        wrapper.appendChild(suggestionBox);
+
+        function renderSuggestions(matches) {
+            suggestionBox.innerHTML = '';
+            matches.forEach(fee => {
+                const div = document.createElement('div');
+                div.textContent = `${fee.fee_name} — ₱${parseFloat(fee.amount).toFixed(2)}`;
+                div.className = 'p-2 suggestion-item';
+                div.style.cursor = 'pointer';
+                div.addEventListener('mousedown', () => {
+                    input.value = fee.fee_name;
+                    amountInput.value = parseFloat(fee.amount).toFixed(2);
+                    amountInput.readOnly = !fee.is_variable;
+                    feeIdInput.value = fee.id;
+                    input.classList.remove('is-invalid');
+                    suggestionBox.style.display = 'none';
+                    updateTotal();
+                });
+                suggestionBox.appendChild(div);
+            });
+            suggestionBox.style.display = matches.length ? 'block' : 'none';
+        }
+
+        function handleSearch() {
+            const query = input.value.toLowerCase().trim();
+            const matches = query.length ?
+                feesData.filter(f => f.fee_name.toLowerCase().includes(query)).slice(0, 10) :
+                feesData.slice(0, 10);
+            renderSuggestions(matches);
+        }
+
+        input.addEventListener('input', handleSearch);
+        input.addEventListener('focus', handleSearch);
+        input.addEventListener('blur', () => setTimeout(() => (suggestionBox.style.display = 'none'), 150));
+    }
 
     function updateTotal() {
         let total = 0;
@@ -181,6 +224,7 @@
         const feeIdInput = row.querySelector('.fee-id');
         const labelSelect = row.querySelector('.fee-label');
         const labelOther = row.querySelector('.fee-label-other');
+        attachFeeSearch(nameInput, amountInput, feeIdInput);
 
         if (nameInput) {
             nameInput.addEventListener('change', () => {

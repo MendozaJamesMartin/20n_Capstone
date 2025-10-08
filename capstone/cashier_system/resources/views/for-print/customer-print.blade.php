@@ -124,6 +124,9 @@
     {{-- Date --}}
     <table class="section">
         <tr>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
             <td style="width: 35%;" class="invisible-text">Fund</td>
             <td style="width: 65%;" class="text-right">{{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('m-d-Y') }}</td>
         </tr>
@@ -190,7 +193,12 @@
                     <td>&nbsp;</td>
                 </tr>
             @endfor
-
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>&nbsp;</td>
+            </tr>
             <tr>
                 <td colspan="2" class="text-center invisible-text"><strong>TOTAL</strong></td>
                 <td class="text-center"><strong>{{ number_format($TransactionDetails->sum('subtotal'), 2) }}</strong></td>
@@ -252,25 +260,6 @@
                 </strong>
                 <br>
                 <span style="visibility: hidden;">Collecting Officer</span>
-            </td>
-        </tr>
-    </table>
-
-    {{-- Notes --}}
-    <table class="section invisible-text">
-        <tr>
-            <td>
-                NOTE: Write the number and date of this receipt on the back of check/money<br>
-                order when received.
-            </td>
-        </tr>
-    </table>
-
-    {{-- University Footer --}}
-    <table>
-        <tr>
-            <td class="text-center invisible-text">
-                <strong>"THE COUNTRY'S 1ST POLYTECHNIC U"</strong>
             </td>
         </tr>
     </table>

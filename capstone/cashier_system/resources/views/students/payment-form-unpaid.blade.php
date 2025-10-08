@@ -2,73 +2,109 @@
 
 @section('content')
 
-<main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
+<main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height:85vh; padding:5%;">
     <div class="container-fluid">
-        <div class="bg-light p-4 p-md-5 rounded mx-auto" style="max-width: 900px;">
-            <h1 class="mb-4">Payment Form</h1>
+        <div class="bg-light p-4 p-md-5 rounded mx-auto" style="max-width:900px;">
+            <h1 class="mb-4 text-center">Payment Form</h1>
 
             @if(session('success'))
-                <p class="text-success">{{ session('success') }}</p>
+            <p class="text-success text-center">{{ session('success') }}</p>
             @elseif(session('error'))
-                <p class="text-danger">{{ session('error') }}</p>
+            <p class="text-danger text-center">{{ session('error') }}</p>
             @endif
 
             @if (!$hasActiveBatch)
-                <div class="alert alert-danger">
-                    🚫 Cannot submit payment. Please wait for further announcement for Cashier availability.
-                </div>
+            <div class="alert alert-danger text-center">
+                🚫 Cannot submit payment. Please wait for further announcement for Cashier availability.
+            </div>
             @endif
 
             <form method="POST" action="{{ route('student.payment.form') }}" id="paymentForm">
                 @csrf
 
-                <!-- Outsider Info -->
+                <!-- Customer Info -->
                 <div class="mb-3">
-                    <label for="customer_name" class="form-label">Customer Name</label>
-                    <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="First Name M.I. Last Name" required>
-                </div>
-
-                <div class="mb-4">
-                    <label for="contact" class="form-label">Contact</label>
-                    <input type="text" class="form-control" id="contact" name="contact" placeholder="example@email.com">
+                    <label for="customer_name" class="form-label fw-semibold">Customer Name</label>
+                    <input type="text" class="form-control" id="customer_name" name="customer_name"
+                        placeholder="First Name M.I. Last Name" required>
                 </div>
 
                 <!-- Fee Selection -->
-                <h3>Fees</h3>
-                <table class="table table-bordered align-middle text-center" id="fees-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 60%">Fee Name</th>
-                            <th style="width: 15%">Amount</th>
-                            <th style="width: 15%">Quantity</th>
-                            <th style="width: 10%">Remove</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Rows added dynamically -->
-                    </tbody>
-                </table>
+                <h3 class="mt-4 mb-3 text-center text-md-start">Fees</h3>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle text-center" id="fees-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:60%">Fee Name</th>
+                                <th style="width:15%">Amount</th>
+                                <th style="width:15%">Quantity</th>
+                                <th style="width:10%">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
 
-                <button type="button" class="btn btn-success btn-sm mb-3" id="addFeeRow">+ Add Fee</button>
+                <div class="d-grid d-md-inline mb-3">
+                    <button type="button" class="btn btn-success btn-sm mb-3 w-100 w-md-auto" id="addFeeRow">
+                        + Add Fee
+                    </button>
+                </div>
 
-                <div class="mt-3">
+                <div class="mt-3 text-center">
                     <h4>Total Amount: ₱<span id="total-amount">0.00</span></h4>
                 </div>
 
-                <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
-                    Submit Payment
-                </button>
+                <div class="d-grid d-md-inline">
+                    <button type="submit" class="btn btn-primary mt-3 w-100 w-md-auto" id="confirmPaymentButton">
+                        Submit Payment
+                    </button>
+                </div>
             </form>
-
-            <!-- Datalist for fee name autocomplete -->
-            <datalist id="feeSuggestions">
-                @foreach($fees as $fee)
-                    <option value="{{ $fee->fee_name }}" data-id="{{ $fee->id }}" data-amount="{{ $fee->amount }}">
-                @endforeach
-            </datalist>
         </div>
     </div>
 </main>
+
+<style>
+    @media (max-width: 576px) {
+        main {
+            padding: 3%;
+        }
+
+        .bg-light {
+            padding: 1.5rem !important;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+        }
+
+        table {
+            font-size: 0.85rem;
+        }
+
+        .btn {
+            font-size: 0.9rem;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+        }
+    }
+
+    .suggestion-item:hover {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .suggestions-list {
+        max-height: 150px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+    }
+</style>
 
 <script>
     const feesData = @json($fees);
@@ -91,58 +127,121 @@
         tr.classList.add('fee-row');
 
         tr.innerHTML = `
-            <td>
-                <input list="feeSuggestions" class="form-control fee-name" placeholder="Type to search">
-                <input type="hidden" class="fee-id" name="fee_ids[]">
-            </td>
-            <td>
-                <input type="number" step="0.01" class="form-control fee-amount" readonly>
-            </td>
-            <td>
-                <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="1" min="1">
-            </td>
-            <td>
-                <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
-            </td>
-        `;
-
+        <td style="position: relative;">
+            <input type="text" class="form-control fee-name" placeholder="Search fee..." autocomplete="off">
+            <input type="hidden" class="fee-id" name="fee_ids[]">
+        </td>
+        <td><input type="number" step="0.01" class="form-control fee-amount" readonly></td>
+        <td><input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="1" min="1"></td>
+        <td><button type="button" class="btn btn-danger btn-sm remove-row">X</button></td>
+    `;
         tbody.appendChild(tr);
 
-        const nameInput = tr.querySelector('.fee-name');
+        const feeNameInput = tr.querySelector('.fee-name');
         const amountInput = tr.querySelector('.fee-amount');
         const quantityInput = tr.querySelector('.fee-quantity');
         const feeIdInput = tr.querySelector('.fee-id');
 
-        nameInput.addEventListener('change', () => {
-            const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
-            if (fee) {
-                amountInput.value = parseFloat(fee.amount).toFixed(2);
-                feeIdInput.value = fee.id;
-                nameInput.classList.remove('is-invalid');
+        let suggestionsList = document.createElement('div');
+        suggestionsList.classList.add('border', 'rounded', 'bg-white', 'position-absolute', 'shadow-sm');
+        suggestionsList.style.maxHeight = '150px';
+        suggestionsList.style.overflowY = 'auto';
+        suggestionsList.style.display = 'none';
+        suggestionsList.style.zIndex = '2000';
+        document.body.appendChild(suggestionsList);
+
+        let currentIndex = -1;
+
+        function positionSuggestions() {
+            const rect = feeNameInput.getBoundingClientRect();
+            suggestionsList.style.width = rect.width + 'px';
+            suggestionsList.style.left = rect.left + window.scrollX + 'px';
+            suggestionsList.style.top = rect.bottom + window.scrollY + 'px';
+        }
+
+        function renderSuggestions(filteredFees) {
+            suggestionsList.innerHTML = '';
+            filteredFees.forEach((fee, index) => {
+                const div = document.createElement('div');
+                div.classList.add('suggestion-item', 'p-2');
+                div.textContent = fee.fee_name;
+                div.style.cursor = 'pointer';
+                div.dataset.index = index;
+                div.addEventListener('click', () => selectFee(fee));
+                suggestionsList.appendChild(div);
+            });
+            if (filteredFees.length) {
+                positionSuggestions();
+                suggestionsList.style.display = 'block';
             } else {
-                amountInput.value = '';
-                feeIdInput.value = '';
-                nameInput.classList.add('is-invalid');
+                suggestionsList.style.display = 'none';
             }
+        }
+
+        function selectFee(fee) {
+            feeNameInput.value = fee.fee_name;
+            amountInput.value = parseFloat(fee.amount).toFixed(2);
+            feeIdInput.value = fee.id;
+            suggestionsList.style.display = 'none';
             updateTotal();
+        }
+
+        feeNameInput.addEventListener('input', () => {
+            const query = feeNameInput.value.toLowerCase();
+            currentIndex = -1;
+            if (query.length < 1) return (suggestionsList.style.display = 'none');
+            const matches = feesData
+                .filter(fee => fee.fee_name.toLowerCase().includes(query))
+                .slice(0, 10);
+            renderSuggestions(matches);
         });
 
-        nameInput.addEventListener('input', () => {
-            const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
-            if (fee) {
-                amountInput.value = parseFloat(fee.amount).toFixed(2);
-                feeIdInput.value = fee.id;
-                nameInput.classList.remove('is-invalid');
+        feeNameInput.addEventListener('focus', () => {
+            let matches;
+            const query = feeNameInput.value.trim().toLowerCase();
+
+            if (query.length > 0) {
+                matches = feesData.filter(fee => fee.fee_name.toLowerCase().includes(query)).slice(0, 10);
             } else {
-                amountInput.value = '';
-                feeIdInput.value = '';
-                nameInput.classList.add('is-invalid');
+                // show all (or first 10) fees by default when empty
+                matches = feesData.slice(0, 10);
             }
-            updateTotal();
+
+            renderSuggestions(matches);
+        });
+
+        feeNameInput.addEventListener('keydown', (e) => {
+            const items = suggestionsList.querySelectorAll('.suggestion-item');
+            if (!items.length) return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentIndex = (currentIndex + 1) % items.length;
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentIndex = (currentIndex - 1 + items.length) % items.length;
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentIndex >= 0 && items[currentIndex]) {
+                    const selectedFee = feesData.find(f => f.fee_name === items[currentIndex].textContent);
+                    if (selectedFee) selectFee(selectedFee);
+                }
+            } else return;
+            items.forEach(item => item.classList.remove('bg-primary', 'text-white'));
+            if (items[currentIndex]) {
+                items[currentIndex].classList.add('bg-primary', 'text-white');
+                items[currentIndex].scrollIntoView({
+                    block: 'nearest'
+                });
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!suggestionsList.contains(e.target) && e.target !== feeNameInput) {
+                suggestionsList.style.display = 'none';
+            }
         });
 
         quantityInput.addEventListener('input', updateTotal);
-
         tr.querySelector('.remove-row').addEventListener('click', () => {
             tr.remove();
             updateTotal();
@@ -151,28 +250,25 @@
 
     document.getElementById('addFeeRow').addEventListener('click', createRow);
 
-    document.getElementById('confirmPaymentButton').addEventListener('click', function () {
-
-        // Validate all fee name inputs
-        const nameInputs = document.querySelectorAll('.fee-name');
+    document.getElementById('confirmPaymentButton').addEventListener('click', function() {
+        const inputs = document.querySelectorAll('.fee-name');
         let hasInvalid = false;
 
-        nameInputs.forEach(nameInput => {
-            const fee = feesData.find(f => f.fee_name.toLowerCase() === nameInput.value.toLowerCase());
-            if (!fee) {
-                nameInput.classList.add('is-invalid');
+        inputs.forEach(input => {
+            const feeIdInput = input.closest('tr').querySelector('.fee-id');
+            if (!feeIdInput.value) {
+                input.classList.add('is-invalid');
                 hasInvalid = true;
             } else {
-                nameInput.classList.remove('is-invalid');
+                input.classList.remove('is-invalid');
             }
         });
 
         if (hasInvalid) {
-            alert("Please correct invalid fee names before submitting.");
+            alert("Please select valid fees before submitting.");
             return;
         }
 
-        // Before submission, create hidden inputs for quantities[fee_id]
         const form = document.getElementById('paymentForm');
         document.querySelectorAll('.dynamic-quantity').forEach(e => e.remove());
 
@@ -215,7 +311,7 @@
 
             const form = document.getElementById('paymentForm');
             const notice = document.createElement('p');
-            notice.className = 'text-danger mt-2';
+            notice.className = 'text-danger mt-2 text-center';
             notice.textContent = '🛑 Payment form is temporarily disabled.';
             form.appendChild(notice);
         }

@@ -19,7 +19,8 @@ use NumberFormatter;
 
 class TransactionsController extends Controller
 {
-    public function GetTransactionsHistory(Request $request) {
+    public function GetTransactionsHistory(Request $request)
+    {
 
         $timeframe = $request->input('timeframe', 'all');
         $search = $request->input('search', '');
@@ -71,7 +72,8 @@ class TransactionsController extends Controller
         return view('common.transactions.transactions-history', compact('result', 'show'));
     }
 
-    public function GetCustomerTransactionDetails ($id) {
+    public function GetCustomerTransactionDetails($id)
+    {
         $TransactionDetails = DB::table('customer_transaction_receipt')
             ->where('transaction_id', $id)
             ->get();
@@ -83,7 +85,8 @@ class TransactionsController extends Controller
         return view('common.transactions.customer-details', compact('TransactionDetails'), ['hasActiveBatch' => $currentBatch !== null]);
     }
 
-    public function GetConcessionaireTransactionDetails ($id) {
+    public function GetConcessionaireTransactionDetails($id)
+    {
         $TransactionDetails = DB::table('concessionaire_transaction_receipt')
             ->where('transaction_id', $id)
             ->get();
@@ -95,10 +98,11 @@ class TransactionsController extends Controller
         return view('common.transactions.concessionaire-details', compact('TransactionDetails'), ['hasActiveBatch' => $currentBatch !== null]);
     }
 
-    public function customerReceiptPDF ($id) {
+    public function customerReceiptPDF($id)
+    {
         $TransactionDetails = DB::table('customer_transaction_receipt')
-        ->where('transaction_id', $id)
-        ->get();
+            ->where('transaction_id', $id)
+            ->get();
 
         if ($TransactionDetails->isEmpty()) {
             abort(404, 'Transaction not found');
@@ -126,10 +130,11 @@ class TransactionsController extends Controller
         return $pdf->stream("Receipt_{$id}.pdf");
     }
 
-    public function concessionaireReceiptPDF ($id) {
+    public function concessionaireReceiptPDF($id)
+    {
         $TransactionDetails = DB::table('concessionaire_transaction_receipt')
-        ->where('transaction_id', $id)
-        ->get();
+            ->where('transaction_id', $id)
+            ->get();
 
         if ($TransactionDetails->isEmpty()) {
             abort(404, 'Transaction not found');
@@ -143,7 +148,7 @@ class TransactionsController extends Controller
 
         $total = $TransactionDetails->first()->total_amount ?? 0;
         $amountInWords = $this->numberToWords($total);
-        
+
         $Cashier = Auth::user();
 
         $pdf = Pdf::loadView('for-print.concessionaire-print', [
@@ -157,7 +162,8 @@ class TransactionsController extends Controller
         return $pdf->stream("Receipt_{$id}.pdf");
     }
 
-    public function finalizeTransaction ($transactionId) {
+    public function finalizeTransaction($transactionId)
+    {
         Log::info("Finalize Transaction with ID: $transactionId");
         DB::beginTransaction();
         try {
@@ -205,7 +211,7 @@ class TransactionsController extends Controller
                 event: 'transaction_finalized',
                 auditableType: 'App\\Models\\Transaction',
                 auditableId: $transactionId,
-                oldValues: [                    
+                oldValues: [
                     'transaction_date' => $transactionBeforeFinalize->transaction_date,
                     'amount_paid' => $transactionBeforeFinalize->amount_paid,
                     'balance_due' => $transactionBeforeFinalize->balance_due,
@@ -223,7 +229,6 @@ class TransactionsController extends Controller
             DB::commit();
 
             return redirect()->back()->with('success', 'Transaction finalized successfully.');
-            
         } catch (QueryException $e) {
             DB::rollBack();
             Log::error("Failed to finalize transaction : " . $e->getMessage());
@@ -231,15 +236,16 @@ class TransactionsController extends Controller
         }
     }
 
-    public function cancelReceipt($id) {
-        
+    public function cancelReceipt($id)
+    {
+
         DB::beginTransaction();
 
         $receiptBeforeCancel = Receipt::where('transaction_id', $id)->firstOrFail();
 
         if ($receiptBeforeCancel) {
             try {
-                
+
                 DB::statement("CALL CancelTransaction(?)", [$id]);
 
                 $receiptAfterCancel = Receipt::where('transaction_id', $id)->firstOrFail();
@@ -249,7 +255,7 @@ class TransactionsController extends Controller
                     event: 'receipt_cancelled',
                     auditableType: 'App\\Models\\Receipt',
                     auditableId: $id,
-                    oldValues: [                    
+                    oldValues: [
                         'status' => $receiptBeforeCancel->status
                     ],  // If you have previous state, you can include here
                     newValues: [
@@ -261,7 +267,6 @@ class TransactionsController extends Controller
                 DB::commit();
 
                 return back()->with('success', 'Receipt has been cancelled.');
-
             } catch (QueryException $e) {
                 DB::rollBack();
                 Log::error("Failed to cancel receipt : " . $e->getMessage());
@@ -270,7 +275,6 @@ class TransactionsController extends Controller
         } else {
             return back()->with('error', 'Receipt not found.');
         }
-
     }
 
     public function exportMonthlyReport(Request $request)
@@ -280,18 +284,31 @@ class TransactionsController extends Controller
             'end_date' => 'required|date|after_or_equal:start_date',
             'fee_ids' => 'array',
             'fee_ids.*' => 'integer|exists:fees,id',
+            'include_bills' => 'nullable|boolean',
+            'utility_type' => 'nullable|string|in:All,Water,Electricity',
+            'customer_type' => 'nullable|string|in:All,Normal,Concessionaire',
         ]);
 
         $start = $request->input('start_date');
         $end = $request->input('end_date');
         $feeIds = $request->input('fee_ids', []);
+        $includeBills = $request->boolean('include_bills', true);
+        $utilityType = $request->input('utility_type', 'All');
+        $customerType = $request->input('customer_type', 'All');
 
         return Excel::download(
-            new MonthlyTransactionReportExport($start, $end, $feeIds),
+            new MonthlyTransactionReportExport(
+                $start,
+                $end,
+                $feeIds,
+                $includeBills,
+                $utilityType,
+                $customerType
+            ),
             "Report_{$start}_to_{$end}.xlsx"
         );
     }
-    
+
     private function numberToWords($number): string
     {
         $peso = floor($number);
@@ -317,5 +334,4 @@ class TransactionsController extends Controller
         // No centavos
         return $pesoWords . ' only';
     }
-
 }

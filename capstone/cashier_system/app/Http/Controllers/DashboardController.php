@@ -22,8 +22,7 @@ class DashboardController extends Controller
             ->sum('total_amount');
 
         // Unpaid transactions (still unpaid, exclude cancelled)
-        $unpaidCount = Transaction::where('amount_paid', '0')
-            ->whereHas('receipt', fn($q) => $q->where('status', '!=', 'Cancelled'))
+        $unpaidCount = Transaction::where('status', '=', 'Pending')
             ->count();
 
         // Paid transactions (today, exclude cancelled)
