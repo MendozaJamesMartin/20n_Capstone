@@ -4,6 +4,7 @@
 <main class="py-5 px-3" style="min-height: 85vh; background-color: #f9f9f9;">
     <div class="container" style="max-width: 800px;">
 
+        {{-- Success/Error Messages --}}
         @if(session('success'))
         <div class="alert alert-success mt-3" style="white-space: pre-line;">{{ session('success') }}</div>
         @elseif(session('error'))
@@ -20,8 +21,8 @@
         </div>
         @endif
 
-        <div class="card shadow">
-
+        {{-- Transaction Summary --}}
+        <div class="card shadow mb-4">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">Transaction Details</h4>
             </div>
@@ -35,7 +36,7 @@
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
                         <strong>Customer Name:</strong>
-                        <span>{{ $TransactionDetails[0]->customer_name }}</span>
+                        <span class="text-uppercase">{{ $TransactionDetails[0]->customer_name }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
                         <strong>Total Amount:</strong>
@@ -53,6 +54,42 @@
                     </li>
                 </ul>
 
+                {{-- Transaction Line Items --}}
+                <h5 class="mb-3">Items Paid For</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 5%">#</th>
+                                <th>Fee Name</th>
+                                <th>Label</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Unit Amount</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($TransactionDetails as $index => $item)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $item->fee_name }}</td>
+                                <td>{{ $item->fee_label ?: '-' }}</td>
+                                <td class="text-center">{{ $item->quantity }}</td>
+                                <td class="text-end">₱{{ number_format($item->fee_amount, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($item->subtotal, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot>
+                            <tr class="fw-bold">
+                                <td colspan="5" class="text-end">Total</td>
+                                <td class="text-end">₱{{ number_format($TransactionDetails[0]->total_amount, 2) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                {{-- Action Buttons --}}
                 <div class="text-end">
                     @if (!$hasActiveBatch && $TransactionDetails[0]->payment_status == "Pending")
                     <div class="alert alert-danger">
@@ -76,7 +113,7 @@
                         View and Print Receipt
                     </a>
 
-                    {{-- Cancel Receipt Button (if already issued) --}}
+                    {{-- Cancel Receipt Button --}}
                     @if ($TransactionDetails[0]->receipt_status == "Issued")
                     <form id="cancelReceipt" method="POST" action="{{ route('cancel.receipt', ['id' => $TransactionDetails[0]->transaction_id]) }}" style="display: inline;">
                         @csrf
@@ -104,26 +141,23 @@
         });
     }
 
-    document.getElementById('printReceiptBtn').addEventListener('click', function () {
-        // Wait a bit so the new tab opens first, then reload
-        setTimeout(() => {
-            location.reload();
-        }, 1000);
-    });
+    const printBtn = document.getElementById('printReceiptBtn');
+    if (printBtn) {
+        printBtn.addEventListener('click', function () {
+            setTimeout(() => location.reload(), 1000);
+        });
+    }
 
     document.addEventListener('DOMContentLoaded', function () {
         const printBtn = document.getElementById('printReceiptBtn');
         const receiptStatus = "{{ $TransactionDetails[0]->receipt_status ?? '' }}";
-
         if (printBtn && receiptStatus === 'Issued') {
             printBtn.addEventListener('click', function (event) {
-                const confirmed = confirm('⚠️ This receipt has already been issued. Are you sure you want to reprint it?');
-                if (!confirmed) {
+                if (!confirm('⚠️ This receipt has already been issued. Are you sure you want to reprint it?')) {
                     event.preventDefault();
                 }
             });
         }
     });
 </script>
-
 @endsection
