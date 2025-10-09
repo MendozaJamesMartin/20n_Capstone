@@ -109,9 +109,10 @@
                                     <td>
                                         <select class="form-select fee-label" name="fee_labels_temp[]" required>
                                             <option value="">-- Select Label --</option>
-                                            <option value="Certification Fee" {{ $detail->fee_label == 'Certification Fee' ? 'selected' : '' }}>Certification Fee</option>
-                                            <option value="Certified True Copy" {{ $detail->fee_label == 'Certified True Copy' ? 'selected' : '' }}>Certified True Copy</option>
-                                            <option value="Others" {{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy']) ? 'selected' : '' }}>Others (specify)</option>
+                                            <option value="None">None</option>
+                                            <option value="Certification Fee">Certification Fee</option>
+                                            <option value="Certified True Copy">Certified True Copy</option>
+                                            <option value="Others">Others (specify)</option>
                                         </select>
                                         <input type="text" name="custom_labels[]" class="form-control mt-2 fee-label-other {{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy']) ? '' : 'd-none' }}"
                                             value="{{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy']) ? $detail->fee_label : '' }}"
@@ -132,7 +133,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
-                            Approve
+                            Approve and Confirm Payment
                         </button>
                     </form>
 
@@ -292,6 +293,7 @@
             <td>
                 <select class="form-select fee-label" name="fee_labels_temp[]" required>
                     <option value="">-- Select Label --</option>
+                    <option value="None">None</option>
                     <option value="Certification Fee">Certification Fee</option>
                     <option value="Certified True Copy">Certified True Copy</option>
                     <option value="Others">Others (specify)</option>
@@ -348,7 +350,10 @@
             let finalLabel = labelsSelect[i].value;
             if (finalLabel === 'Others') {
                 finalLabel = labelsOther[i].value.trim();
+            } else if (finalLabel === 'None') {
+                finalLabel = ''; // treat as no label
             }
+
 
             if (feeId && quantity > 0 && amount) {
                 const idHidden = document.createElement('input');

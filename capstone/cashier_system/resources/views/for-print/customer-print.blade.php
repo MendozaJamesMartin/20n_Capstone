@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <title>Official Receipt</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         html, body {
             margin: 1;
@@ -17,16 +15,10 @@
             height: 99%;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        table { width: 100%; border-collapse: collapse; }
+        td, th { padding: 3px; vertical-align: top; }
 
-        td, th {
-            padding: 3px;
-            vertical-align: top;
-        }
-
+        /* Fixed height for item section */
         .item-table {
             table-layout: fixed;
             height: 190px;
@@ -40,57 +32,37 @@
             font-size: 12px;
         }
 
-        .item-table .cell-wrap {
-            white-space: normal;
-        }
+        .item-table .cell-wrap { white-space: normal; }
 
-        .text-center {
-            text-align: center;
-        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .section { margin-bottom: 4px; }
+        .signature-box { height: 40px; }
+        h2 { font-size: 12px; margin: 4px 0; }
+        hr { margin: 2px 0; border: none; border-top: 1px solid #000; }
+        .invisible-text { color: transparent; }
 
-        .text-right {
-            text-align: right;
-        }
-
-        .section {
-            margin-bottom: 4px;
-        }
-
-        .signature-box {
-            height: 40px;
-        }
-
-        h2 {
-            font-size: 12px;
-            margin: 4px 0;
-        }
-
-        hr {
-            margin: 2px 0;
-            border: none;
-            border-top: 1px solid #000;
-        }
-
-        .invisible-text {
-            color: transparent;
-
-        /* padding-start (left) utilities similar to bootstrap ps-* */
+        /* padding utilities (Bootstrap-style) */
         .ps-1 { padding-left: 4px !important; }
         .ps-2 { padding-left: 8px !important; }
         .ps-3 { padding-left: 16px !important; }
         .ps-4 { padding-left: 32px !important; }
         .ps-5 { padding-left: 64px !important; }
-
-        /* padding-end (right) utilities similar to bootstrap pe-* */
         .pe-1 { padding-right: 4px !important; }
         .pe-2 { padding-right: 8px !important; }
         .pe-3 { padding-right: 16px !important; }
         .pe-4 { padding-right: 32px !important; }
         .pe-5 { padding-right: 64px !important; }
-        }
     </style>
 </head>
 <body>
+
+    {{-- Helper for wrapping long fee names --}}
+    @php
+        function wrapTextLines($text, $maxLength = 45) {
+            return explode("\n", wordwrap($text, $maxLength, "\n", true));
+        }
+    @endphp
 
     {{-- Header notes --}}
     <table class="section invisible-text">
@@ -103,7 +75,7 @@
         </tr>
     </table>
 
-    {{-- Header: 3-column --}}
+    {{-- Header --}}
     <table class="section invisible-text">
         <tr>    
             <td style="width: 25%;">&nbsp;</td>
@@ -123,16 +95,16 @@
 
     {{-- Date --}}
     <table class="section">
-        <tr>
-            <td>&nbsp;</td>
-        </tr>
+        <tr><td>&nbsp;</td></tr>
         <tr>
             <td style="width: 35%;" class="invisible-text">Fund</td>
-            <td style="width: 65%;" class="text-right">{{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('m-d-Y') }}</td>
+            <td style="width: 65%;" class="text-right pe-4">
+                {{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('m-d-Y') }}
+            </td>
         </tr>
     </table>
 
-    {{-- Institution and Customer Name --}}
+    {{-- Institution and Customer --}}
     <table class="section">
         <tr class="text-center invisible-text">
             <td><strong>POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</strong></td>
@@ -144,9 +116,9 @@
 
     {{-- Itemized Section --}}
     @php
-        $maxRows = 12;
-        $itemCount = count($TransactionDetails);
-        $blankRows = $maxRows - $itemCount;
+        $maxRows = 14; // allows extra lines for wrapping
+        $itemCount = 0;
+        $grouped = $TransactionDetails->groupBy('fee_label');
     @endphp
 
     <table class="section item-table">
@@ -158,67 +130,68 @@
             </tr>
         </thead>
         <tbody>
-
-            @php
-                // Group fees by fee_label
-                $grouped = $TransactionDetails->groupBy('fee_label');
-            @endphp
-
             @foreach($grouped as $label => $feesGroup)
-                <!-- Label Row -->
-                <tr>
-                    <td colspan="3" class="cell-wrap ps-4"><strong>{{ $label }}</strong></td>
-                </tr>
+                @php
+                    $displayLabel = trim($label);
+                    $hasLabel = $displayLabel !== '' && strtolower($displayLabel) !== 'none';
+                @endphp
 
-                <!-- Fee Rows under this label -->
+                {{-- Label Row --}}
+                @if($hasLabel)
+                    <tr>
+                        <td colspan="3" class="cell-wrap ps-4"><strong>{{ $displayLabel }}</strong></td>
+                    </tr>
+                    @php $itemCount++; @endphp
+                @endif
+
+                {{-- Fee Rows with wrapped names --}}
                 @foreach($feesGroup as $fee)
                     @php
                         $displayName = $fee->fee_name;
                         if ($fee->quantity > 1) {
                             $displayName .= " ({$fee->quantity})";
                         }
+                        $lines = wrapTextLines($displayName, 45);
                     @endphp
-                    <tr>
-                        <td colspan="2" class="cell-wrap ps-5">- {{ $displayName }}</td>
-                        <td class="text-center">{{ number_format($fee->subtotal, 2) }}</td>
-                    </tr>
+
+                    @foreach($lines as $i => $line)
+                        <tr>
+                            <td colspan="2" class="cell-wrap {{ $hasLabel ? ($i == 0 ? 'ps-5' : 'ps-5 ps-1') : ($i == 0 ? 'ps-4' : 'ps-4 ps-1') }}">
+                                {{-- Remove dash if no label --}}
+                                {{ $i == 0 ? ($hasLabel ? '- ' . $line : $line) : $line }}
+                            </td>
+                            @if($i == 0)
+                                <td class="text-center pe-3">{{ number_format($fee->subtotal, 2) }}</td>
+                            @else
+                                <td></td>
+                            @endif
+                        </tr>
+                        @php $itemCount++; @endphp
+                    @endforeach
                 @endforeach
             @endforeach
 
-            <!-- Blank rows filler if needed -->
-            @for ($i = 0; $i < $blankRows; $i++)
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
+            {{-- Blank filler rows --}}
+            @for ($i = $itemCount; $i < $maxRows; $i++)
+                <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
             @endfor
-            <tr>
-                <td>&nbsp;</td>
-            </tr>
-            <tr>
-                <td>&nbsp;</td>
-            </tr>
+
+            {{-- Static Total --}}
+            <tr><td>&nbsp;</td></tr>
             <tr>
                 <td colspan="2" class="text-center invisible-text"><strong>TOTAL</strong></td>
-                <td class="text-center"><strong>{{ number_format($TransactionDetails->sum('subtotal'), 2) }}</strong></td>
+                <td class="text-center pe-3"><strong>{{ number_format($TransactionDetails->sum('subtotal'), 2) }}</strong></td>
             </tr>
         </tbody>
     </table>
 
     {{-- Amount in Words --}}
     <table class="section">
-            <td colspan="2"></td>
-            <td class="pe-4 text-right">
-                <strong>{{ $amountInWords }}</strong>
-            </td>
+        <td colspan="2"></td>
+        <td class="pe-4 text-right"><strong>{{ $amountInWords }}</strong></td>
     </table>
 
-    <table class="section">
-        <tr>
-            <td>&nbsp;</td>
-        </tr>
-    </table>
+    <table class="section"><tr><td>&nbsp;</td></tr></table>
 
     {{-- Payment Method --}}
     <table class="section invisible-text">
@@ -228,38 +201,24 @@
             <td style="width: 25%;" class="text-center">Number</td>
             <td style="width: 25%;" class="text-center">Date</td>
         </tr>
-        <tr>
-            <td>Check</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-        </tr>
-        <tr>
-            <td>Money Order</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-        </tr>
+        <tr><td>Check</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+        <tr><td>Money Order</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
     </table>
 
     {{-- Signature --}}
     <table class="section">
         <tr>
-            <td colspan="2" style="border-bottom: 0px;" class="invisible-text">
-                <div class="text-left">Received the amount stated above.</div>
-            </td>
+            <td class="invisible-text"><div class="text-left">Received the amount stated above.</div></td>
         </tr>
         <tr>
             <td></td>
-            <td class="text-center">
+            <td class="pe-4 text-center">
                 <strong>
                     {{ $Cashier->first_name }}
                     {{ $Cashier->middle_name ? strtoupper(substr(trim($Cashier->middle_name), 0, 1)) . '.' : '' }}
                     {{ $Cashier->last_name }}
                     {{ $Cashier->suffix ? ' ' . $Cashier->suffix : '' }}
                 </strong>
-                <br>
-                <span style="visibility: hidden;">Collecting Officer</span>
             </td>
         </tr>
     </table>

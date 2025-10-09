@@ -81,7 +81,7 @@ class PaymentsController extends Controller
                     'quantities'    => 'required|array',
                     'amounts'       => 'required|array',
                     'labels'        => 'required|array',
-                    'labels.*'      => 'required|string|min:1',
+                    'labels.*'      => 'nullable|string',
                 ]);
 
                 // filter valid rows
@@ -301,7 +301,7 @@ class PaymentsController extends Controller
                     'quantities'=> 'required|array',
                     'amounts'   => 'required|array',
                     'labels'    => 'required|array',
-                    'labels.*'  => 'required|string|min:1',
+                    'labels.*'  => 'nullable|string',
                 ]);
 
                 $feeIds = $quantities = $amounts = $labels = [];

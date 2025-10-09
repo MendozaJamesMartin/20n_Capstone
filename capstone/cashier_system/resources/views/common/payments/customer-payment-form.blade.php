@@ -36,12 +36,7 @@
                 <!-- Outsider Info -->
                 <div class="mb-3">
                     <label for="customer_name" class="form-label">Customer Name</label>
-                    <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="First Name M.I. Last Name" required>
-                </div>
-
-                <div class="mb-4">
-                    <label for="contact" class="form-label">Contact</label>
-                    <input type="text" class="form-control" id="contact" name="contact" placeholder="example@email.com">
+                    <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="LAST NAME, FIRST NAME M.I." required>
                 </div>
 
                 <!-- Fee Selection -->
@@ -68,7 +63,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
-                    Submit Payment
+                    Confirm Payment
                 </button>
             </form>
 
@@ -160,6 +155,7 @@
             <td>
                 <select class="form-select fee-label" name="fee_labels_temp[]" required>
                     <option value="">-- Select Label --</option>
+                    <option value="None">None</option>
                     <option value="Certification Fee">Certification Fee</option>
                     <option value="Certified True Copy">Certified True Copy</option>
                     <option value="Others">Others (specify)</option>
@@ -258,6 +254,8 @@
             let finalLabel = labelsSelect[i].value;
             if (finalLabel === 'Others') {
                 finalLabel = labelsOther[i].value.trim();
+            } else if (finalLabel === 'None') {
+                finalLabel = ''; // treat as no label
             }
 
             if (feeId && quantity > 0 && amount) {

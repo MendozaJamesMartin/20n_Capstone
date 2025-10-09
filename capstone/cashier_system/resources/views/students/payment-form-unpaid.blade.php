@@ -26,7 +26,7 @@
                 <div class="mb-3">
                     <label for="customer_name" class="form-label fw-semibold">Customer Name</label>
                     <input type="text" class="form-control" id="customer_name" name="customer_name"
-                        placeholder="First Name M.I. Last Name" required>
+                        placeholder="LAST NAME, FIRST NAME M.I." required>
                 </div>
 
                 <!-- Fee Selection -->
@@ -59,7 +59,7 @@
 
                 <div class="d-grid d-md-inline">
                     <button type="submit" class="btn btn-primary mt-3 w-100 w-md-auto" id="confirmPaymentButton">
-                        Submit Payment
+                        Submit
                     </button>
                 </div>
             </form>
