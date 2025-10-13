@@ -136,29 +136,32 @@ class DashboardController extends Controller
         }
 
         // Bills (exclude cancelled receipts)
-        $waterPayments = DB::table('view_water_bills')
-            ->join('concessionaire_transaction_details', 'view_water_bills.bill_id', '=', 'concessionaire_transaction_details.bill_id')
-            ->join('transactions', 'concessionaire_transaction_details.transaction_id', '=', 'transactions.id')
+
+        // Get all transactions with fees named 'Water' or 'Electricity'
+        $waterPayments = DB::table('customer_transaction_details')
+            ->join('fees', 'customer_transaction_details.fee_id', '=', 'fees.id')
+            ->join('transactions', 'customer_transaction_details.transaction_id', '=', 'transactions.id')
             ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
             ->where('receipts.status', '!=', 'Cancelled')
-            ->where('view_water_bills.utility_type', 'Water')
-            ->sum('concessionaire_transaction_details.amount_paid');
+            ->where('fees.fee_name', 'like', '%Water%')
+            ->sum(DB::raw('customer_transaction_details.amount * customer_transaction_details.quantity'));
 
-        $overdueWaterAmount = DB::table('view_water_bills')
+        $electricityPayments = DB::table('customer_transaction_details')
+            ->join('fees', 'customer_transaction_details.fee_id', '=', 'fees.id')
+            ->join('transactions', 'customer_transaction_details.transaction_id', '=', 'transactions.id')
+            ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
+            ->where('receipts.status', '!=', 'Cancelled')
+            ->where('fees.fee_name', 'like', '%Electricity%')
+            ->sum(DB::raw('customer_transaction_details.amount * customer_transaction_details.quantity'));
+
+        // Overdue bills based on concessionaire_bills table
+        $overdueWaterAmount = DB::table('concessionaire_bills')
             ->where('utility_type', 'Water')
             ->where('status', '!=', 'Fully Paid')
             ->where('due_date', '<', Carbon::today())
             ->sum('total_due');
 
-        $electricityPayments = DB::table('view_electricity_bills')
-            ->join('concessionaire_transaction_details', 'view_electricity_bills.bill_id', '=', 'concessionaire_transaction_details.bill_id')
-            ->join('transactions', 'concessionaire_transaction_details.transaction_id', '=', 'transactions.id')
-            ->join('receipts', 'transactions.id', '=', 'receipts.transaction_id')
-            ->where('receipts.status', '!=', 'Cancelled')
-            ->where('view_electricity_bills.utility_type', 'Electricity')
-            ->sum('concessionaire_transaction_details.amount_paid');
-
-        $overdueElectricityAmount = DB::table('view_electricity_bills')
+        $overdueElectricityAmount = DB::table('concessionaire_bills')
             ->where('utility_type', 'Electricity')
             ->where('status', '!=', 'Fully Paid')
             ->where('due_date', '<', Carbon::today())
