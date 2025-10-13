@@ -24,7 +24,7 @@
                         Issued
                     </a>
                     <a href="{{ request()->fullUrlWithQuery(['show' => 'cancelled', 'page' => 1]) }}"
-                        class="btn btn-sm {{ $show === 'cancelled' ? 'btn-primary' : 'btn-outline-secondary' }}">
+                        class="btn btn-sm {{ $show === 'cancelled' ? 'btn-danger' : 'btn-outline-secondary' }}">
                         Cancelled
                     </a>
                 </div>
@@ -45,11 +45,10 @@
                             <th onclick="sortTable(0)">Transaction ID</th>
                             <th onclick="sortTable(1)">Receipt Number</th>
                             <th onclick="sortTable(2)">Customer Name</th>
-                            <th onclick="sortTable(3)">Customer Type</th>
-                            <th onclick="sortTable(4)">Total Amount</th>
+                            <th onclick="sortTable(3)">Total Amount</th>
+                            <th onclick="sortTable(4)">Transaction Date</th>
                             @if($show === 'active')
-                            <th onclick="sortTable(5)">Transaction Date</th>
-                            <th onclick="sortTable(6)">Receipt Date</th>
+                            <th onclick="sortTable(5)">Receipt Date</th>
                             <th>Action</th>
                             @else
                             <th onclick="sortTable(5)">Cancelled At</th>
@@ -62,25 +61,23 @@
                         <tr>
                             <td>{{ $transaction->transaction_id }}</td>
                             <td>{{ $transaction->receipt_number }}</td>
-                            <td>{{ $transaction->customer_name }}</td>
-                            <td>{{ $transaction->customer_type }}</td>
+                            <td style="text-transform: uppercase;">{{ $transaction->customer_name }}</td>
                             <td>{{ number_format($transaction->total_amount, 2) }}</td>
-
-                            @if($show === 'active')
                             <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($transaction->receipt_print_date)->format('Y-m-d') }}</td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('customer.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="Details"><i class="fa-solid fa-pen-to-square"></i></a>
-                                </div>
-                            </td>
+                            @if($show === 'active')
+                                <td>{{ \Carbon\Carbon::parse($transaction->receipt_print_date)->format('Y-m-d') }}</td>
+                                <td>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{{ route('customer.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="View Details"><i class="fa-solid fa-receipt"></i></a>
+                                </td>
+                                </td>
                             @else
-                            <td>{{ \Carbon\Carbon::parse($transaction->cancelled_at)->format('Y-m-d H:i') }}</td>
-                            <td>
-                                <div class="d-flex justify-content-center gap-2">
-                                    <a href="{{ route('customer.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="Details"><i class="fa-solid fa-pen-to-square"></i></a>
-                                </div>
-                            </td>
+                                <td>{{ \Carbon\Carbon::parse($transaction->cancelled_at)->format('Y-m-d H:i') }}</td>
+                                <td>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{{ route('customer.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="View Details"><i class="fa-solid fa-receipt"></i></a>
+                                    </div>
+                                </td>
                             @endif
                         </tr>
                         @empty

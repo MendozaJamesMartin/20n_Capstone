@@ -14,11 +14,25 @@ use Illuminate\Support\Facades\Log;
 class BillsController extends Controller
 {
     public function GetBillingList(Request $request) {
-        // Subquery to get latest electricity bill per concessionaire
-        $electricityBills = DB::table('view_electricity_bills as eb1')->get();
+        // Latest Electricity Bill per Concessionaire
+        $electricityBills = DB::table('view_electricity_bills as eb1')
+            ->whereRaw('eb1.bill_date = (
+                SELECT MAX(eb2.bill_date)
+                FROM view_electricity_bills eb2
+                WHERE eb2.concessionaire_name = eb1.concessionaire_name
+            )')
+            ->orderBy('eb1.concessionaire_name')
+            ->get();
 
-        // Subquery to get latest water bill per concessionaire
-        $waterBills = DB::table('view_water_bills as wb1')->get();
+        // Latest Water Bill per Concessionaire
+        $waterBills = DB::table('view_water_bills as wb1')
+            ->whereRaw('wb1.bill_date = (
+                SELECT MAX(wb2.bill_date)
+                FROM view_water_bills wb2
+                WHERE wb2.concessionaire_name = wb1.concessionaire_name
+            )')
+            ->orderBy('wb1.concessionaire_name')
+            ->get();
 
         return view('common.concessionaires.concessionaire-bills', compact('electricityBills', 'waterBills'));
     }

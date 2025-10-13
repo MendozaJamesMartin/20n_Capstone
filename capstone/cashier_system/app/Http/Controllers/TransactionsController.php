@@ -167,30 +167,14 @@ class TransactionsController extends Controller
         Log::info("Finalize Transaction with ID: $transactionId");
         DB::beginTransaction();
         try {
-            // Determine transaction type (customer or concessionaire)
-            $isConcessionaire = DB::table('concessionaire_transaction_details')
-                ->where('transaction_id', $transactionId)
-                ->exists();
 
-            $viewName = $isConcessionaire
-                ? 'for-print.concessionaire-print'
-                : 'for-print.customer-print';
-
-            $receiptView = $isConcessionaire
-                ? 'concessionaire_transaction_receipt'
-                : 'customer_transaction_receipt';
-
-            Log::info("Using view: $receiptView");
-
-            $TransactionDetails = DB::table($receiptView)
+            $TransactionDetails = DB::table('customer_transaction_receipt')
                 ->where('transaction_id', $transactionId)
                 ->get();
 
             if ($TransactionDetails->isEmpty()) {
                 abort(404, 'Transaction not found');
             }
-
-            $Cashier = Auth::user();
 
             // Fetch the updated transaction before finalization for audit old/new values if needed
             $transactionBeforeFinalize = DB::table('transactions')->where('id', $transactionId)->first();

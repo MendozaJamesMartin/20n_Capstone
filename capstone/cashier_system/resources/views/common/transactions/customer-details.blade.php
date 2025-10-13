@@ -35,6 +35,10 @@
                         <span>{{ $TransactionDetails[0]->transaction_id }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between">
+                        <strong>Receipt Number:</strong>
+                        <span>{{ $TransactionDetails[0]->receipt_number }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
                         <strong>Customer Name:</strong>
                         <span class="text-uppercase">{{ $TransactionDetails[0]->customer_name }}</span>
                     </li>
