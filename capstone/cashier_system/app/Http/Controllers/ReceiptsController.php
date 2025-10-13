@@ -47,12 +47,8 @@ class ReceiptsController extends Controller
         // 2. Check if this range overlaps with any existing batches (even unused ones)
         $conflictInBatches = DB::table('receipt_batches')
             ->where(function ($query) use ($start, $end) {
-                $query->whereBetween('start_number', [$start, $end])
-                    ->orWhereBetween('end_number', [$start, $end])
-                    ->orWhere(function ($q) use ($start, $end) {
-                        $q->where('start_number', '<=', $start)
-                            ->where('end_number', '>=', $end);
-                    });
+                $query->where('start_number', '<=', $end)
+                    ->where('end_number', '>=', $start);
             })
             ->exists();
 

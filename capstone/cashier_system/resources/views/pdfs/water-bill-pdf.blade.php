@@ -47,10 +47,23 @@
         <p>Billing Period: {{ $bill->billing_period }}</p>
     </div>
 
-    <div class="section text-center">
-        <p>Current Charges: <strong>P {{ number_format($bill->current_charges, 2) }}</strong></p>
-        <p>Previous Unpaid Amount: <strong>{{ number_format($bill->previous_unpaid, 2) }}</strong></p>
-        <p>Total Amount Due: <strong>P <u>{{ number_format($bill->total_due, 2) }}</u></strong></p>
+    <div class="section" style="display: flex; flex-direction: column; align-items: center;">
+        <table style="width: 70%; border-collapse: collapse; font-size: 14px;">
+            <tr>
+                <td style="text-align: right; padding: 10px 2px;">Current Charges:</td>
+                <td style="text-align: left; padding: 10px 2px;">P {{ number_format($bill->current_charges, 2) }}</td>
+            </tr>
+            <tr>
+                <td style="text-align: right; padding: 10px 2px;">Previous Unpaid Amount:</td>
+                <td style="text-align: left; padding: 10px 2px;">P {{ number_format($bill->previous_unpaid, 2) }}</td>
+            </tr>
+            <tr>
+                <td style="text-align: right; padding: 10px 2px; font-weight: bold;">Total Amount Due:</td>
+                <td style="text-align: left; padding: 10px 2px; font-weight: bold; text-decoration: underline;">
+                    P {{ number_format($bill->total_due, 2) }}
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div class="note">

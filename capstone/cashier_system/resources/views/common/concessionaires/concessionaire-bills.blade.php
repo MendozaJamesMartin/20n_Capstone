@@ -35,7 +35,7 @@
                                 <th onclick="sortTable(6)">Current Charges</th>
                                 <th onclick="sortTable(7)">Previous Unpaid</th>
                                 <th onclick="sortTable(8)">Total</th>
-                                <th onclick="sortTable(9)">Balance Due</th>
+                                <th onclick="sortTable(9)">Amount Paid</th>
                                 <th onclick="sortTable(10)">Due Date</th>
                                 <th onclick="sortTable(11)">Status</th>
                                 <th>Action</th>
@@ -50,10 +50,10 @@
                                 <td>{{ $bill->bill_end_date }}</td>
                                 <td>{{ number_format($bill->concessionaire_kwh_used, 2) }}</td>
                                 <td>₱{{ number_format($bill->cost_per_kwh, 2) }}</td>
-                                <td>₱{{ number_format($bill->total_due, 2) }}</td>
+                                <td>₱{{ number_format($bill->current_charges, 2) }}</td>
                                 <td>₱{{ number_format($bill->previous_unpaid, 2) }}</td>
                                 <td>₱{{ number_format($bill->total_due, 2) }}</td>
-                                <td>₱{{ number_format($bill->balance_due, 2) }}</td>
+                                <td>₱{{ number_format($bill->amount_paid, 2) }}</td>
                                 <td>{{ $bill->due_date }}</td>
                                 <td><span class="badge bg-{{ $bill->status === 'Fully Paid' ? 'success' : ($bill->status === 'Partially Paid' ? 'warning' : 'danger') }}">{{ $bill->status }}</span></td>
                                 <td>
@@ -79,7 +79,7 @@
                                 <th onclick="sortTable(2)">Current Charges</th>
                                 <th onclick="sortTable(3)">Previous Unpaid</th>
                                 <th onclick="sortTable(4)">Total</th>
-                                <th onclick="sortTable(5)">Balance Due</th>
+                                <th onclick="sortTable(5)">Amount Paid</th>
                                 <th onclick="sortTable(6)">Due Date</th>
                                 <th onclick="sortTable(7)">Status</th>
                                 <th>Action</th>
@@ -93,7 +93,7 @@
                                 <td>₱{{ number_format($bill->current_charges, 2) }}</td>
                                 <td>₱{{ number_format($bill->previous_unpaid, 2) }}</td>
                                 <td>₱{{ number_format($bill->total_due, 2) }}</td>
-                                <td>₱{{ number_format($bill->balance_due, 2) }}</td>
+                                <td>₱{{ number_format($bill->amount_paid, 2) }}</td>
                                 <td>{{ $bill->due_date }}</td>
                                 <td><span class="badge bg-{{ $bill->status === 'Fully Paid' ? 'success' : ($bill->status === 'Partially Paid' ? 'warning' : 'danger') }}">{{ $bill->status }}</span></td>
                                 <td>

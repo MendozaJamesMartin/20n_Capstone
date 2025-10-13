@@ -36,8 +36,7 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     //Transaction Managements
     Route::get('/transactions/history', [TransactionsController::class, 'GetTransactionsHistory'])->name('receipts.list');
     Route::get('/transactions/customer/receipt/{id}', [TransactionsController::class, 'GetCustomerTransactionDetails'])->name('customer.transaction.details');
-    Route::get('/transactions/concessionaire/receipt/{id}', [TransactionsController::class, 'GetConcessionaireTransactionDetails'])->name('concessionaire.transaction.details');
-    
+
     //Finalize Customer Transaction
     Route::post('/transactions/finalize/{id}', [TransactionsController::class, 'finalizeTransaction'])->name('finalize.transation');
     Route::put('/transaction/cancel/receipt/{id}', [TransactionsController::class, 'cancelReceipt'])->name('cancel.receipt');
@@ -49,11 +48,8 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     //Concessionaire Bills Management
     Route::get('concessionaires/billing/list', [BillsController::class, 'GetBillingList'])->name('concessionaires.billing.list');
     Route::match(['get', 'post'], 'concessionaires/billing/new', [BillsController::class, 'CreateNewBilling'])->name('concessionaires.billing.new');
-    Route::match(['get', 'post'], 'concessionaires/billing/payment', [BillsController::class, 'BillsPayment'])->name('concessionaires.billing.payment');
     Route::get('concessionaire/billing/electricity/{id}', [BillsController::class, 'electricityBillingStatement'])->name('concessionaire.bill.electricity.pdf');
     Route::get('concessionaire/billing/water/{id}', [BillsController::class, 'waterBillingStatement'])->name('concessionaire.bill.water.pdf');
-    //Check if Concessionaire receives billing first time
-    Route::get('/check-first-bill/{concessionaire_id}/{utility_type}', [BillsController::class, 'checkFirstBill']);
 
     //User Management
     Route::get('/users/profile', [UsersController::class, 'showUserProfile'])->name('user.profile');

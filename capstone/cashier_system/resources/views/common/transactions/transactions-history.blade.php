@@ -71,26 +71,14 @@
                             <td>{{ \Carbon\Carbon::parse($transaction->receipt_print_date)->format('Y-m-d') }}</td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    @if($transaction->customer_type === 'Concessionaire')
-                                    <a href="{{ route('concessionaire.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="Details"><i class="fa-solid fa-pen-to-square"></i></a>
-                                    <a href="{{ route('concessionaire.receipt.pdf', ['id' => $transaction->transaction_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Receipt"><i class="fa-solid fa-receipt"></i></a>
-                                    @else
                                     <a href="{{ route('customer.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="Details"><i class="fa-solid fa-pen-to-square"></i></a>
-                                    <a href="{{ route('customer.receipt.pdf', ['id' => $transaction->transaction_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Receipt"><i class="fa-solid fa-receipt"></i></a>
-                                    @endif
                                 </div>
                             </td>
                             @else
                             <td>{{ \Carbon\Carbon::parse($transaction->cancelled_at)->format('Y-m-d H:i') }}</td>
                             <td>
                                 <div class="d-flex justify-content-center gap-2">
-                                    @if($transaction->customer_type === 'Concessionaire')
-                                    <a href="{{ route('concessionaire.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="Details"><i class="fa-solid fa-pen-to-square"></i></a>
-                                    <a href="{{ route('concessionaire.receipt.pdf', ['id' => $transaction->transaction_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Receipt"><i class="fa-solid fa-receipt"></i></a>
-                                    @else
                                     <a href="{{ route('customer.transaction.details', ['id' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="Details"><i class="fa-solid fa-pen-to-square"></i></a>
-                                    <a href="{{ route('customer.receipt.pdf', ['id' => $transaction->transaction_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Receipt"><i class="fa-solid fa-receipt"></i></a>
-                                    @endif
                                 </div>
                             </td>
                             @endif

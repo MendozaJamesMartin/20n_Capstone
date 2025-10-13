@@ -31,6 +31,38 @@
         .note {
             margin-top: 40px;
         }
+
+.center-table {
+    width: 100%;
+    text-align: center; /* centers the inline-table itself */
+    margin: 10px 0;
+}
+
+.center-table table {
+    display: inline-table;       /* ✅ makes the table center align within the parent */
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: left;
+    width: 65%;                  /* adjust width as needed (60–70% recommended) */
+}
+
+.center-table td {
+    padding: 3px 5px;
+    vertical-align: top;
+}
+
+.center-table td:first-child {
+    text-align: right;
+    padding-right: 15px;
+    width: 55%;                  /* keep consistent spacing */
+}
+
+.center-table td:last-child {
+    text-align: left;
+    width: 45%;
+}
+
+
     </style>
 </head>
 <body>
@@ -49,32 +81,49 @@
         <p>RE: {{ $bill->utility_type }} Bill for the Month of <strong><u>{{ $bill->billing_period }}</u></strong></p>
 
         <p>
-            As per reading of your electric meter, the total kilowatt hours for the period from {{ \Carbon\Carbon::parse($bill->bill_start_date)->format('F d, Y') }} to {{ \Carbon\Carbon::parse($bill->bill_end_date)->format('F d, Y') }} are as follows:
+            As per reading of your electric meter, the total kilowatt hours for the period from 
+            {{ \Carbon\Carbon::parse($bill->bill_start_date)->format('F d, Y') }} 
+            to {{ \Carbon\Carbon::parse($bill->bill_end_date)->format('F d, Y') }} are as follows:
         </p>
     </div>
 
-        <div class="text-center">
-            <p>Current Reading: <u>{{ number_format($bill->current_reading_kwh, 2) }}</u> KW/H</p>
-            <p>Previous Reading: <u>{{ number_format($bill->previous_reading_kwh, 2) }}</u> KW/H</p>
-            <p>Total: <u>{{ number_format($bill->total_kwh_used, 2) }}</u> KW/H</p>
-        </div>
+    <!-- Reading Section -->
+<div class="center-table">
+    <table>
+        <tr>
+            <td>Current Reading:</td>
+            <td><u>{{ number_format($bill->current_reading_kwh, 2) }}</u> KW/H</td>
+        </tr>
+        <tr>
+            <td>Previous Reading:</td>
+            <td><u>{{ number_format($bill->previous_reading_kwh, 2) }}</u> KW/H</td>
+        </tr>
+        <tr>
+            <td>Total:</td>
+            <td><u>{{ number_format($bill->concessionaire_kwh_used, 2) }}</u> KW/H</td>
+        </tr>
+    </table>
+</div>
 
     <div class="section">
         <p>Hence, the computation of your electric bill is as follows:</p>
-
-        <div class="text-center">
-            <p>Total Bill (PUPT): P {{ number_format($bill->university_total_bill, 2) }}</p>
-            <p>Total kWh Used: {{ number_format($bill->university_total_kwh, 2) }} (using 120 multiplier)</p>
-            <p>Cost per kWh: P {{ number_format($bill->cost_per_kwh, 4) }}</p>
-
-            <p>Concessionaire’s Consumption = {{ number_format($bill->concessionaire_kwh_used, 2) }}</p>
-            <p>x Cost per kWh = {{ number_format($bill->cost_per_kwh, 4) }}</p>
-            <p><strong>Total Amount: P {{ number_format($bill->total_due, 2) }}</strong></p>
-
-            <p>Previous Unpaid Amount: P {{ number_format($bill->previous_unpaid, 2) }}</p>
-            <p><strong>Total Amount Due: P {{ number_format($bill->total_due, 2) }}</strong></p>
-        </div>
     </div>
+
+<!-- Computation Section -->
+<div class="center-table">
+    <table>
+        <tr><td>Total Bill (PUPT):</td><td>P {{ number_format($bill->university_total_bill, 2) }}</td></tr>
+        <tr><td>Total kWh Used:</td><td>{{ number_format($bill->university_total_kwh, 2) }} (using 120 multiplier)</td></tr>
+        <tr><td>Cost per kWh:</td><td>P {{ number_format($bill->cost_per_kwh, 4) }}</td></tr>
+                <tr><td>&nbsp;</td></tr>
+        <tr><td>Concessionaire’s Consumption =</td><td>{{ number_format($bill->concessionaire_kwh_used, 2) }}</td></tr>
+        <tr><td>x Cost per kWh =</td><td>{{ number_format($bill->cost_per_kwh, 4) }}</td></tr>
+        <tr class="bold"><td>Total Amount:</td><td>P {{ number_format($bill->current_charges, 2) }}</td></tr>
+                <tr><td>&nbsp;</td></tr>
+        <tr><td>Previous Unpaid Amount:</td><td>P {{ number_format($bill->previous_unpaid, 2) }}</td></tr>
+        <tr class="bold"><td style="text-decoration: underline;">Total Amount Due:</td><td style="text-decoration: underline;">P {{ number_format($bill->total_due, 2) }}</td></tr>
+    </table>
+</div>
 
     <div class="note">
         <p>

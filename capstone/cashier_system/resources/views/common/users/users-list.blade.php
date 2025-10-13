@@ -2,7 +2,7 @@
 
 @section('content')
 <main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 2%;">
-    <div class="container" style="width:50%">
+    <div class="container" style="width:60%">
 
         <!-- Header: Title, Search, Registration Button -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
@@ -43,7 +43,7 @@
                         <tr>
                             <th onclick="sortTable(0)">ID</th>
                             <th onclick="sortTable(1)">Email</th>
-                            <th>Password</th>
+                            <th onclick="sortTable(2)">Full Name</th>
                             <th onclick="sortTable(3)">Role</th>
                             <th>Action</th>
                         </tr>
@@ -53,7 +53,12 @@
                         <tr>
                             <td>{{ $user->id }}</td>
                             <td>{{ $user->email }}</td>
-                            <td>********</td>
+                            <td>                    
+                                {{ $user->first_name }}
+                                {{ $user->middle_name ? strtoupper(substr(trim($user->middle_name), 0, 1)) . '.' : '' }}
+                                {{ $user->last_name }}
+                                {{ $user->suffix ? ' ' . $user->suffix : '' }}
+                            </td>
                             <td>{{ $user->role }}</td>
                             <td>
                                 <button class="btn btn-warning btn-sm" data-bs-toggle="modal"

@@ -167,7 +167,6 @@
                 </a>
                 <div class="collapse ps-3" id="paymentsSubmenu">
                     <a href="{{ route('payments.customer.new') }}" class="nav-link">Customer Payment Form</a>
-                    <a href="{{ route('concessionaires.billing.payment') }}" class="nav-link">Bills Payment</a>
                 </div>
             </li>
 
