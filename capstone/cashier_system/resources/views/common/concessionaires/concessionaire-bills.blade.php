@@ -28,8 +28,8 @@
                             <tr>
                                 <th onclick="sortTable(0)">Concessionaire</th>
                                 <th onclick="sortTable(1)">Billing Period</th>
-                                <th onclick="sortTable(2)">Bill Start Date</th>
-                                <th onclick="sortTable(3)">Bill End Date</th>
+                                <th onclick="sortTable(2)">Previous Reading</th>
+                                <th onclick="sortTable(3)">Current Reading</th>
                                 <th onclick="sortTable(4)">kWh Used</th>
                                 <th onclick="sortTable(5)">₱/kWh</th>
                                 <th onclick="sortTable(6)">Current Charges</th>
@@ -46,8 +46,8 @@
                             <tr>
                                 <td>{{ $bill->concessionaire_name }}</td>
                                 <td>{{ $bill->billing_period }}</td>
-                                <td>{{ $bill->bill_start_date }}</td>
-                                <td>{{ $bill->bill_end_date }}</td>
+                                <td>{{ $bill->previous_reading_kwh }}</td>
+                                <td>{{ $bill->current_reading_kwh }}</td>
                                 <td>{{ number_format($bill->concessionaire_kwh_used, 2) }}</td>
                                 <td>₱{{ number_format($bill->cost_per_kwh, 2) }}</td>
                                 <td>₱{{ number_format($bill->current_charges, 2) }}</td>

@@ -82,7 +82,7 @@
                             <input type="date" name="bill_end_date" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Previous Reading (First Bill Only)</label>
+                            <label class="form-label">Previous Reading</label>
                             <input type="number" name="previous_reading" class="form-control" step="0.01">
                         </div>
                         <div class="col-md-6">
