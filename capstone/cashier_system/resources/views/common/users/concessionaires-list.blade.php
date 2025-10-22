@@ -61,7 +61,7 @@
                         <tr>
                             <th onclick="sortTable(0)" style="cursor:pointer">ID</th>
                             <th onclick="sortTable(1)" style="cursor:pointer">Name</th>
-                            <th onclick="sortTable(2)" style="cursor:pointer">Email</th>
+                            <th onclick="sortTable(2)" style="cursor:pointer">Contact</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -109,7 +109,7 @@
                                                 <input type="text" name="name" class="form-control" value="{{ $concessionaire->name }}" required>
                                             </div>
                                             <div class="mb-3">
-                                                <label class="form-label">Email</label>
+                                                <label class="form-label">Contact</label>
                                                 <input type="text" name="contact" class="form-control" value="{{ $concessionaire->contact }}" required>
                                             </div>
                                             <button type="submit" class="btn btn-danger">

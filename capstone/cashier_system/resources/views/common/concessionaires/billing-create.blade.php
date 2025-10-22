@@ -1,7 +1,7 @@
 @extends('layout.main-master')
 
 @section('content')
-<main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height: 85vh; padding: 5%;">
+<main style="min-height: 85vh; padding: 5%;">
     <div class="container" style="width:75%">
         <div class="bg-light p-5 rounded shadow-sm">
             <h2 class="mb-4">Create Concessionaire Billing</h2>

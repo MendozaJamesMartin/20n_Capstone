@@ -40,7 +40,7 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
         $data = [];
         $this->boldRows = [];
 
-        $data[] = ['DATE', 'OFFICIAL RECEIPT NUMBER', 'PAYER NAME', 'FEES', 'COLLECTION'];
+        $data[] = ['DATE', 'OFFICIAL RECEIPT NUMBER', 'PAYOR NAME', 'FEES', 'COLLECTION'];
 
         $transactions = DB::table('transactions as t')
             ->join('receipts as r', 't.id', '=', 'r.transaction_id')
@@ -60,8 +60,8 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
             if ($isCancelled) {
                 $row = [$txnDate, $txn->receipt_number, 'CANCELLED', 'CANCELLED', 'CANCELLED'];
             } else {
-                // Determine payer name (customer or concessionaire)
-                $payerName = DB::table('customers')
+                // Determine payor name (customer or concessionaire)
+                $payorName = DB::table('customers')
                     ->whereIn('id', function ($q) use ($txn) {
                         $q->select('customer_id')
                             ->from('customer_transaction_details')
@@ -69,8 +69,8 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
                     })
                     ->value('customer_name');
 
-                if (!$payerName) {
-                    $payerName = DB::table('concessionaires')
+                if (!$payorName) {
+                    $payorName = DB::table('concessionaires')
                         ->whereIn('id', function ($q) use ($txn) {
                             $q->select('customer_id')
                                 ->from('customer_transaction_details')
@@ -79,17 +79,23 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
                         ->value('name');
                 }
 
+                // Convert to uppercase if exists
+                $payorName = $payorName ? strtoupper($payorName) : '';
+
                 // Fetch fees for this transaction
                 $fees = DB::table('customer_transaction_details as ctd')
                     ->join('fees as f', 'ctd.fee_id', '=', 'f.id')
                     ->where('ctd.transaction_id', $txn->id)
                     ->when(!empty($this->feeIds), fn($q) => $q->whereIn('f.id', $this->feeIds))
-                    ->select('ctd.fee_label', 'f.fee_name')
+                    ->select('ctd.fee_label', 'f.fee_name', 'ctd.quantity')
                     ->get()
-                    ->map(fn($f) => "{$f->fee_label}-{$f->fee_name}")
+                    ->map(function ($f) {
+                        $qtyText = ($f->quantity > 1) ? "({$f->quantity})" : '';
+                        return "{$f->fee_label}-{$f->fee_name}{$qtyText}";
+                    })
                     ->implode(', ');
 
-                $row = [$txnDate, $txn->receipt_number, $payerName, $fees, $txn->total_amount];
+                $row = [$txnDate, $txn->receipt_number, $payorName, $fees, $txn->total_amount];
             }
 
             // Group by day

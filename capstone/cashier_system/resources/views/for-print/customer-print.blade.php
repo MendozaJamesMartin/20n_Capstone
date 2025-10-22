@@ -98,19 +98,23 @@
         <tr><td>&nbsp;</td></tr>
         <tr>
             <td style="width: 35%;" class="invisible-text">Fund</td>
-            <td style="width: 65%;" class="text-right pe-4">
+            <td style="width: 65%;" class="text-center ps-4">
                 {{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('m-d-Y') }}
             </td>
         </tr>
     </table>
 
-    {{-- Institution and Customer --}}
-    <table class="section">
+    {{-- Institution and Customer (static position) --}}
+    <table class="section" style="position: relative; height: 40px;">
         <tr class="text-center invisible-text">
             <td><strong>POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</strong></td>
         </tr>
-        <tr>
-            <td class="text-center"><strong style="text-transform: uppercase;">{{ $TransactionDetails[0]->customer_name ?? 'John Doe' }}</strong></td>
+        <tr style="position: absolute; top: 18px; left: 0; width: 100%;">
+            <td class="text-center">
+                <strong style="text-transform: uppercase;">
+                    {{ $TransactionDetails[0]->customer_name ?? 'John Doe' }}
+                </strong>
+            </td>
         </tr>
     </table>
 
@@ -205,14 +209,15 @@
         <tr><td>Money Order</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
     </table>
 
-    {{-- Signature --}}
-    <table class="section">
+    {{-- Signature (static position) --}}
+    <table class="section" style="position: relative; height: 50px;">
         <tr>
-            <td class="invisible-text"><div class="text-left">Received the amount stated above.</div></td>
+            <td class="invisible-text">
+                <div class="text-left">Received the amount stated above.</div>
+            </td>
         </tr>
-        <tr>
-            <td></td>
-            <td class="pe-4 text-center">
+        <tr style="position: absolute; bottom: 0; right: 0; width: 100%;">
+            <td class="text-center">
                 <strong>
                     {{ $Cashier->first_name }}
                     {{ $Cashier->middle_name ? strtoupper(substr(trim($Cashier->middle_name), 0, 1)) . '.' : '' }}

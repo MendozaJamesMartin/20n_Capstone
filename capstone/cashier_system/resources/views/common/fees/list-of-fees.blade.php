@@ -2,7 +2,7 @@
 
 @section('content')
 
-<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 2%;">
+<main style="min-height: 85vh; padding: 2%;">
     <div class="container mt-4" style="width: 60%">
 
         @if(session('success'))

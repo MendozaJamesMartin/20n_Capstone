@@ -212,18 +212,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    // Revenue Chart
     const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
     new Chart(ctxRevenue, {
         type: 'line',
         data: {
-            labels: {
-                !!json_encode($chartLabels) !!
-            },
+            labels: {!! json_encode($chartLabels) !!},
             datasets: [{
                 label: 'Monthly Collection',
-                data: {
-                    !!json_encode($chartData) !!
-                },
+                data: {!! json_encode($chartData) !!},
                 borderColor: 'rgba(40,167,69,1)',
                 backgroundColor: 'rgba(40,167,69,0.1)',
                 fill: true,
@@ -231,22 +228,29 @@
             }]
         },
         options: {
-            responsive: true
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
         }
     });
 
+    // Top Fees Chart
     const ctxFee = document.getElementById('feeChart').getContext('2d');
     new Chart(ctxFee, {
         type: 'pie',
         data: {
-            labels: {
-                !!json_encode($topFees - > pluck('fee_name')) !!
-            },
+            labels: {!! json_encode($topFees->pluck('fee_name')) !!},
             datasets: [{
                 label: 'Top Fees',
-                data: {
-                    !!json_encode($topFees - > pluck('total')) !!
-                },
+                data: {!! json_encode($topFees->pluck('total')) !!},
                 backgroundColor: [
                     '#007bff', '#ffc107', '#28a745', '#dc3545', '#6610f2', '#6c757d',
                     '#20c997', '#fd7e14', '#17a2b8', '#6f42c1'
@@ -254,7 +258,12 @@
             }]
         },
         options: {
-            responsive: true
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
         }
     });
 </script>

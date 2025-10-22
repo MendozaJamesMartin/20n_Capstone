@@ -270,7 +270,6 @@ class TransactionsController extends Controller
             'fee_ids.*' => 'integer|exists:fees,id',
             'include_bills' => 'nullable|boolean',
             'utility_type' => 'nullable|string|in:All,Water,Electricity',
-            'customer_type' => 'nullable|string|in:All,Normal,Concessionaire',
         ]);
 
         $start = $request->input('start_date');
@@ -278,7 +277,6 @@ class TransactionsController extends Controller
         $feeIds = $request->input('fee_ids', []);
         $includeBills = $request->boolean('include_bills', true);
         $utilityType = $request->input('utility_type', 'All');
-        $customerType = $request->input('customer_type', 'All');
 
         return Excel::download(
             new MonthlyTransactionReportExport(
@@ -287,7 +285,6 @@ class TransactionsController extends Controller
                 $feeIds,
                 $includeBills,
                 $utilityType,
-                $customerType
             ),
             "Report_{$start}_to_{$end}.xlsx"
         );

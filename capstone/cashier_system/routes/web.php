@@ -62,7 +62,7 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
         //Fees Management
         Route::get('fees/list', [FeesController::class, 'feesList'])->name('fees.list');
         Route::post('fees/add', [FeesController::class, 'AddFees'])->name('fees.add');
-        Route::post('fees/{id}/update', [FeesController::class, 'UpdateFees'])->name('fees.update');
+        Route::put('fees/{id}/update', [FeesController::class, 'UpdateFees'])->name('fees.update');
         Route::get('fees/{id}/delete', [FeesController::class, 'deleteFees'])->name('fees.delete');
         Route::get('fees/{id}/restore', [FeesController::class, 'restoreFees'])->name('fees.restore');
 

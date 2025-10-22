@@ -133,7 +133,7 @@
 
         <!-- Filter Modal -->
         <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-dialog modal-dialog-centered modal-md">
                 <form action="{{ url()->current() }}" method="GET" class="modal-content p-4">
                     <input type="hidden" name="show" value="{{ $show }}"> {{-- Preserve active/cancelled --}}
                     <div class="modal-header">
@@ -151,14 +151,6 @@
                                 <option value="today" {{ request('timeframe') == 'today' ? 'selected' : '' }}>Today</option>
                                 <option value="this_week" {{ request('timeframe') == 'this_week' ? 'selected' : '' }}>This Week</option>
                                 <option value="this_month" {{ request('timeframe') == 'this_month' ? 'selected' : '' }}>This Month</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="customer_type" class="form-label">Payor Type</label>
-                            <select name="customer_type" class="form-select">
-                                <option value="">All</option>
-                                <option value="Customer" {{ request('customer_type') == 'Customer' ? 'selected' : '' }}>Customer</option>
-                                <option value="Concessionaire" {{ request('customer_type') == 'Concessionaire' ? 'selected' : '' }}>Concessionaire</option>
                             </select>
                         </div>
                         <div class="col-md-12 d-flex justify-content-between align-items-center">
