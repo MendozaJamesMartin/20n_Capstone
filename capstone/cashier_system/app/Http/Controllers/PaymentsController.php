@@ -382,7 +382,7 @@ class PaymentsController extends Controller
         }
     }
 
-    public function disapproveTransaction($id)
+    public function disapproveTransaction($id, $redirectTo = 'back')
     {
         Log::info("Begin Transaction disapproval");
         DB::beginTransaction();
@@ -452,12 +452,21 @@ class PaymentsController extends Controller
                 newValues: [],
                 tags: 'transaction'
             );
+            
+            // ✅ Redirect based on context
+            if ($redirectTo === 'customer.transaction.details') {
+                return redirect()->route('receipts.list')
+                    ->with('success', 'Transaction disapproved and deleted successfully.');
+            }
 
-            return redirect()->route('payments.pending')->with('success', 'Transaction disapproved and deleted successfully.');
+            // Default (from list)
+            return redirect()->back()->with('success', 'Transaction disapproved and deleted successfully.');
+
         } catch (QueryException $e) {
             DB::rollBack();
             Log::info("Failed to Delete Transaction");
-            return redirect()->route('payments.pending')->with('error', 'Failed to delete transaction');
+            return redirect()->back()->with('error', 'Failed to delete transaction');
         }
     }
+
 }

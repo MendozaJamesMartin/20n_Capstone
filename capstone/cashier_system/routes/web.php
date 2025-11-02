@@ -31,7 +31,7 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     //View Details of Pending Payments and Edit them before approving payment
     Route::match(['get', 'put'], '/payments/pending/{transactionId}', [PaymentsController::class, 'updateUnpaidTransaction'])->name('payments.update');
     //Delete Unpaid Payment
-    Route::delete('/transactions/{id}/disapprove', [PaymentsController::class, 'disapproveTransaction'])->name('payments.disapprove');
+    Route::delete('/transactions/{id}/disapprove/{redirectTo?}', [PaymentsController::class, 'disapproveTransaction'])->name('payments.disapprove');
 
     //Transaction Managements
     Route::get('/transactions/history', [TransactionsController::class, 'GetTransactionsHistory'])->name('receipts.list');

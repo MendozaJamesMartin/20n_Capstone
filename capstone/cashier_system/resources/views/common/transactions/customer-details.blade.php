@@ -101,6 +101,13 @@
                     </div>
                     @else
                     @if ($TransactionDetails[0]->payment_status == "Pending")
+                    <form id="finalizeForm" method="POST" action="{{ route('payments.disapprove', ['id' => $TransactionDetails[0]->transaction_id, 'redirectTo' => 'customer.transaction.details']) }}" style="display: inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" id="undoBtn" class="btn btn-danger">
+                            <i class="bi bi-x-circle"></i> Undo Transaction
+                        </button>
+                    </form>
                     <form id="finalizeForm" method="POST" action="{{ route('finalize.transation', ['id' => $TransactionDetails[0]->transaction_id]) }}" style="display: inline;">
                         @csrf
                         <button type="submit" id="finalizeBtn" class="btn btn-success">

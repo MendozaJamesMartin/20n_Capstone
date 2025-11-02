@@ -61,7 +61,7 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="9" class="text-center">No electricity bills available.</td></tr>
+                            <tr><td colspan="12" class="text-center">No electricity bills available.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -101,7 +101,7 @@
                                 </td>
                             </tr>
                             @empty
-                            <tr><td colspan="7" class="text-center">No water bills available.</td></tr>
+                            <tr><td colspan="8" class="text-center">No water bills available.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

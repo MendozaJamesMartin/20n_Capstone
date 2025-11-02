@@ -10,26 +10,37 @@
             margin: 1;
             padding: 1;
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 14px;
             width: 99%;
             height: 99%;
+            line-height: 0.86; /* keeps overall height same as 12px text */
         }
 
         table { width: 100%; border-collapse: collapse; }
-        td, th { padding: 3px; vertical-align: top; }
+        td, th {
+            padding: 3px;
+            vertical-align: middle;
+            transform: translateY(-1px); /* centers growth visually */
+        }
 
         /* Fixed height for item section */
         .item-table {
             table-layout: fixed;
             height: 190px;
+            overflow: hidden;          /* prevents pushing down */
+            position: relative;        /* isolates internal layout */
         }
-
+        .item-table tbody {
+            height: 190px;
+            display: table-row-group;  /* keep valid table semantics */
+        }
         .item-table td, .item-table th {
             height: 15px;
             overflow: hidden;
             word-wrap: break-word;
             line-height: 1.1;
-            font-size: 12px;
+            font-size: 14px;
+            transform: translateY(-1px);
         }
 
         .item-table .cell-wrap { white-space: normal; }
@@ -38,11 +49,22 @@
         .text-right { text-align: right; }
         .section { margin-bottom: 4px; }
         .signature-box { height: 40px; }
-        h2 { font-size: 12px; margin: 4px 0; }
-        hr { margin: 2px 0; border: none; border-top: 1px solid #000; }
+
+        h2 {
+            font-size: 14px;
+            margin: 4px 0;
+            transform: translateY(-1px);
+        }
+
+        hr {
+            margin: 2px 0;
+            border: none;
+            border-top: 1px solid #000;
+        }
+
         .invisible-text { color: transparent; }
 
-        /* padding utilities (Bootstrap-style) */
+        /* Padding utilities */
         .ps-1 { padding-left: 4px !important; }
         .ps-2 { padding-left: 8px !important; }
         .ps-3 { padding-left: 16px !important; }
@@ -53,6 +75,15 @@
         .pe-3 { padding-right: 16px !important; }
         .pe-4 { padding-right: 32px !important; }
         .pe-5 { padding-right: 64px !important; }
+
+        strong, div, span {
+            transform: translateY(-1px);
+        }
+
+        /* Fine-tune: bring TOTAL and amount-in-words up one line */
+        .align-up-1 {
+            transform: translateY(-14px) !important; /* roughly one 14px line */
+        }
     </style>
 </head>
 <body>
@@ -91,6 +122,9 @@
             </td>
             <td style="width: 25%;">&nbsp;</td>
         </tr>
+        <tr>
+            <td style="width: 25%;">&nbsp;</td>
+        </tr>
     </table>
 
     {{-- Date --}}
@@ -104,7 +138,7 @@
         </tr>
     </table>
 
-    {{-- Institution and Customer (static position) --}}
+    {{-- Institution and Customer --}}
     <table class="section" style="position: relative; height: 40px;">
         <tr class="text-center invisible-text">
             <td><strong>POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</strong></td>
@@ -148,7 +182,6 @@
                     @php $itemCount++; @endphp
                 @endif
 
-                {{-- Fee Rows with wrapped names --}}
                 @foreach($feesGroup as $fee)
                     @php
                         $displayName = $fee->fee_name;
@@ -161,7 +194,6 @@
                     @foreach($lines as $i => $line)
                         <tr>
                             <td colspan="2" class="cell-wrap {{ $hasLabel ? ($i == 0 ? 'ps-5' : 'ps-5 ps-1') : ($i == 0 ? 'ps-4' : 'ps-4 ps-1') }}">
-                                {{-- Remove dash if no label --}}
                                 {{ $i == 0 ? ($hasLabel ? '- ' . $line : $line) : $line }}
                             </td>
                             @if($i == 0)
@@ -170,7 +202,10 @@
                                 <td></td>
                             @endif
                         </tr>
-                        @php $itemCount++; @endphp
+                        @php
+                            // ✅ increment for every printed line
+                            $itemCount++;
+                        @endphp
                     @endforeach
                 @endforeach
             @endforeach
@@ -209,7 +244,7 @@
         <tr><td>Money Order</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
     </table>
 
-    {{-- Signature (static position) --}}
+    {{-- Signature --}}
     <table class="section" style="position: relative; height: 50px;">
         <tr>
             <td class="invisible-text">
@@ -217,7 +252,7 @@
             </td>
         </tr>
         <tr style="position: absolute; bottom: 0; right: 0; width: 100%;">
-            <td class="text-center">
+            <td class="text-right pe-5">
                 <strong>
                     {{ $Cashier->first_name }}
                     {{ $Cashier->middle_name ? strtoupper(substr(trim($Cashier->middle_name), 0, 1)) . '.' : '' }}
