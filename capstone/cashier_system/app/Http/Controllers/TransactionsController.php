@@ -19,61 +19,63 @@ use NumberFormatter;
 
 class TransactionsController extends Controller
 {
-    public function GetTransactionsHistory(Request $request)
-    {
 
+    public function GetTransactionsHistory(Request $request) {
         $timeframe = $request->input('timeframe', 'all');
-        $search = $request->input('search', '');
+        $search = trim($request->input('search', ''));
         $show = $request->input('show', 'active'); // active or cancelled
 
         $query = DB::table('universal_transaction_history')->select();
 
+        // Filter active vs cancelled
         if ($show === 'cancelled') {
             $query->where('receipt_status', '=', 'Cancelled');
         } else {
             $query->where('receipt_status', '!=', 'Cancelled');
         }
 
-        // Apply transaction date filter
+        // Apply timeframe filter
         if ($timeframe === 'today') {
-            $query->where('universal_transaction_history.transaction_date', '>=', Carbon::now()->subDay());
+            $query->whereDate('universal_transaction_history.transaction_date', '=', Carbon::today());
         } elseif ($timeframe === 'this_week') {
-            $query->where('universal_transaction_history.transaction_date', '>=', Carbon::now()->subWeek());
+            $query->whereBetween('universal_transaction_history.transaction_date', [
+                Carbon::now()->startOfWeek(),
+                Carbon::now()->endOfWeek()
+            ]);
         } elseif ($timeframe === 'this_month') {
-            $query->where('universal_transaction_history.transaction_date', '>=', Carbon::now()->subMonth());
+            $query->whereMonth('universal_transaction_history.transaction_date', Carbon::now()->month)
+                ->whereYear('universal_transaction_history.transaction_date', Carbon::now()->year);
         }
 
-        // Apply receipt print date filter
-        if ($timeframe === 'today') {
-            $query->where('universal_transaction_history.receipt_print_date', '>=', Carbon::now()->subDay());
-        } elseif ($timeframe === 'this_week') {
-            $query->where('universal_transaction_history.receipt_print_date', '>=', Carbon::now()->subWeek());
-        } elseif ($timeframe === 'this_month') {
-            $query->where('universal_transaction_history.receipt_print_date', '>=', Carbon::now()->subMonth());
+        // 🔍 Apply search filter (server-side)
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('customer_name', 'like', "%{$search}%")
+                ->orWhere('receipt_number', 'like', "%{$search}%")
+                ->orWhere('transaction_id', 'like', "%{$search}%");
+            });
         }
 
-        // Apply entity_type filter if provided
-        if ($request->has('customer_type') && !empty($request->input('customer_type'))) {
+        // Apply customer type filter if provided
+        if ($request->filled('customer_type')) {
             $query->where('customer_type', $request->input('customer_type'));
         }
 
-        // Apply sorting method
+        // Sorting
         $sortBy = $request->input('sort_by', 'receipt_print_date');
         $sortOrder = $request->input('sort_order', 'DESC');
         $validSortColumns = ['transaction_date', 'customer_type', 'customer_name', 'total_amount', 'receipt_print_date'];
         if (!in_array($sortBy, $validSortColumns)) {
             $sortBy = 'receipt_print_date';
         }
-
         $query->orderBy($sortBy, $sortOrder);
 
-        $result = $query->paginate(10)->appends(request()->except('page'));
+        $result = $query->paginate(10)->appends($request->except('page'));
 
         return view('common.transactions.transactions-history', compact('result', 'show'));
     }
 
-    public function GetCustomerTransactionDetails($id)
-    {
+    public function GetCustomerTransactionDetails($id) {
         $TransactionDetails = DB::table('customer_transaction_receipt')
             ->where('transaction_id', $id)
             ->get();
@@ -85,8 +87,7 @@ class TransactionsController extends Controller
         return view('common.transactions.customer-details', compact('TransactionDetails'), ['hasActiveBatch' => $currentBatch !== null]);
     }
 
-    public function GetConcessionaireTransactionDetails($id)
-    {
+    public function GetConcessionaireTransactionDetails($id) {
         $TransactionDetails = DB::table('concessionaire_transaction_receipt')
             ->where('transaction_id', $id)
             ->get();
@@ -98,8 +99,7 @@ class TransactionsController extends Controller
         return view('common.transactions.concessionaire-details', compact('TransactionDetails'), ['hasActiveBatch' => $currentBatch !== null]);
     }
 
-    public function customerReceiptPDF($id)
-    {
+    public function customerReceiptPDF($id) {
         $TransactionDetails = DB::table('customer_transaction_receipt')
             ->where('transaction_id', $id)
             ->get();
@@ -130,8 +130,7 @@ class TransactionsController extends Controller
         return $pdf->stream("Receipt_{$id}.pdf");
     }
 
-    public function concessionaireReceiptPDF($id)
-    {
+    public function concessionaireReceiptPDF($id) {
         $TransactionDetails = DB::table('concessionaire_transaction_receipt')
             ->where('transaction_id', $id)
             ->get();
@@ -162,8 +161,7 @@ class TransactionsController extends Controller
         return $pdf->stream("Receipt_{$id}.pdf");
     }
 
-    public function finalizeTransaction($transactionId)
-    {
+    public function finalizeTransaction($transactionId) {
         Log::info("Finalize Transaction with ID: $transactionId");
         DB::beginTransaction();
         try {
@@ -220,8 +218,7 @@ class TransactionsController extends Controller
         }
     }
 
-    public function cancelReceipt($id)
-    {
+    public function cancelReceipt($id) {
 
         DB::beginTransaction();
 
@@ -290,8 +287,7 @@ class TransactionsController extends Controller
         );
     }
 
-    private function numberToWords($number): string
-    {
+    private function numberToWords($number): string {
         $peso = floor($number);
         $centavos = round(($number - $peso) * 100);
 

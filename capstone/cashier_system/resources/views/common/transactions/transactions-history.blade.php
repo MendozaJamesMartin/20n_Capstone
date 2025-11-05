@@ -11,10 +11,26 @@
             </h2>
 
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <!-- Search Input -->
-                <form action="{{ url()->current() }}" method="GET" class="d-flex">
+                <form action="{{ url()->current() }}" method="GET" class="d-flex align-items-center position-relative">
                     <input type="hidden" name="show" value="{{ $show }}">
-                    <input type="text" id="searchInput" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search...">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        name="search" 
+                        value="{{ request('search') }}" 
+                        class="form-control pe-5" 
+                        placeholder="Search..."
+                    >
+                    @if(request('search'))
+                        <button 
+                            type="button" 
+                            id="clearSearchBtn" 
+                            class="btn btn-sm btn-light position-absolute end-0 me-2 border-0"
+                            title="Clear search"
+                        >
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    @endif
                 </form>
 
                 <!-- Toggle Active / Cancelled -->
@@ -173,13 +189,34 @@
     let originalRows = Array.from(table.tBodies[0].rows);
     let sortState = {};
 
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        let filter = this.value.toLowerCase();
-        let rows = document.querySelectorAll("#historyTable tbody tr");
-        rows.forEach(row => {
-            let text = row.textContent.toLowerCase();
-            row.style.display = text.includes(filter) ? '' : 'none';
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+
+        // Submit search to server when typing Enter
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchInput.form.submit();
+            }
         });
+
+        // Optional: auto-search after a short delay (live server search)
+        let typingTimer;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                searchInput.form.submit();
+            }, 600); // delay before auto-submit (optional)
+        });
+
+        // Clear search instantly
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                searchInput.form.submit();
+            });
+        }
     });
 
     function sortTable(n) {
@@ -210,5 +247,25 @@
         table.tBodies[0].innerHTML = '';
         rows.forEach(row => table.tBodies[0].appendChild(row));
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearchBtn');
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                searchInput.form.submit(); // reload results without search filter
+            });
+        }
+
+        // Optional: submit form when pressing Enter
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchInput.form.submit();
+            }
+        });
+    });
 </script>
 @endsection

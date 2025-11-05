@@ -45,7 +45,7 @@
                 </a>
             </div>
             <div class="col-md-3">
-                <a href="{{ route('receipts.list') }}" class="text-decoration-none text-reset">
+                <a href="{{ route('receipts.list', ['timeframe' => 'today', 'show' => 'active']) }}" class="text-decoration-none text-reset">
                     <div class="card shadow-sm kpi-card h-100">
                         <div class="card-body d-flex align-items-center">
                             <div class="icon-wrapper bg-primary text-white me-3">

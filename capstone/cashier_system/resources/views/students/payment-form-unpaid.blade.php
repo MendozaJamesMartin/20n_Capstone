@@ -4,19 +4,19 @@
 
 <main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height:85vh; padding:5%;">
     <div class="container-fluid">
-        <div class="bg-light p-4 p-md-5 rounded mx-auto" style="max-width:900px;">
+        <div class="bg-light p-4 p-md-5 rounded mx-auto shadow-sm" style="max-width:900px;">
             <h1 class="mb-4 text-center">Payment Form</h1>
 
             @if(session('success'))
-            <p class="text-success text-center">{{ session('success') }}</p>
+                <p class="text-success text-center">{{ session('success') }}</p>
             @elseif(session('error'))
-            <p class="text-danger text-center">{{ session('error') }}</p>
+                <p class="text-danger text-center">{{ session('error') }}</p>
             @endif
 
             @if (!$hasActiveBatch)
-            <div class="alert alert-danger text-center">
-                🚫 Cannot submit payment. Please wait for further announcement for Cashier availability.
-            </div>
+                <div class="alert alert-danger text-center">
+                    🚫 Cannot submit payment. Please wait for further announcement for Cashier availability.
+                </div>
             @endif
 
             <form method="POST" action="{{ route('student.payment.form') }}" id="paymentForm">
@@ -29,35 +29,24 @@
                         placeholder="LAST NAME, FIRST NAME M.I." required>
                 </div>
 
-                <!-- Fee Selection -->
+                <!-- Fee Section -->
                 <h3 class="mt-4 mb-3 text-center text-md-start">Fees</h3>
-                <div class="table-responsive">
-                    <table class="table table-bordered align-middle text-center" id="fees-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:60%">Fee Name</th>
-                                <th style="width:15%">Amount</th>
-                                <th style="width:15%">Quantity</th>
-                                <th style="width:10%">Remove</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Rows added dynamically -->
-                        </tbody>
-                    </table>
+
+                <div id="feesContainer">
+                    <!-- Fee rows will be added dynamically -->
                 </div>
 
-                <div class="d-grid d-md-inline mb-3">
+                <div class="d-grid d-md-inline mb-3 text-center">
                     <button type="button" class="btn btn-success btn-sm mb-3 w-100 w-md-auto" id="addFeeRow">
                         + Add Fee
                     </button>
                 </div>
 
                 <div class="mt-3 text-center">
-                    <h4>Total Amount: ₱<span id="total-amount">0.00</span></h4>
+                    <h4 class="fw-bold">Total Amount: ₱<span id="total-amount">0.00</span></h4>
                 </div>
 
-                <div class="d-grid d-md-inline">
+                <div class="d-grid d-md-inline text-center">
                     <button type="submit" class="btn btn-primary mt-3 w-100 w-md-auto" id="confirmPaymentButton">
                         Submit
                     </button>
@@ -68,32 +57,6 @@
 </main>
 
 <style>
-    @media (max-width: 576px) {
-        main {
-            padding: 3%;
-        }
-
-        .bg-light {
-            padding: 1.5rem !important;
-        }
-
-        h1 {
-            font-size: 1.6rem;
-        }
-
-        table {
-            font-size: 0.85rem;
-        }
-
-        .btn {
-            font-size: 0.9rem;
-        }
-
-        .form-label {
-            font-size: 0.9rem;
-        }
-    }
-
     .suggestion-item:hover {
         background-color: #0d6efd;
         color: white;
@@ -110,6 +73,132 @@
     const feesData = @json($fees);
     let rowCount = 0;
 
+    // ---------- Cooldown configuration ----------
+    const COOLDOWN_MINUTES = 3; // change to desired minutes
+    const COOLDOWN_KEY = 'studentPaymentCooldownUntil';
+    let cooldownIntervalId = null;
+
+    // ---------- Cooldown helpers ----------
+    function applyCooldownFromTimestamp(cooldownUntil) {
+        if (cooldownIntervalId) {
+            clearInterval(cooldownIntervalId);
+            cooldownIntervalId = null;
+        }
+
+        const form = document.getElementById('paymentForm');
+        const controls = form.querySelectorAll('input, button, select, textarea');
+        controls.forEach(el => el.disabled = true);
+
+        const addFeeBtn = document.getElementById('addFeeRow');
+        if (addFeeBtn) addFeeBtn.disabled = true;
+        document.querySelectorAll('.remove-row').forEach(b => b.disabled = true);
+
+        let notice = document.getElementById('cooldownNotice');
+        if (!notice) {
+            notice = document.createElement('p');
+            notice.id = 'cooldownNotice';
+            notice.className = 'text-danger mt-3 text-center fw-bold';
+            form.appendChild(notice);
+        }
+
+        function update() {
+            const now = Date.now();
+            let remainingMs = cooldownUntil - now;
+            if (remainingMs <= 0) {
+                clearInterval(cooldownIntervalId);
+                cooldownIntervalId = null;
+                localStorage.removeItem(COOLDOWN_KEY);
+                notice.textContent = "✅ You can now submit again.";
+                controls.forEach(el => el.disabled = false);
+                if (addFeeBtn) addFeeBtn.disabled = false;
+                document.querySelectorAll('.remove-row').forEach(b => b.disabled = false);
+                setTimeout(() => notice.remove(), 2000);
+                return;
+            }
+
+            const remainingSeconds = Math.floor(remainingMs / 1000);
+            const mins = Math.floor(remainingSeconds / 60);
+            const secs = remainingSeconds % 60;
+            notice.textContent = `⏳ Please wait ${mins}m ${secs}s before submitting again.`;
+        }
+
+        update();
+        cooldownIntervalId = setInterval(update, 1000);
+    }
+
+    function checkCooldownOnLoad() {
+        const raw = localStorage.getItem(COOLDOWN_KEY);
+        if (!raw) return;
+        const cooldownUntil = parseInt(raw, 10);
+        if (isNaN(cooldownUntil)) {
+            localStorage.removeItem(COOLDOWN_KEY);
+            return;
+        }
+        if (cooldownUntil > Date.now()) {
+            applyCooldownFromTimestamp(cooldownUntil);
+        } else {
+            localStorage.removeItem(COOLDOWN_KEY);
+        }
+    }
+
+    function startCooldownNow(minutes = COOLDOWN_MINUTES) {
+        const cooldownUntil = Date.now() + minutes * 60 * 1000;
+        localStorage.setItem(COOLDOWN_KEY, String(cooldownUntil));
+        applyCooldownFromTimestamp(cooldownUntil);
+    }
+
+    // ---------- Handle form submission ----------
+    const paymentForm = document.getElementById('paymentForm');
+    if (paymentForm) {
+        paymentForm.addEventListener('submit', function (e) {
+            // Don't start cooldown or disable until AFTER the form has been accepted by the browser
+            // Create overlay first
+            const overlay = document.createElement('div');
+            overlay.className =
+                'position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex align-items-center justify-content-center';
+            overlay.style.zIndex = '5000';
+            overlay.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="mt-3 fw-semibold text-primary">Processing payment...</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // ✅ Let Laravel handle the form POST naturally
+            // We'll trigger cooldown *after* the request leaves the page
+            window.addEventListener('beforeunload', () => {
+                startCooldownNow();
+            });
+
+            // Do not call preventDefault() or disable inputs
+            // The browser will handle the POST including the CSRF token
+        });
+    }
+
+    // ---------- Initialization ----------
+    window.addEventListener('DOMContentLoaded', () => {
+        createRow();
+
+        const hasActiveBatch = @json($hasActiveBatch);
+        if (!hasActiveBatch) {
+            document.querySelectorAll('#paymentForm input, #paymentForm button, #paymentForm select, #paymentForm textarea').forEach(el => {
+                el.disabled = true;
+            });
+
+            const form = document.getElementById('paymentForm');
+            const notice = document.createElement('p');
+            notice.className = 'text-danger mt-2 text-center';
+            notice.textContent = '🛑 Payment form is temporarily disabled.';
+            form.appendChild(notice);
+        } else {
+            checkCooldownOnLoad();
+        }
+    });
+
+    window.addEventListener('pageshow', () => checkCooldownOnLoad());
+
+    // ---------- Fee row & total logic ----------
     function updateTotal() {
         let total = 0;
         document.querySelectorAll('.fee-row').forEach(row => {
@@ -122,25 +211,35 @@
 
     function createRow() {
         rowCount++;
-        const tbody = document.querySelector('#fees-table tbody');
-        const tr = document.createElement('tr');
-        tr.classList.add('fee-row');
+        const container = document.getElementById('feesContainer');
 
-        tr.innerHTML = `
-        <td style="position: relative;">
-            <input type="text" class="form-control fee-name" placeholder="Search fee..." autocomplete="off">
-            <input type="hidden" class="fee-id" name="fee_ids[]">
-        </td>
-        <td><input type="number" step="0.01" class="form-control fee-amount" readonly></td>
-        <td><input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="1" min="1"></td>
-        <td><button type="button" class="btn btn-danger btn-sm remove-row">X</button></td>
-    `;
-        tbody.appendChild(tr);
+        const row = document.createElement('div');
+        row.classList.add('fee-row', 'row', 'mb-3', 'align-items-end');
+        row.innerHTML = `
+            <div class="col-lg-6 col-md-12 mb-2">
+                <label class="form-label fw-semibold">Fee Name</label>
+                <input type="text" class="form-control fee-name" placeholder="Search fee..." autocomplete="off">
+                <input type="hidden" class="fee-id" name="fee_ids[]">
+            </div>
+            <div class="col-lg-3 col-md-6 mb-2">
+                <label class="form-label fw-semibold">Amount</label>
+                <input type="number" class="form-control fee-amount" step="0.01" readonly>
+            </div>
+            <div class="col-lg-2 col-md-4 mb-2">
+                <label class="form-label fw-semibold">Quantity</label>
+                <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="1" min="1">
+            </div>
+            <div class="col-lg-1 col-md-2 text-center mb-2">
+                <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
+            </div>
+        `;
 
-        const feeNameInput = tr.querySelector('.fee-name');
-        const amountInput = tr.querySelector('.fee-amount');
-        const quantityInput = tr.querySelector('.fee-quantity');
-        const feeIdInput = tr.querySelector('.fee-id');
+        container.appendChild(row);
+
+        const feeNameInput = row.querySelector('.fee-name');
+        const amountInput = row.querySelector('.fee-amount');
+        const quantityInput = row.querySelector('.fee-quantity');
+        const feeIdInput = row.querySelector('.fee-id');
 
         let suggestionsList = document.createElement('div');
         suggestionsList.classList.add('border', 'rounded', 'bg-white', 'position-absolute', 'shadow-sm');
@@ -197,16 +296,10 @@
         });
 
         feeNameInput.addEventListener('focus', () => {
-            let matches;
             const query = feeNameInput.value.trim().toLowerCase();
-
-            if (query.length > 0) {
-                matches = feesData.filter(fee => fee.fee_name.toLowerCase().includes(query)).slice(0, 10);
-            } else {
-                // show all (or first 10) fees by default when empty
-                matches = feesData.slice(0, 10);
-            }
-
+            const matches = query.length > 0
+                ? feesData.filter(fee => fee.fee_name.toLowerCase().includes(query)).slice(0, 10)
+                : feesData.slice(0, 10);
             renderSuggestions(matches);
         });
 
@@ -229,9 +322,7 @@
             items.forEach(item => item.classList.remove('bg-primary', 'text-white'));
             if (items[currentIndex]) {
                 items[currentIndex].classList.add('bg-primary', 'text-white');
-                items[currentIndex].scrollIntoView({
-                    block: 'nearest'
-                });
+                items[currentIndex].scrollIntoView({ block: 'nearest' });
             }
         });
 
@@ -242,80 +333,67 @@
         });
 
         quantityInput.addEventListener('input', updateTotal);
-        tr.querySelector('.remove-row').addEventListener('click', () => {
-            tr.remove();
+        row.querySelector('.remove-row').addEventListener('click', () => {
+            row.remove();
             updateTotal();
         });
     }
 
-    document.getElementById('addFeeRow').addEventListener('click', createRow);
+    const addBtn = document.getElementById('addFeeRow');
+    if (addBtn) addBtn.addEventListener('click', createRow);
 
-    document.getElementById('confirmPaymentButton').addEventListener('click', function() {
-        const inputs = document.querySelectorAll('.fee-name');
-        let hasInvalid = false;
+    const confirmBtn = document.getElementById('confirmPaymentButton');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function(e) {
+            const inputs = document.querySelectorAll('.fee-name');
+            let hasInvalid = false;
 
-        inputs.forEach(input => {
-            const feeIdInput = input.closest('tr').querySelector('.fee-id');
-            if (!feeIdInput.value) {
-                input.classList.add('is-invalid');
-                hasInvalid = true;
-            } else {
-                input.classList.remove('is-invalid');
-            }
-        });
-
-        if (hasInvalid) {
-            alert("Please select valid fees before submitting.");
-            return;
-        }
-
-        const form = document.getElementById('paymentForm');
-        document.querySelectorAll('.dynamic-quantity').forEach(e => e.remove());
-
-        const feeIds = form.querySelectorAll('.fee-id');
-        const quantities = form.querySelectorAll('.fee-quantity');
-        const amounts = form.querySelectorAll('.fee-amount');
-
-        feeIds.forEach((idInput, i) => {
-            const feeId = idInput.value;
-            const quantity = quantities[i].value;
-            const amount = amounts[i].value;
-            if (feeId && quantity > 0 && amount) {
-                const qtyInput = document.createElement('input');
-                qtyInput.type = 'hidden';
-                qtyInput.name = `quantities[${feeId}]`;
-                qtyInput.value = quantity;
-                qtyInput.classList.add('dynamic-quantity');
-                form.appendChild(qtyInput);
-
-                const amtInput = document.createElement('input');
-                amtInput.type = 'hidden';
-                amtInput.name = `amounts[${feeId}]`;
-                amtInput.value = amount;
-                amtInput.classList.add('dynamic-quantity');
-                form.appendChild(amtInput);
-            }
-        });
-
-        form.submit();
-    });
-
-    window.addEventListener('DOMContentLoaded', () => {
-        createRow();
-
-        const hasActiveBatch = @json($hasActiveBatch);
-        if (!hasActiveBatch) {
-            document.querySelectorAll('#paymentForm input, #paymentForm button, #paymentForm select').forEach(el => {
-                el.disabled = true;
+            inputs.forEach(input => {
+                const feeIdInput = input.closest('.fee-row').querySelector('.fee-id');
+                if (!feeIdInput.value) {
+                    input.classList.add('is-invalid');
+                    hasInvalid = true;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
             });
 
+            if (hasInvalid) {
+                e.preventDefault();
+                alert("Please select valid fees before submitting.");
+                return;
+            }
+
             const form = document.getElementById('paymentForm');
-            const notice = document.createElement('p');
-            notice.className = 'text-danger mt-2 text-center';
-            notice.textContent = '🛑 Payment form is temporarily disabled.';
-            form.appendChild(notice);
-        }
-    });
+            document.querySelectorAll('.dynamic-quantity').forEach(e => e.remove());
+
+            const feeIds = form.querySelectorAll('.fee-id');
+            const quantities = form.querySelectorAll('.fee-quantity');
+            const amounts = form.querySelectorAll('.fee-amount');
+
+            feeIds.forEach((idInput, i) => {
+                const feeId = idInput.value;
+                const quantity = quantities[i].value;
+                const amount = amounts[i].value;
+                if (feeId && quantity > 0 && amount) {
+                    const qtyInput = document.createElement('input');
+                    qtyInput.type = 'hidden';
+                    qtyInput.name = `quantities[${feeId}]`;
+                    qtyInput.value = quantity;
+                    qtyInput.classList.add('dynamic-quantity');
+                    form.appendChild(qtyInput);
+
+                    const amtInput = document.createElement('input');
+                    amtInput.type = 'hidden';
+                    amtInput.name = `amounts[${feeId}]`;
+                    amtInput.value = amount;
+                    amtInput.classList.add('dynamic-quantity');
+                    form.appendChild(amtInput);
+                }
+            });
+        });
+    }
 </script>
+
 
 @endsection
