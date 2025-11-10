@@ -8,5 +8,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Schedule your auto backup daily
+// Schedule auto backup daily
 Schedule::command('app:auto-backup-database')->dailyAt('00:00');
+// Schedule auto disapprove transactions
+Schedule::command('app:auto-disapprove-transactions')->dailyAt('00:00');

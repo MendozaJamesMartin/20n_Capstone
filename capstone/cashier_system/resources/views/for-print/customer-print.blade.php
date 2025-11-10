@@ -252,7 +252,7 @@
             </td>
         </tr>
         <tr style="position: absolute; bottom: 0; right: 0; width: 100%;">
-            <td class="text-right pe-5" style="font-size: 12px;">
+            <td class="text-center ps-5" style="font-size: 12px;">
                 <strong>
                     {{ $Cashier->first_name }}
                     {{ $Cashier->middle_name ? strtoupper(substr(trim($Cashier->middle_name), 0, 1)) . '.' : '' }}

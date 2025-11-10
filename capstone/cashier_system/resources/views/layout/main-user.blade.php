@@ -27,7 +27,7 @@
 <body style="min-height: 100vh; display: flex; flex-direction: column;">
     <nav class="navbar navbar-expand-lg bg-danger bg-gradient">
         <div class="container-fluid">
-            <a class="navbar-brand text-light" href=" {{ route('home') }}">PUPTeC</a>
+            <a class="navbar-brand text-light" href=" ">PUPTeC</a>
         </div>
     </nav>
 

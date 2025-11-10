@@ -19,7 +19,7 @@ use Psy\Readline\Transient;
 
 use function Pest\Laravel\get;
 
-Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], function () {
+Route::group(['prefix' => 'cashier', 'middleware' => (['user.auth', 'verify'])], function () {
     
     //Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
@@ -57,7 +57,7 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
     Route::post('/users/new/password', [UsersController::class, 'newPassword'])->name('new.password.save');
 
     //Superadmin only pages
-    Route::group(['prefix' => 'admin', 'middleware' => ['admin.auth:Superadmin']], function () {
+    Route::group(['middleware' => ['admin.auth:Superadmin']], function () {
         
         //Fees Management
         Route::get('fees/list', [FeesController::class, 'feesList'])->name('fees.list');
@@ -80,10 +80,10 @@ Route::group(['prefix' => 'admin', 'middleware' => (['user.auth', 'verify'])], f
         Route::get('concessionaires/{id}/restore', [ConcessionairesController::class, 'restoreConcessionaire'])->name('concessionaires.restore');
 
         //Receipts Management
-        Route::get('/admin/receipts', [ReceiptsController::class, 'manage'])->name('receipts.manage');
-        Route::post('/admin/receipts/add-batch', [ReceiptsController::class, 'addBatch'])->name('receipts.addBatch');
-        Route::put('/admin/receipts/edit-batch/{id}', [ReceiptsController::class, 'editBatch'])->name('receipts.editBatch');
-        Route::delete('/admin/receipts/delete-batch/{id}', [ReceiptsController::class, 'deleteBatch'])->name('receipts.deleteBatch');
+        Route::get('/manage/receipts', [ReceiptsController::class, 'manage'])->name('receipts.manage');
+        Route::post('/manage/receipts/add-batch', [ReceiptsController::class, 'addBatch'])->name('receipts.addBatch');
+        Route::put('/manage/receipts/edit-batch/{id}', [ReceiptsController::class, 'editBatch'])->name('receipts.editBatch');
+        Route::delete('/manage/receipts/delete-batch/{id}', [ReceiptsController::class, 'deleteBatch'])->name('receipts.deleteBatch');
 
         //Audit logs
         Route::get('/audit/logs', [AuditLogController::class, 'index'])->name('audit.logs');
@@ -109,7 +109,7 @@ Route::group(['middleware' => ['user.auth']], function() {
     Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
 });
 
-Route::group(['middleware' => ['redirect.auth'], 'prefix' > '/admin'], function() {
+Route::group(['prefix' > '/cashier', 'middleware' => ['redirect.auth']], function() {
     Route::get('/login', [LoginController::class, 'login'])->name('login');
     Route::post('/login', [LoginController::class, 'loginPost'])->name('login.submit');
 
@@ -135,7 +135,7 @@ Route::group(['middleware' => ['redirect.auth'], 'prefix' => '/customer'], funct
     });
     
 });
-
+/*
 Route::group(['middleware' => ['redirect.auth'], 'prefix' => '/'], function () {
 
     Route::get('/', function () {
@@ -143,3 +143,4 @@ Route::group(['middleware' => ['redirect.auth'], 'prefix' => '/'], function () {
     })->name('home');
 
 });
+*/

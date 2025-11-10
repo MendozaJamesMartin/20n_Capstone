@@ -151,7 +151,7 @@
     </nav>
 
     <!-- Sidebar -->
-    <nav id="sidebar" class="sidebar collapsed d-flex flex-column no-print">
+    <nav id="sidebar" class="sidebar d-flex flex-column no-print">
 
         <ul class="nav flex-column">
 

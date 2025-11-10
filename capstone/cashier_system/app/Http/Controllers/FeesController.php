@@ -14,9 +14,11 @@ class FeesController extends Controller
         $status = $request->query('status', 'active'); // default to active
 
         if ($status === 'deleted') {
-            $fees = Fee::onlyTrashed()->get();
+            $fees = Fee::onlyTrashed()
+                ->orderBy('fee_name', 'asc')
+                ->get();
         } else {
-            $fees = Fee::all();
+            $fees = Fee::orderBy('fee_name', 'asc')->get();
         }
 
         return view('common.fees.list-of-fees', compact('fees', 'status'));
