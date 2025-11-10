@@ -2,7 +2,7 @@
 
 @section('content')
 
-<main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height:85vh; padding:5%;">
+<main style="min-height:85vh; padding:5%;">
     <div class="container-fluid">
         <div class="bg-light p-4 p-md-5 rounded mx-auto shadow-sm" style="max-width:900px;">
             <h1 class="mb-4 text-center">Customer Payment Form</h1>
@@ -37,6 +37,12 @@
                     <label for="customer_name" class="form-label fw-semibold">Customer Name</label>
                     <input type="text" class="form-control" id="customer_name" name="customer_name"
                         placeholder="LAST NAME, FIRST NAME M.I." required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="contact" class="form-label fw-semibold">Email Address (optional)</label>
+                    <input type="text" class="form-control" id="contact" name="contact"
+                        placeholder="customer@email.com">
                 </div>
 
                 <!-- Fee Section -->

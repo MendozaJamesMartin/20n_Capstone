@@ -2,7 +2,7 @@
 
 @section('content')
 
-<main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:cover; min-height:85vh; padding:5%;">
+<main style="min-height:85vh; padding:5%;">
     <div class="container" style="width:90%">
         <div class="bg-light p-5 rounded shadow">
 
@@ -30,7 +30,7 @@
                     <h3>Student Submission</h3>
                     <div class="card p-3 mb-4">
                         <p><strong>Name:</strong> {{ $transactionDetails[0]->customer_name ?? 'N/A' }}</p>
-                        <p><strong>Email:</strong> {{ $transactionDetails[0]->email ?? 'N/A' }}</p>
+                        <p><strong>Email:</strong> {{ $transactionDetails[0]->contact ?? 'N/A' }}</p>
 
                         <h5 class="mt-3">Submitted Fees</h5>
                         <table class="table table-sm table-bordered text-center">
@@ -65,15 +65,15 @@
                         @method('PUT')
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Student Full Name</label>
+                            <label class="form-label fw-semibold">Customer Full Name</label>
                             <input type="text" class="form-control" name="customer_name"
                                 value="{{ old('customer_name', $transactionDetails[0]->customer_name ?? '') }}">
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Email</label>
-                            <input type="text" class="form-control" name="email"
-                                value="{{ old('email', $transactionDetails[0]->email ?? '') }}">
+                            <label class="form-label fw-semibold">Email Address (optional)</label>
+                            <input type="text" class="form-control" name="contact"
+                                value="{{ old('contact', $transactionDetails[0]->contact ?? '') }}">
                         </div>
 
                         <h5 class="mt-4 mb-3">Fees</h5>
