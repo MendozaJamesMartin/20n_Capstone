@@ -1,8 +1,8 @@
 @extends('layout.main-master')
 @section('content')
 
-<main style="background-image: url('/bgpup4.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 5%;">
-    <div class="container" style="width:50%;">
+<main style="min-height:85vh; padding:2%; background: linear-gradient(to bottom, #f5f7fa, #eef1f5);">
+    <div class="container" style="max-width:600px;">
 
         @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
@@ -20,7 +20,7 @@
         </div>
         @endif
 
-        <div class="bg-light border" style="padding:2%">
+        <div class="card modern-card p-4 mb-4">
 
             <h3><strong>User Profile</strong></h3>
 
@@ -397,6 +397,73 @@
         </div>
     </div>
 </main>
+
+<style>
+    .modern-card {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e7e7e7;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        transition: box-shadow .2s ease-in-out;
+    }
+
+    .modern-card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control:disabled {
+        background: #f4f4f4;
+        border-radius: 10px;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 1px solid #dadada;
+    }
+
+    .btn-danger,
+    .btn-secondary {
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .btn-danger:hover,
+    .btn-secondary:hover {
+        opacity: 0.9;
+    }
+
+    .alert {
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 15px;
+    }
+
+    .modal-content {
+        border-radius: 16px !important;
+        border: 1px solid #e5e5e5;
+    }
+
+    .modal-header,
+    .modal-footer {
+        border: none;
+    }
+
+    .input-group .form-control {
+        border-radius: 10px 0 0 10px;
+    }
+
+    .input-group .btn {
+        border-radius: 0 10px 10px 0;
+    }
+</style>
 
 {{-- Eye toggle script remains --}}
 <script>

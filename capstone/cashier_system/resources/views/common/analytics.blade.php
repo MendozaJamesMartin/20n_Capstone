@@ -3,46 +3,65 @@
 
 <style>
     .card:hover {
-        transform: scale(1.01);
+        transform: scale(1.02);
     }
-
     .card {
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .summary-card h5 {
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    .summary-card h3 {
+        font-weight: 700;
+        font-size: 1.5rem;
+    }
+    .table thead th {
+        vertical-align: middle;
+        text-align: center;
+    }
+    .table tbody td {
+        vertical-align: middle;
+        text-align: center;
+    }
+    .badge-status {
+        font-size: 0.85rem;
+        padding: 0.4em 0.6em;
     }
 </style>
 
-<div class="container">
-    <h2 class="mb-4">Cashier Analytics Dashboard</h2>
+<div class="container py-4">
+    <h2 class="mb-4 fw-bold">Cashier Analytics Dashboard</h2>
 
     <!-- Summary Cards -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
+            <div class="card summary-card bg-success text-white rounded-4 shadow-sm">
+                <div class="card-body text-center">
                     <h5>Total Collection</h5>
                     <h3>₱{{ number_format($totalRevenue, 2) }}</h3>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
+            <div class="card summary-card bg-primary text-white rounded-4 shadow-sm">
+                <div class="card-body text-center">
                     <h5>This Month's Collection</h5>
                     <h3>₱{{ number_format($monthlyRevenue, 2) }}</h3>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
+            <div class="card summary-card bg-warning text-white rounded-4 shadow-sm">
+                <div class="card-body text-center">
                     <h5>Unpaid Amount</h5>
                     <h3>₱{{ number_format($unpaidRevenue, 2) }}</h3>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
+            <div class="card summary-card bg-danger text-white rounded-4 shadow-sm">
+                <div class="card-body text-center">
                     <h5>Cancelled Receipts</h5>
                     <h3>{{ $cancelledReceipts }}</h3>
                 </div>
@@ -51,13 +70,12 @@
     </div>
 
     <!-- Monthly Collection Trend + Report Export -->
-    <div class="card mb-4">
+    <div class="card mb-4 rounded-4 shadow-sm">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Monthly Collection Report</h5>
-                <!-- Button to open modal -->
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
-                    Export Report
+                <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal" data-bs-target="#exportModal">
+                    <i class="bi bi-download me-1"></i> Export Report
                 </button>
             </div>
             <canvas id="revenueChart" height="100"></canvas>
@@ -67,9 +85,9 @@
     <div class="row g-3 mb-4">
         <!-- Top Fees Chart -->
         <div class="col-md-6">
-            <div class="card h-100">
+            <div class="card h-100 rounded-4 shadow-sm">
                 <div class="card-body">
-                    <h5>Top Fees (Pie Chart)</h5>
+                    <h5 class="mb-3">Top Fees (Pie Chart)</h5>
                     <canvas id="feeChart" height="200"></canvas>
                 </div>
             </div>
@@ -77,15 +95,15 @@
 
         <!-- Top Fees List -->
         <div class="col-md-6">
-            <div class="card h-100">
+            <div class="card h-100 rounded-4 shadow-sm">
                 <div class="card-body">
-                    <h5>Top Fees Paid</h5>
-                    <ul class="list-group">
+                    <h5 class="mb-3">Top Fees Paid</h5>
+                    <ul class="list-group list-group-flush">
                         @foreach ($topFees as $fee)
-                        <li class="list-group-item d-flex justify-content-between">
-                            {{ $fee->fee_name }}
-                            <span class="badge bg-success">₱{{ number_format($fee->total, 2) }}</span>
-                        </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $fee->fee_name }}
+                                <span class="badge bg-success rounded-pill">₱{{ number_format($fee->total, 2) }}</span>
+                            </li>
                         @endforeach
                     </ul>
                 </div>
@@ -94,15 +112,16 @@
     </div>
 
     <!-- Receipts Analytics -->
-    <div class="card mb-4">
+    <div class="card mb-4 rounded-4 shadow-sm">
         <div class="card-body">
-            <h5>Receipt Batches</h5>
-            <p><strong>Total Receipts Issued:</strong> {{ $totalReceiptsIssued }}</p>
-            <p><strong>Total Remaining:</strong> {{ $totalReceiptsRemaining }}</p>
-
+            <h5 class="mb-3">Receipt Batches</h5>
+            <div class="row mb-3">
+                <div class="col-md-6"><strong>Total Receipts Issued:</strong> {{ $totalReceiptsIssued }}</div>
+                <div class="col-md-6"><strong>Total Remaining:</strong> {{ $totalReceiptsRemaining }}</div>
+            </div>
             <div class="table-responsive">
-                <table class="table table-bordered mt-3">
-                    <thead>
+                <table class="table table-bordered align-middle text-center">
+                    <thead class="table-light">
                         <tr>
                             <th>Batch</th>
                             <th>Start</th>
@@ -124,9 +143,9 @@
                             <td>{{ $batch->remaining_count }}</td>
                             <td>
                                 @if($batch->exhausted_at)
-                                <span class="badge bg-danger">Exhausted</span>
+                                    <span class="badge bg-danger badge-status">Exhausted</span>
                                 @else
-                                <span class="badge bg-success">Active</span>
+                                    <span class="badge bg-success badge-status">Active</span>
                                 @endif
                             </td>
                         </tr>
@@ -140,27 +159,27 @@
     <!-- Concessionaire Billing -->
     <div class="row g-3 mb-4">
         <div class="col-md-6">
-            <div class="card bg-light border-primary">
+            <div class="card bg-light border-primary rounded-4 shadow-sm">
                 <div class="card-body">
                     <h5>Water Bill Payments</h5>
-                    <p>Paid: ₱{{ number_format($waterPayments, 2) }}</p>
-                    <p class="text-danger">Overdue Amount: ₱{{ number_format($overdueWaterAmount, 2) }}</p>
+                    <p class="mb-1">Paid: ₱{{ number_format($waterPayments, 2) }}</p>
+                    <p class="text-danger mb-0">Overdue Amount: ₱{{ number_format($overdueWaterAmount, 2) }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card bg-light border-warning">
+            <div class="card bg-light border-warning rounded-4 shadow-sm">
                 <div class="card-body">
                     <h5>Electricity Bill Payments</h5>
-                    <p>Paid: ₱{{ number_format($electricityPayments, 2) }}</p>
-                    <p class="text-danger">Overdue Amount: ₱{{ number_format($overdueElectricityAmount, 2) }}</p>
+                    <p class="mb-1">Paid: ₱{{ number_format($electricityPayments, 2) }}</p>
+                    <p class="text-danger mb-0">Overdue Amount: ₱{{ number_format($overdueElectricityAmount, 2) }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-body text-danger">
+    <div class="card mb-4 rounded-4 shadow-sm text-danger">
+        <div class="card-body text-center">
             <h5>Total Overdue Concessionaire Bills</h5>
             <h3>₱{{ number_format($totalOverdueAmount, 2) }}</h3>
             <p>Total Payments (Water + Electricity): ₱{{ number_format($totalBillingPayments, 2) }}</p>
@@ -171,8 +190,8 @@
     <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-md">
             <form method="GET" action="{{ route('reports.monthly.export') }}">
-                <div class="modal-content">
-                    <div class="modal-header">
+                <div class="modal-content rounded-4 shadow-sm">
+                    <div class="modal-header border-0">
                         <h5 class="modal-title" id="exportModalLabel">Export Report by Date Range</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -183,31 +202,26 @@
                         $startOfMonth = $now->copy()->startOfMonth()->toDateString();
                         $endOfMonth = $now->copy()->endOfMonth()->toDateString();
                         @endphp
-
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" name="start_date" id="start_date" class="form-control"
-                                    value="{{ $startOfMonth }}" required>
+                                <input type="date" name="start_date" id="start_date" class="form-control rounded-3" value="{{ $startOfMonth }}" required>
                             </div>
-
                             <div class="col-md-6 mb-3">
                                 <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" name="end_date" id="end_date" class="form-control"
-                                    value="{{ $endOfMonth }}" required>
+                                <input type="date" name="end_date" id="end_date" class="form-control rounded-3" value="{{ $endOfMonth }}" required>
                             </div>
                         </div>
                     </div>
 
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Export Report</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <div class="modal-footer border-0">
+                        <button type="submit" class="btn btn-success rounded-3">Export Report</button>
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
                     </div>
                 </div>
             </form>
         </div>
     </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -229,16 +243,8 @@
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    display: true
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+            plugins: { legend: { display: true } },
+            scales: { y: { beginAtZero: true } }
         }
     });
 
@@ -259,11 +265,7 @@
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
+            plugins: { legend: { position: 'bottom' } }
         }
     });
 </script>

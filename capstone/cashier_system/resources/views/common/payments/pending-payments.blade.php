@@ -1,17 +1,23 @@
 @extends('layout.main-master')
 @section('content')
 
-<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: auto; background-position: right center; min-height: 85vh; padding: 2%;">
+<main style="min-height:85vh; padding:5% 5% 8% 5%; background: linear-gradient(to bottom, #f5f7fa, #eef1f5);">
     <div class="container">
 
-        <!-- Header: Title, Search, and Filter Button -->
+        <!-- Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <h2 class="mb-0">Pending Payments</h2>
+            <h2 class="mb-0 fw-bold">Pending Payments</h2>
 
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <!-- Search Input -->
-                <form action="{{ url()->current() }}" method="GET" class="d-flex">
-                    <input type="text" id="searchInput" class="form-control" placeholder="Search transactions...">
+
+                <!-- Search -->
+                <form action="{{ url()->current() }}" method="GET" class="d-flex position-relative">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="form-control pe-5" 
+                        placeholder="Search transactions..."
+                    >
                 </form>
 
                 <!-- Filter Button -->
@@ -26,6 +32,7 @@
             <div class="table-responsive">
                 <table class="table table-striped align-middle text-center mb-0" id="pendingTable">
                     <thead class="table-dark">
+                        <tr>
                             <th onclick="sortTable(0)">Transaction #</th>
                             <th onclick="sortTable(1)">Customer Name</th>
                             <th onclick="sortTable(2)">Total Amount</th>
@@ -39,26 +46,35 @@
                         @forelse($result as $transaction)
                         <tr>
                             <td>{{ $transaction->transaction_number }}</td>
-                            <td>{{ $transaction->customer_name }}</td>
+                            <td class="text-uppercase fw-semibold">{{ $transaction->customer_name }}</td>
                             <td>{{ $transaction->total_amount }}</td>
                             <td>{{ $transaction->amount_paid }}</td>
                             <td>{{ $transaction->balance_due }}</td>
                             <td>{{ \Carbon\Carbon::parse($transaction->created_at)->format('Y-m-d') }}</td>
                             <td>
-                                <a href="{{ route('payments.update', ['transactionId' => $transaction->transaction_id]) }}" class="btn btn-sm btn-outline-danger" title="View and Edit Payment">
+                                <a href="{{ route('payments.update', ['transactionId' => $transaction->transaction_id]) }}" 
+                                   class="btn btn-sm btn-outline-danger" 
+                                   title="View and Edit Payment">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
-                                <form action="{{ route('payments.disapprove', ['id' => $transaction->transaction_id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to disapprove and delete this transaction?');" style="display:inline;">
+                                <form action="{{ route('payments.disapprove', ['id' => $transaction->transaction_id]) }}" 
+                                      method="POST" 
+                                      onsubmit="return confirm('Are you sure you want to disapprove and delete this transaction?');" 
+                                      style="display:inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Disapprove Payment">
-                                        <i class="fa fa-trash" aria-hidden="true"></i>
+                                    <button type="submit" 
+                                            class="btn btn-sm btn-outline-danger" 
+                                            title="Disapprove Payment">
+                                        <i class="fa fa-trash"></i>
                                     </button>
                                 </form>
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="8" class="text-center">No pending payments found</td></tr>
+                        <tr>
+                            <td colspan="8" class="text-center">No pending payments found</td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -67,12 +83,13 @@
 
         <!-- Pagination Controls -->
         <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mt-3">
+
             @if ($result->onFirstPage())
                 <button class="btn btn-outline-dark rounded-pill px-3" disabled>« First</button>
                 <button class="btn btn-outline-dark rounded-pill px-3" disabled>‹ Prev</button>
             @else
-                <a href="{{ $result->url(1) }}" class="btn btn-outline-secondary rounded-pill px-3">« First</a>
-                <a href="{{ $result->previousPageUrl() }}" class="btn btn-outline-secondary rounded-pill px-3">‹ Prev</a>
+                <a href="{{ $result->url(1) }}" class="btn btn-outline-dark rounded-pill px-3">« First</a>
+                <a href="{{ $result->previousPageUrl() }}" class="btn btn-outline-dark rounded-pill px-3">‹ Prev</a>
             @endif
 
             <form action="{{ url()->current() }}" method="GET" class="d-flex align-items-center">
@@ -95,8 +112,8 @@
             </form>
 
             @if ($result->hasMorePages())
-                <a href="{{ $result->nextPageUrl() }}" class="btn btn-outline-secondary rounded-pill px-3">Next ›</a>
-                <a href="{{ $result->url($result->lastPage()) }}" class="btn btn-outline-secondary rounded-pill px-3">Last »</a>
+                <a href="{{ $result->nextPageUrl() }}" class="btn btn-outline-dark rounded-pill px-3">Next ›</a>
+                <a href="{{ $result->url($result->lastPage()) }}" class="btn btn-outline-dark rounded-pill px-3">Last »</a>
             @else
                 <button class="btn btn-outline-dark rounded-pill px-3" disabled>Next ›</button>
                 <button class="btn btn-outline-dark rounded-pill px-3" disabled>Last »</button>
@@ -108,10 +125,13 @@
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <form action="{{ url()->current() }}" method="GET" class="modal-content p-4">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="filterModalLabel"><i class="fa-solid fa-filter me-2"></i> Filter Payments</h5>
+                        <h5 class="modal-title" id="filterModalLabel">
+                            <i class="fa-solid fa-filter me-2"></i> Filter Payments
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body row g-3">
+
                         <div class="col-md-6">
                             <label for="timeframe" class="form-label">Timeframe</label>
                             <select name="timeframe" class="form-select">
@@ -127,9 +147,10 @@
                         <div class="col-md-12 d-flex justify-content-between align-items-center">
                             <div class="d-flex gap-2">
                                 <button type="submit" class="btn btn-primary">Apply Filters</button>
-                                <a href="{{ url()->current() }}" class="btn btn-outline-secondary">Reset</a>
+                                <a href="{{ url()->current() }}" class="btn btn-outline-dark">Reset</a>
                             </div>
                         </div>
+
                     </div>
                 </form>
             </div>

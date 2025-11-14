@@ -2,12 +2,18 @@
 
 @section('content')
 
-<main class="py-5 px-3" style="min-height: 85vh; background-color: #f8f9fa;">
-    <div class="container">
-        <h2 class="mb-4">Receipt Management</h2>
+<main style="min-height: 85vh; padding: 3%;
+    background: linear-gradient(135deg, #eef2f7, #f8f9fc);">
 
-        <!-- Page Instructions -->
-        <div class="alert alert-info">
+    <div class="container mt-4" style="animation: fadeIn 0.4s ease;">
+
+        <!-- Page Title -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+            <h3 class="fw-bold mb-0">Receipt Management</h3>
+        </div>
+
+        <!-- Instructions -->
+        <div class="alert alert-info shadow-sm rounded-4 mb-4" style="white-space:pre-line;">
             <ul class="mb-0">
                 <li>🧾 Receipt numbers are issued sequentially from loaded batches.</li>
                 <li>⚠️ Only one batch can be <strong>Active</strong> at a time. The system automatically switches when the current batch is exhausted.</li>
@@ -16,99 +22,103 @@
             </ul>
         </div>
 
+        <!-- Alerts -->
         @if(session('success'))
-            <p class="text-success">{{ session('success') }}</p>
+        <div class="alert alert-success shadow-sm">{{ session('success') }}</div>
         @elseif(session('error'))
-            <p class="text-danger">{{ session('error') }}</p>
+        <div class="alert alert-danger shadow-sm">{{ session('error') }}</div>
         @endif
 
         @if ($errors->any())
-        <div class="alert alert-danger">
+        <div class="alert alert-danger shadow-sm">
             <ul class="mb-0">
                 @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
+                    <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
         @endif
 
-        <!-- Warning for low receipts -->
+        <!-- Low Receipt Warning -->
         @if ($currentBatch && $currentBatch->remaining_count <= 5)
-            <p class="text-warning fw-bold">
+            <div class="alert alert-warning fw-bold shadow-sm rounded-4">
                 ⚠️ Only {{ $currentBatch->remaining_count }} receipts left. Please load a new batch soon.
-            </p>
+            </div>
         @endif
 
-        <!-- Current Active Receipt Batch -->
+        <!-- Active Batch Card -->
         @if ($currentBatch)
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    Current Active Receipt Batch
-                </div>
-                <div class="card-body">
-                    <p>
-                        <strong>Start Number:</strong> {{ $currentBatch->start_number ?? 0 }}
-                        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="The first receipt number in this batch."></i>
-                    </p>
-                    <p>
-                        <strong>Current Receipt Number:</strong> {{ $currentBatch->display_next_number }}
-                        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="This is the next receipt number that will be issued."></i>
-                    </p>
-                    <p>
-                        <strong>End Number:</strong> {{ $currentBatch->end_number ?? 0 }}
-                        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="The last available receipt number in this batch."></i>
-                    </p>
-                    <p>
-                        <strong>Receipts Used:</strong> {{ $currentBatch->used_count }}
-                        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="How many receipts have already been issued from this batch."></i>
-                    </p>
-                    <p>
-                        <strong>Receipts Left:</strong> {{ $currentBatch->remaining_count }}
-                        <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="How many receipts remain available in this batch."></i>
-                    </p>
-                </div>
-            </div>
-        @else
-            <div class="alert alert-warning">No active receipt batch available.</div>
-        @endif
+        <div class="bg-white rounded-4 shadow p-4 mb-4" style="border:1px solid #e5e7eb;">
+            <h5 class="fw-bold pb-2 border-bottom">Current Active Receipt Batch</h5>
 
-        <!-- Add New Batch Form -->
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                Add New Receipt Batch
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ route('receipts.addBatch') }}">
-                    @csrf
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="start_number" class="form-label">
-                                Start Number
-                                <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Enter the first number of your receipt book. Example: 100001"></i>
-                            </label>
-                            <input type="number" class="form-control" name="start_number" id="start_number" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="end_number" class="form-label">
-                                End Number
-                                <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="Enter the last number of your receipt book. Example: 100500"></i>
-                            </label>
-                            <input type="number" class="form-control" name="end_number" id="end_number" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-success">Add Batch</button>
-                </form>
+            <div class="row mt-3">
+                <div class="col-md-4 mb-3">
+                    <strong>Start Number:</strong> {{ $currentBatch->start_number }}
+                    <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip"
+                       title="The first receipt number in this batch."></i>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <strong>Current Number:</strong> {{ $currentBatch->display_next_number }}
+                    <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip"
+                       title="The next receipt number to be issued."></i>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <strong>End Number:</strong> {{ $currentBatch->end_number }}
+                    <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip"
+                       title="The last receipt number available."></i>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <strong>Receipts Used:</strong> {{ $currentBatch->used_count }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <strong>Receipts Left:</strong> {{ $currentBatch->remaining_count }}
+                </div>
             </div>
         </div>
 
+        @else
+        <div class="alert alert-warning shadow-sm rounded-4">
+            No active receipt batch available.
+        </div>
+        @endif
+
+        <!-- Add Batch -->
+        <div class="bg-white rounded-4 shadow p-4 mb-4" style="border:1px solid #e5e7eb;">
+            <h5 class="fw-bold pb-2 border-bottom">Add New Receipt Batch</h5>
+
+            <form method="POST" action="{{ route('receipts.addBatch') }}">
+                @csrf
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            Start Number
+                            <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip"
+                               title="Enter the first number of the receipt book."></i>
+                        </label>
+                        <input type="number" name="start_number" class="form-control shadow-sm rounded-3" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            End Number
+                            <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip"
+                               title="Enter the final number in the batch."></i>
+                        </label>
+                        <input type="number" name="end_number" class="form-control shadow-sm rounded-3" required>
+                    </div>
+                </div>
+
+                <button class="btn btn-success mt-3 px-4 rounded-pill shadow-sm">Add Batch</button>
+            </form>
+        </div>
+
         <!-- All Batches Table -->
-        <div class="card">
-            <div class="card-header">
-                All Receipt Batches
-                <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="This table shows all batches, including Active, Pending, and Empty ones."></i>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-bordered m-0">
+        <div class="bg-white rounded-4 shadow p-4" style="border:1px solid #e5e7eb;">
+            <h5 class="fw-bold pb-2 border-bottom">All Receipt Batches</h5>
+
+            <div class="table-responsive shadow-sm rounded-3 mt-3" style="border:1px solid #e2e3e5;">
+                <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>#</th>
@@ -119,13 +129,14 @@
                             <th>Left</th>
                             <th>Status</th>
                             <th>Created</th>
-                            <th>Emptied</th>
+                            <th>Exhausted</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
+
                     <tbody>
                     @forelse ($batches as $batch)
-                        <tr>
+                        <tr class="align-middle">
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $batch->start_number }}</td>
                             <td>{{ $batch->display_next_number }}</td>
@@ -134,79 +145,74 @@
                             <td>{{ $batch->remaining_count }}</td>
                             <td>
                                 @if ($batch->next_number <= $batch->end_number)
-                                    @if ($batch->id == $currentBatch?->id)
-                                        <span class="badge bg-success" data-bs-toggle="tooltip" title="This batch is currently in use.">Active</span>
+                                    @if ($currentBatch?->id == $batch->id)
+                                        <span class="badge bg-success">Active</span>
                                     @else
-                                        <span class="badge bg-info" data-bs-toggle="tooltip" title="This batch is ready to be used after the current one finishes.">Pending</span>
+                                        <span class="badge bg-info">Pending</span>
                                     @endif
                                 @else
-                                    <span class="badge bg-secondary" data-bs-toggle="tooltip" title="This batch has been completely used.">Empty</span>
+                                    <span class="badge bg-secondary">Empty</span>
                                 @endif
                             </td>
-                            <td>{{ ($batch->created_at)->format('Y-m-d') }}</td>
+                            <td>{{ $batch->created_at->format('Y-m-d') }}</td>
                             <td>{{ optional($batch->exhausted_at)->format('Y-m-d') ?? '—' }}</td>
                             <td>
-                                <!-- Edit button -->
-                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editBatchModal{{ $batch->id }}">
+                                <button class="btn btn-sm btn-primary shadow-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editBatchModal{{ $batch->id }}">
                                     Edit
                                 </button>
 
-                                <!-- Delete -->
-                                <form method="POST" action="{{ route('receipts.deleteBatch', $batch->id) }}" class="d-inline"
-                                      onsubmit="return confirm('Are you sure you want to delete this batch?');">
+                                <form method="POST" action="{{ route('receipts.deleteBatch', $batch->id) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Delete this batch?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    <button class="btn btn-sm btn-danger shadow-sm">Delete</button>
                                 </form>
                             </td>
                         </tr>
 
-                        <!-- Edit Batch Modal -->
-                        <div class="modal fade" id="editBatchModal{{ $batch->id }}" tabindex="-1" aria-labelledby="editBatchModalLabel{{ $batch->id }}" aria-hidden="true">
-                          <div class="modal-dialog">
-                            <div class="modal-content">
-                              <form method="POST" action="{{ route('receipts.editBatch', $batch->id) }}">
-                                @csrf
-                                @method('PUT')
-                                <div class="modal-header">
-                                  <h5 class="modal-title" id="editBatchModalLabel{{ $batch->id }}">Edit Receipt Batch</h5>
-                                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">
-                                            Start Number
-                                            <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="The first receipt number in this batch. Cannot be changed."></i>
-                                        </label>
-                                        <input type="number" class="form-control" value="{{ $batch->start_number }}" disabled>
+                        <!-- Edit Modal -->
+                        <div class="modal fade" id="editBatchModal{{ $batch->id }}">
+                            <div class="modal-dialog">
+                                <form method="POST" action="{{ route('receipts.editBatch', $batch->id) }}">
+                                    @csrf @method('PUT')
+                                    <div class="modal-content shadow-lg rounded-4">
+                                        <div class="modal-header bg-primary text-white">
+                                            <h5 class="modal-title">Edit Receipt Batch</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body bg-light">
+                                            <div class="mb-3">
+                                                <label class="form-label">Start Number</label>
+                                                <input type="number" value="{{ $batch->start_number }}" disabled class="form-control">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">End Number</label>
+                                                <input type="number" name="end_number" class="form-control"
+                                                       value="{{ $batch->end_number }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Next Number</label>
+                                                <input type="number" name="next_number" class="form-control"
+                                                       value="{{ $batch->next_number }}" required>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button class="btn btn-primary">Save</button>
+                                        </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="end_number_{{ $batch->id }}" class="form-label">
-                                            End Number
-                                            <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="You can increase this if your book has more pages than initially expected."></i>
-                                        </label>
-                                        <input type="number" class="form-control" name="end_number" id="end_number_{{ $batch->id }}" value="{{ $batch->end_number }}" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="next_number_{{ $batch->id }}" class="form-label">
-                                            Next Number
-                                            <i class="bi bi-info-circle text-muted" data-bs-toggle="tooltip" title="This is the number that will be issued next. Only change this if there was a skipped or voided receipt."></i>
-                                        </label>
-                                        <input type="number" class="form-control" name="next_number" id="next_number_{{ $batch->id }}" value="{{ $batch->next_number }}" required>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                  <button type="submit" class="btn btn-primary">Save changes</button>
-                                </div>
-                              </form>
+                                </form>
                             </div>
-                          </div>
                         </div>
 
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center">No batches found.</td>
+                            <td colspan="10" class="text-center text-muted py-3">
+                                No batches found.
+                            </td>
                         </tr>
                     @endforelse
                     </tbody>
@@ -215,7 +221,16 @@
         </div>
 
     </div>
+
 </main>
+
+<!-- Fade-in animation -->
+<style>
+    @keyframes fadeIn {
+        from {opacity:0; transform:translateY(10px);}
+        to {opacity:1; transform:translateY(0);}
+    }
+</style>
 
 <!-- Re-enable tooltips -->
 <script>

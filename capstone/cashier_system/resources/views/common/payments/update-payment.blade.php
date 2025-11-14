@@ -6,12 +6,14 @@
     <div class="container" style="width:90%">
         <div class="bg-light p-5 rounded shadow">
 
-            <h1 class="mb-4">Finalize Payment</h1>
+            <!-- Title -->
+            <h1 class="mb-4 fw-bold text-center">Finalize Payment</h1>
 
+            <!-- Alerts -->
             @if(session('success'))
-                <p class="text-success">{{ session('success') }}</p>
+                <div class="alert alert-success text-center">{{ session('success') }}</div>
             @elseif(session('error'))
-                <p class="text-danger">{{ session('error') }}</p>
+                <div class="alert alert-danger text-center">{{ session('error') }}</div>
             @endif
 
             @if ($errors->any())
@@ -24,46 +26,55 @@
                 </div>
             @endif
 
-            <div class="row">
-                <!-- Left Column: Student Submission -->
+            <div class="row g-4">
+                <!-- Left Column -->
                 <div class="col-md-5">
-                    <h3>Student Submission</h3>
-                    <div class="card p-3 mb-4">
-                        <p><strong>Name:</strong> {{ $transactionDetails[0]->customer_name ?? 'N/A' }}</p>
-                        <p><strong>Email:</strong> {{ $transactionDetails[0]->contact ?? 'N/A' }}</p>
+                    <h3 class="mb-3 fw-semibold">Student Submission</h3>
 
-                        <h5 class="mt-3">Submitted Fees</h5>
-                        <table class="table table-sm table-bordered text-center">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Fee Name</th>
-                                    <th>Amount</th>
-                                    <th>Qty</th>
-                                    <th>Label</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($transactionDetails as $detail)
-                                <tr>
-                                    <td>{{ $detail->fee_name }}</td>
-                                    <td>₱{{ number_format($detail->amount, 2) }}</td>
-                                    <td>{{ $detail->quantity }}</td>
-                                    <td>{{ $detail->fee_label ?? '—' }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body">
+
+                            <p><strong>Name:</strong> {{ $transactionDetails[0]->customer_name ?? 'N/A' }}</p>
+                            <p><strong>Email:</strong> {{ $transactionDetails[0]->contact ?? 'N/A' }}</p>
+
+                            <h5 class="mt-4 mb-2 fw-semibold">Submitted Fees</h5>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered text-center align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Fee Name</th>
+                                            <th>Amount</th>
+                                            <th>Qty</th>
+                                            <th>Label</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($transactionDetails as $detail)
+                                        <tr>
+                                            <td>{{ $detail->fee_name }}</td>
+                                            <td>₱{{ number_format($detail->amount, 2) }}</td>
+                                            <td>{{ $detail->quantity }}</td>
+                                            <td>{{ $detail->fee_label ?? '—' }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Cashier Finalization -->
+                <!-- Right Column -->
                 <div class="col-md-7">
-                    <h3>Cashier Finalization</h3>
+                    <h3 class="mb-3 fw-semibold">Cashier Finalization</h3>
 
                     <form method="POST" action="{{ route('payments.update', ['transactionId' => $transactionId]) }}" id="paymentForm">
                         @csrf
                         @method('PUT')
 
+                        <!-- Customer Info -->
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Customer Full Name</label>
                             <input type="text" class="form-control" name="customer_name"
@@ -76,75 +87,89 @@
                                 value="{{ old('contact', $transactionDetails[0]->contact ?? '') }}">
                         </div>
 
-                        <h5 class="mt-4 mb-3">Fees</h5>
+                        <!-- Fees -->
+                        <h5 class="mt-4 mb-3 fw-semibold">Fees</h5>
+
                         <div id="feesContainer">
                             @foreach($transactionDetails as $detail)
-                                <div class="fee-row card p-3 mb-3 shadow-sm">
+                                <div class="fee-row card p-3 mb-3 shadow-sm border-0">
                                     <div class="row g-3 align-items-end">
+
                                         <div class="col-lg-5 col-md-12">
                                             <label class="form-label fw-semibold">Fee Name</label>
                                             <input type="text" class="form-control fee-name" value="{{ $detail->fee_name }}" autocomplete="off">
                                             <input type="hidden" class="fee-id" name="fee_ids[]" value="{{ $detail->fee_id }}">
                                         </div>
+
                                         <div class="col-lg-2 col-md-6">
                                             <label class="form-label fw-semibold">Amount</label>
-                                            <input type="number" step="0.01" class="form-control fee-amount" 
-                                                name="amounts[]"
+                                            <input type="number" step="0.01" class="form-control fee-amount" name="amounts[]"
                                                 value="{{ number_format($detail->amount, 2, '.', '') }}"
                                                 {{ $detail->is_variable ? '' : 'readonly' }}>
                                         </div>
+
                                         <div class="col-lg-2 col-md-4">
                                             <label class="form-label fw-semibold">Quantity</label>
-                                            <input type="number" class="form-control fee-quantity" name="quantities[]" 
-                                                value="{{ $detail->quantity }}" min="1">
+                                            <input type="number" class="form-control fee-quantity" name="quantities[]" value="{{ $detail->quantity }}" min="1">
                                         </div>
+
                                         <div class="col-lg-2 col-md-6">
                                             <label class="form-label fw-semibold">Label</label>
                                             <select class="form-select fee-label" name="labels[]" required>
-                                                <option value="">-- Select Label --</option>
                                                 <option value="None" {{ $detail->fee_label == 'None' ? 'selected' : '' }}>None</option>
                                                 <option value="Certification Fee" {{ $detail->fee_label == 'Certification Fee' ? 'selected' : '' }}>Certification Fee</option>
                                                 <option value="Certified True Copy" {{ $detail->fee_label == 'Certified True Copy' ? 'selected' : '' }}>Certified True Copy</option>
                                                 <option value="Others" {{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy','None','']) ? 'selected' : '' }}>Others (specify)</option>
                                             </select>
-                                            <input type="text" name="custom_labels[]" class="form-control mt-2 fee-label-other {{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy','None','']) ? '' : 'd-none' }}"
+
+                                            <input type="text" name="custom_labels[]" class="form-control mt-2 fee-label-other 
+                                                {{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy','None','']) ? '' : 'd-none' }}"
                                                 value="{{ !in_array($detail->fee_label, ['Certification Fee','Certified True Copy','None','']) ? $detail->fee_label : '' }}"
                                                 placeholder="Enter label">
                                         </div>
+
                                         <div class="col-lg-1 col-md-2 text-center">
-                                            <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
+                                            <button type="button" class="btn btn-danger btn-sm remove-row px-3">X</button>
                                         </div>
+
                                     </div>
                                 </div>
                             @endforeach
                         </div>
 
+                        <!-- Add Fee Button -->
                         <div class="text-center">
                             <button type="button" class="btn btn-success btn-sm mb-3" id="addFeeRow">+ Add Fee</button>
                         </div>
 
+                        <!-- Total -->
                         <div class="mt-3 text-center">
                             <h4 class="fw-bold">Total Amount: ₱<span id="total-amount">0.00</span></h4>
                         </div>
 
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary mt-3" id="confirmPaymentButton">
+                        <!-- Approve Button -->
+                        <div class="text-center mt-3">
+                            <button type="submit" class="btn btn-primary px-4" id="confirmPaymentButton">
                                 Approve and Confirm Payment
                             </button>
                         </div>
+
                     </form>
 
-                    <form action="{{ route('payments.disapprove', ['id' => $transactionDetails[0]->transaction_id]) }}" method="POST"
+                    <!-- Disapprove -->
+                    <form action="{{ route('payments.disapprove', ['id' => $transactionDetails[0]->transaction_id]) }}"
+                        method="POST"
                         onsubmit="return confirm('Are you sure you want to disapprove and delete this transaction?');"
-                        class="mt-2 text-center">
+                        class="mt-3 text-center">
+
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
-                            Disapprove
-                        </button>
+
+                        <button type="submit" class="btn btn-danger px-4">Disapprove</button>
                     </form>
                 </div>
             </div>
+
         </div>
     </div>
 </main>
@@ -192,7 +217,6 @@
                 <div class="col-lg-2 col-md-6">
                     <label class="form-label fw-semibold">Label</label>
                     <select class="form-select fee-label" name="labels[]" required>
-                        <option value="">-- Select Label --</option>
                         <option value="None">None</option>
                         <option value="Certification Fee">Certification Fee</option>
                         <option value="Certified True Copy">Certified True Copy</option>

@@ -1,12 +1,13 @@
 @extends('layout.main-master')
 
 @section('content')
-<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 85vh; padding: 2%;">
+<main style="min-height:85vh; padding:2%; background: linear-gradient(to bottom, #f5f7fa, #eef1f5);">
+
     <div class="container" style="width:60%">
 
         <!-- Header: Title, Search, Registration Button -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <h2 class="mb-0">Registered Users</h2>
+            <h2 class="mb-0 page-title">Registered Users</h2>
 
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <!-- Search Box -->
@@ -25,18 +26,18 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+        @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
 
         <!-- Table Card -->
-        <div class="card shadow-sm p-3 mb-4 bg-light rounded">
+        <div class="card modern-card p-4 mb-4">
             <div class="table-responsive">
                 <table class="table table-striped align-middle text-center mb-0" id="usersTable">
                     <thead class="table-dark">
@@ -53,7 +54,7 @@
                         <tr>
                             <td>{{ $user->id }}</td>
                             <td>{{ $user->email }}</td>
-                            <td>                    
+                            <td>
                                 {{ $user->first_name }}
                                 {{ $user->middle_name ? strtoupper(substr(trim($user->middle_name), 0, 1)) . '.' : '' }}
                                 {{ $user->last_name }}
@@ -371,6 +372,100 @@
 
     </div>
 </main>
+
+<style>
+    .page-title {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.4px;
+        color: #333;
+    }
+
+    #searchInput {
+        border-radius: 10px;
+        padding: 8px 12px;
+        border: 1px solid #d5d5d5;
+    }
+
+    #searchInput:focus {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.15) !important;
+    }
+
+    .btn-danger.btn-sm {
+        border-radius: 10px !important;
+        padding: 8px 14px !important;
+        font-weight: 600;
+    }
+
+    .modern-card {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e7e7e7;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        transition: box-shadow .2s ease-in-out;
+    }
+
+    .modern-card:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+    }
+
+    .table thead th {
+        cursor: pointer;
+        user-select: none;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .table-striped>tbody>tr:nth-child(odd) {
+        background-color: #f9fbfc !important;
+    }
+
+    .table-striped>tbody>tr:hover {
+        background-color: #eef4ff !important;
+    }
+
+    td,
+    th {
+        vertical-align: middle;
+    }
+
+    .alert {
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 15px;
+    }
+
+    .modal-content {
+        border-radius: 16px !important;
+        border: 1px solid #e5e5e5;
+    }
+
+    .modal-header {
+        border-bottom: none;
+    }
+
+    .modal-footer {
+        border-top: none;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        border: 1px solid #dadada;
+    }
+
+    .form-control:disabled {
+        background: #f4f4f4;
+    }
+
+    .btn-warning.btn-sm,
+    .btn-info.btn-sm {
+        border-radius: 10px !important;
+        padding: 6px 12px !important;
+        font-weight: 600;
+    }
+</style>
 
 <!-- Inline Search & Sort Script -->
 <script>

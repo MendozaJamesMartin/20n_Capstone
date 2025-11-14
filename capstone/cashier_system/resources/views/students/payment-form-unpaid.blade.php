@@ -2,9 +2,11 @@
 
 @section('content')
 
-<main style="min-height:85vh; padding:5%;">
+<main style="min-height:85vh; padding:5% 5% 8% 5%; background: linear-gradient(to bottom, #f5f7fa, #eef1f5);">
+    
     <div class="container-fluid">
-        <div class="bg-light p-4 p-md-5 rounded mx-auto shadow-sm" style="max-width:900px;">
+        <div class="p-4 p-md-5 rounded mx-auto shadow-sm classy-card" style="max-width:900px;">
+        <div class="accent-bar mb-4"></div>
             <h1 class="mb-4 text-center">Payment Form</h1>
 
             @if(session('success'))
@@ -73,6 +75,82 @@
         overflow-y: auto;
         scrollbar-width: thin;
     }
+
+    .classy-card {
+        background: #ffffff;
+        border-radius: 18px;
+        border: 1px solid #e8e8e8;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+        transition: box-shadow .2s ease-in-out;
+    }
+
+    .classy-card:hover {
+        box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+    }
+
+    h1, h3, h4 {
+        font-family: 'Inter', sans-serif;
+        letter-spacing: -0.4px;
+    }
+
+    h1 {
+        font-weight: 700;
+    }
+
+    h3 {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .fee-row {
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        background: #ffffff;
+        transition: box-shadow 0.2s ease;
+    }
+
+    .fee-row:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .btn-success.btn-sm, .btn-danger.btn-sm, .btn-primary {
+        border-radius: 10px !important;
+        padding: 8px 16px !important;
+        font-weight: 600;
+    }
+
+    .btn-danger.btn-sm {
+        padding: 6px 12px !important;
+    }
+
+    .form-control, .form-select {
+        border-radius: 10px;
+        border: 1px solid #d7d7d7;
+        padding: 10px 12px;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.15rem rgba(13,110,253,0.15) !important;
+    }
+
+    .alert {
+        border-radius: 12px;
+        padding: 14px 18px;
+        font-size: 15px;
+    }
+
+    #total-amount {
+        font-size: 1.8rem;
+    }
+
+    .accent-bar {
+        height: 6px;
+        width: 100%;
+        border-radius: 6px;
+        background: linear-gradient(to right, #0d6efd, #3b82f6);
+    }
+
 </style>
 
 <script>

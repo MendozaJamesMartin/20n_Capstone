@@ -1,12 +1,12 @@
 @extends('layout.main-master')
 
 @section('content')
-<main style="background-image:url('/bgpup3.jpg'); background-repeat:no-repeat; background-size:auto; background-position: right center; min-height: 85vh; padding: 2%;">
+<main style="min-height:85vh; padding:5% 5% 8% 5%; background: linear-gradient(to bottom, #f5f7fa, #eef1f5);">
     <div class="container">
 
         <!-- Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <h2 class="mb-0">Latest Concessionaire Bills</h2>
+            <h2 class="mb-0 fw-bold">Latest Concessionaire Bills</h2>
         </div>
 
         <!-- Tabs -->
@@ -44,7 +44,7 @@
                         <tbody>
                             @forelse($electricityBills as $bill)
                             <tr>
-                                <td>{{ $bill->concessionaire_name }}</td>
+                                <td class="text-uppercase fw-semibold">{{ $bill->concessionaire_name }}</td>
                                 <td>{{ $bill->billing_period }}</td>
                                 <td>{{ $bill->previous_reading_kwh }}</td>
                                 <td>{{ $bill->current_reading_kwh }}</td>
@@ -88,7 +88,7 @@
                         <tbody>
                             @forelse($waterBills as $bill)
                             <tr>
-                                <td>{{ $bill->concessionaire_name }}</td>
+                                <td class="text-uppercase fw-semibold">{{ $bill->concessionaire_name }}</td>
                                 <td>{{ $bill->billing_period }}</td>
                                 <td>₱{{ number_format($bill->current_charges, 2) }}</td>
                                 <td>₱{{ number_format($bill->previous_unpaid, 2) }}</td>

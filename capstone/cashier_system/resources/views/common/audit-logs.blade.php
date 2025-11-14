@@ -13,7 +13,7 @@
                 <button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="modal" data-bs-target="#filterModal">
                     <i class="fa-solid fa-filter me-1"></i> Filters
                 </button>
-                <a href="{{ url()->current() }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                <a href="{{ url()->current() }}" class="btn btn-sm btn-outline-dark">Reset</a>
             </form>
         </div>
 
@@ -37,7 +37,7 @@
                             <td class="fw-semibold">{{ $audit->created_at->format('Y-m-d H:i:s') }}</td>
                             <td>{{ $audit->user->name ?? 'System' }}</td>
                             <td class="text-capitalize">
-                                <span class="badge bg-secondary">{{ str_replace('_', ' ', $audit->event) }}</span>
+                                <span class="badge bg-dark">{{ str_replace('_', ' ', $audit->event) }}</span>
                             </td>
                             <td>{{ class_basename($audit->auditable_type) }} <small class="text-muted">(ID: {{ $audit->auditable_id }})</small></td>
                             <td class="text-start small" style="max-width: 250px; white-space: normal;">
@@ -65,7 +65,7 @@
             <button class="btn btn-outline-dark rounded-pill px-3" disabled>« First</button>
             @else
             <a href="{{ $audits->appends(request()->except('page'))->url(1) }}"
-                class="btn btn-outline-secondary rounded-pill px-3">« First</a>
+                class="btn btn-outline-dark rounded-pill px-3">« First</a>
             @endif
 
             <!-- Previous Page -->
@@ -73,7 +73,7 @@
             <button class="btn btn-outline-dark rounded-pill px-3" disabled>‹ Prev</button>
             @else
             <a href="{{ $audits->appends(request()->except('page'))->previousPageUrl() }}"
-                class="btn btn-outline-secondary rounded-pill px-3">‹ Prev</a>
+                class="btn btn-outline-dark rounded-pill px-3">‹ Prev</a>
             @endif
 
             <!-- Editable Page Input -->
@@ -98,7 +98,7 @@
             <!-- Next Page -->
             @if ($audits->hasMorePages())
             <a href="{{ $audits->appends(request()->except('page'))->nextPageUrl() }}"
-                class="btn btn-outline-secondary rounded-pill px-3">Next ›</a>
+                class="btn btn-outline-dark rounded-pill px-3">Next ›</a>
             @else
             <button class="btn btn-outline-dark rounded-pill px-3" disabled>Next ›</button>
             @endif
@@ -108,7 +108,7 @@
             <button class="btn btn-outline-dark rounded-pill px-3" disabled>Last »</button>
             @else
             <a href="{{ $audits->appends(request()->except('page'))->url($audits->lastPage()) }}"
-                class="btn btn-outline-secondary rounded-pill px-3">Last »</a>
+                class="btn btn-outline-dark rounded-pill px-3">Last »</a>
             @endif
 
         </div>
@@ -158,7 +158,7 @@
                     </div>
                 </div>
                 <div class="modal-footer justify-content-between">
-                    <a href="{{ url()->current() }}" class="btn btn-outline-secondary">Reset All</a>
+                    <a href="{{ url()->current() }}" class="btn btn-outline-dark">Reset All</a>
                     <button type="submit" class="btn btn-primary">Apply Filters</button>
                 </div>
             </form>
