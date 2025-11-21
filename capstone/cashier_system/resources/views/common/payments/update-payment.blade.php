@@ -182,141 +182,165 @@
 </style>
 
 <script>
-    const feesData = @json($fees);
+const feesData = @json($fees);
+let rowCount = document.querySelectorAll('.fee-row').length; // existing rows from student
+const maxRows = 8;
 
-    function updateTotal() {
-        let total = 0;
-        document.querySelectorAll('.fee-row').forEach(row => {
-            const amount = parseFloat(row.querySelector('.fee-amount').value) || 0;
-            const quantity = parseInt(row.querySelector('.fee-quantity').value) || 0;
-            total += amount * quantity;
-        });
-        document.getElementById('total-amount').textContent = total.toFixed(2);
-    }
-
-    function createRow() {
-        const container = document.getElementById('feesContainer');
-        const row = document.createElement('div');
-        row.classList.add('fee-row', 'card', 'p-3', 'mb-3', 'shadow-sm');
-
-        row.innerHTML = `
-            <div class="row g-3 align-items-end">
-                <div class="col-lg-5 col-md-12">
-                    <label class="form-label fw-semibold">Fee Name</label>
-                    <input type="text" class="form-control fee-name" placeholder="Search fee..." autocomplete="off">
-                    <input type="hidden" class="fee-id" name="fee_ids[]">
-                </div>
-                <div class="col-lg-2 col-md-6">
-                    <label class="form-label fw-semibold">Amount</label>
-                    <input type="number" class="form-control fee-amount" name="amounts[]" step="0.01" readonly>
-                </div>
-                <div class="col-lg-2 col-md-4">
-                    <label class="form-label fw-semibold">Quantity</label>
-                    <input type="number" class="form-control fee-quantity" name="quantities[]" value="1" min="1">
-                </div>
-                <div class="col-lg-2 col-md-6">
-                    <label class="form-label fw-semibold">Label</label>
-                    <select class="form-select fee-label" name="labels[]" required>
-                        <option value="None">None</option>
-                        <option value="Certification Fee">Certification Fee</option>
-                        <option value="Certified True Copy">Certified True Copy</option>
-                        <option value="Others">Others (specify)</option>
-                    </select>
-                    <input type="text" class="form-control mt-2 fee-label-other d-none" placeholder="Enter label">
-                </div>
-                <div class="col-lg-1 col-md-2 text-center">
-                    <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
-                </div>
-            </div>
-        `;
-        container.appendChild(row);
-        bindRow(row);
-    }
-
-    function bindRow(row) {
-        const feeNameInput = row.querySelector('.fee-name');
-        const amountInput = row.querySelector('.fee-amount');
-        const feeIdInput = row.querySelector('.fee-id');
-        const quantityInput = row.querySelector('.fee-quantity');
-        const labelSelect = row.querySelector('.fee-label');
-        const labelOther = row.querySelector('.fee-label-other');
-
-        let suggestionsList = document.createElement('div');
-        suggestionsList.classList.add('border', 'rounded', 'bg-white', 'position-absolute', 'shadow-sm');
-        suggestionsList.style.maxHeight = '150px';
-        suggestionsList.style.overflowY = 'auto';
-        suggestionsList.style.display = 'none';
-        suggestionsList.style.zIndex = '2000';
-        document.body.appendChild(suggestionsList);
-
-        function positionSuggestions() {
-            const rect = feeNameInput.getBoundingClientRect();
-            suggestionsList.style.width = rect.width + 'px';
-            suggestionsList.style.left = rect.left + window.scrollX + 'px';
-            suggestionsList.style.top = rect.bottom + window.scrollY + 'px';
-        }
-
-        function renderSuggestions(filteredFees) {
-            suggestionsList.innerHTML = '';
-            filteredFees.forEach(fee => {
-                const div = document.createElement('div');
-                div.classList.add('suggestion-item', 'p-2');
-                div.textContent = `${fee.fee_name} — ₱${parseFloat(fee.amount).toFixed(2)}`;
-                div.style.cursor = 'pointer';
-                div.addEventListener('click', () => selectFee(fee));
-                suggestionsList.appendChild(div);
-            });
-            if (filteredFees.length) {
-                positionSuggestions();
-                suggestionsList.style.display = 'block';
-            } else {
-                suggestionsList.style.display = 'none';
-            }
-        }
-
-        function selectFee(fee) {
-            feeNameInput.value = fee.fee_name;
-            amountInput.value = parseFloat(fee.amount).toFixed(2);
-            amountInput.readOnly = !fee.is_variable;
-            feeIdInput.value = fee.id;
-            suggestionsList.style.display = 'none';
-            updateTotal();
-        }
-
-        feeNameInput.addEventListener('input', () => {
-            const query = feeNameInput.value.toLowerCase();
-            if (query.length < 1) return (suggestionsList.style.display = 'none');
-            const matches = feesData.filter(f => f.fee_name.toLowerCase().includes(query)).slice(0, 10);
-            renderSuggestions(matches);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!suggestionsList.contains(e.target) && e.target !== feeNameInput) {
-                suggestionsList.style.display = 'none';
-            }
-        });
-
-        labelSelect.addEventListener('change', () => {
-            if (labelSelect.value === 'Others') labelOther.classList.remove('d-none');
-            else {
-                labelOther.classList.add('d-none');
-                labelOther.value = '';
-            }
-        });
-
-        amountInput.addEventListener('input', updateTotal);
-        quantityInput.addEventListener('input', updateTotal);
-        row.querySelector('.remove-row').addEventListener('click', () => {
-            row.remove();
-            updateTotal();
-        });
-    }
-
-    document.getElementById('addFeeRow').addEventListener('click', createRow);
-    window.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.fee-row').forEach(bindRow);
-        updateTotal();
+function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.fee-row').forEach(row => {
+        const amount = parseFloat(row.querySelector('.fee-amount').value) || 0;
+        const quantity = parseInt(row.querySelector('.fee-quantity').value) || 0;
+        total += amount * quantity;
     });
+    document.getElementById('total-amount').textContent = total.toFixed(2);
+}
+
+function createRow() {
+    if (rowCount >= maxRows) {
+        alert(`You can only add up to ${maxRows} fees.`);
+        return;
+    }
+
+    rowCount++;
+    const container = document.getElementById('feesContainer');
+    const row = document.createElement('div');
+    row.classList.add('fee-row', 'card', 'p-3', 'mb-3', 'shadow-sm');
+
+    row.innerHTML = `
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-5 col-md-12">
+                <label class="form-label fw-semibold">Fee Name</label>
+                <input type="text" class="form-control fee-name" placeholder="Search fee..." autocomplete="off">
+                <input type="hidden" class="fee-id" name="fee_ids[]">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label fw-semibold">Amount</label>
+                <input type="number" class="form-control fee-amount" name="amounts[]" step="0.01" readonly>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label fw-semibold">Quantity</label>
+                <input type="number" class="form-control fee-quantity" name="quantities[]" value="1" min="1">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label fw-semibold">Label</label>
+                <select class="form-select fee-label" name="labels[]" required>
+                    <option value="None">None</option>
+                    <option value="Certification Fee">Certification Fee</option>
+                    <option value="Certified True Copy">Certified True Copy</option>
+                    <option value="Others">Others (specify)</option>
+                </select>
+                <input type="text" class="form-control mt-2 fee-label-other d-none" name="custom_labels[]" placeholder="Enter label">
+            </div>
+            <div class="col-lg-1 col-md-2 text-center">
+                <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
+            </div>
+        </div>
+    `;
+
+    container.appendChild(row);
+    bindRow(row);
+
+    document.getElementById('addFeeRow').disabled = rowCount >= maxRows;
+}
+
+function bindRow(row) {
+    const feeNameInput = row.querySelector('.fee-name');
+    const amountInput = row.querySelector('.fee-amount');
+    const feeIdInput = row.querySelector('.fee-id');
+    const quantityInput = row.querySelector('.fee-quantity');
+    const labelSelect = row.querySelector('.fee-label');
+    const labelOther = row.querySelector('.fee-label-other');
+
+    // suggestion dropdown container
+    let suggestionsList = document.createElement('div');
+    suggestionsList.classList.add('border', 'rounded', 'bg-white', 'position-absolute', 'shadow-sm');
+    suggestionsList.style.maxHeight = '150px';
+    suggestionsList.style.overflowY = 'auto';
+    suggestionsList.style.display = 'none';
+    suggestionsList.style.zIndex = '2000';
+    document.body.appendChild(suggestionsList);
+
+    function positionSuggestions() {
+        const rect = feeNameInput.getBoundingClientRect();
+        suggestionsList.style.width = rect.width + 'px';
+        suggestionsList.style.left = rect.left + window.scrollX + 'px';
+        suggestionsList.style.top = rect.bottom + window.scrollY + 'px';
+    }
+
+    function renderSuggestions(filteredFees) {
+        suggestionsList.innerHTML = '';
+        filteredFees.forEach(fee => {
+            const item = document.createElement('div');
+            item.classList.add('suggestion-item', 'p-2');
+            item.textContent = `${fee.fee_name} — ₱${parseFloat(fee.amount).toFixed(2)}`;
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', () => selectFee(fee));
+            suggestionsList.appendChild(item);
+        });
+
+        if (filteredFees.length) {
+            positionSuggestions();
+            suggestionsList.style.display = 'block';
+        } else {
+            suggestionsList.style.display = 'none';
+        }
+    }
+
+    function selectFee(fee) {
+        feeNameInput.value = fee.fee_name;
+        amountInput.value = parseFloat(fee.amount).toFixed(2);
+        amountInput.readOnly = !fee.is_variable;
+        feeIdInput.value = fee.id;
+        suggestionsList.style.display = 'none';
+        updateTotal();
+    }
+
+    feeNameInput.addEventListener('input', () => {
+        const q = feeNameInput.value.toLowerCase();
+        if (q.length < 1) return suggestionsList.style.display = 'none';
+        const matches = feesData.filter(f => f.fee_name.toLowerCase().includes(q)).slice(0, 10);
+        renderSuggestions(matches);
+    });
+
+    feeNameInput.addEventListener('focus', () => {
+        renderSuggestions(feesData.slice(0, 10));
+    });
+
+    document.addEventListener('click', (e) => {
+        if (e.target !== feeNameInput && !suggestionsList.contains(e.target)) {
+            suggestionsList.style.display = 'none';
+        }
+    });
+
+    labelSelect.addEventListener('change', () => {
+        if (labelSelect.value === 'Others') {
+            labelOther.classList.remove('d-none');
+        } else {
+            labelOther.classList.add('d-none');
+            labelOther.value = '';
+        }
+    });
+
+    amountInput.addEventListener('input', updateTotal);
+    quantityInput.addEventListener('input', updateTotal);
+
+    row.querySelector('.remove-row').addEventListener('click', () => {
+        row.remove();
+        rowCount--;
+        updateTotal();
+        document.getElementById('addFeeRow').disabled = rowCount >= maxRows;
+    });
+}
+
+// Bind existing rows from student submission
+document.querySelectorAll('.fee-row').forEach(row => bindRow(row));
+
+document.getElementById('addFeeRow').addEventListener('click', createRow);
+
+// Initial total calc
+updateTotal();
 </script>
+
 
 @endsection

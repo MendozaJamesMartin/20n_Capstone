@@ -22,9 +22,6 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-    <!-- jQuery (required by Select2) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -34,6 +31,16 @@
 
     <!-- Select2 CSS & JS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Font Awesome for icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+
 
     <style>
         body {
@@ -135,6 +142,7 @@
                 margin-left: 0;
             }
         }
+        
     </style>
 
 </head>
@@ -212,6 +220,7 @@
                 </a>
                 <div class="collapse ps-3" id="reportSubmenu">
                     <a href="{{ route('data.analytics') }}" class="nav-link">View Analytics</a>
+                    <a href="{{ route('reports.page') }}" class="nav-link">View Reports</a>
                 </div>
             </li>
 

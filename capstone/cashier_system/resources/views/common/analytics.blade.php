@@ -74,9 +74,6 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Monthly Collection Report</h5>
-                <button class="btn btn-primary btn-sm rounded-3" data-bs-toggle="modal" data-bs-target="#exportModal">
-                    <i class="bi bi-download me-1"></i> Export Report
-                </button>
             </div>
             <canvas id="revenueChart" height="100"></canvas>
         </div>
@@ -186,42 +183,6 @@
         </div>
     </div>
 
-    <!-- Export Modal -->
-    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-md">
-            <form method="GET" action="{{ route('reports.monthly.export') }}">
-                <div class="modal-content rounded-4 shadow-sm">
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title" id="exportModalLabel">Export Report by Date Range</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        @php
-                        $now = \Carbon\Carbon::now();
-                        $startOfMonth = $now->copy()->startOfMonth()->toDateString();
-                        $endOfMonth = $now->copy()->endOfMonth()->toDateString();
-                        @endphp
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="start_date" class="form-label">Start Date</label>
-                                <input type="date" name="start_date" id="start_date" class="form-control rounded-3" value="{{ $startOfMonth }}" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="end_date" class="form-label">End Date</label>
-                                <input type="date" name="end_date" id="end_date" class="form-control rounded-3" value="{{ $endOfMonth }}" required>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer border-0">
-                        <button type="submit" class="btn btn-success rounded-3">Export Report</button>
-                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

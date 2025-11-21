@@ -97,6 +97,9 @@ Route::group(['prefix' => 'cashier', 'middleware' => (['user.auth', 'verify'])],
         //Transactions Monthly Report
         Route::get('/reports/monthly/export', [TransactionsController::class, 'exportMonthlyReport'])->name('reports.monthly.export');
         Route::get('/analytics', [DashboardController::class, 'analytics'])->name('data.analytics');
+        Route::get('/reports', [DashboardController::class, 'showReportPage'])->name('reports.page');
+        Route::get('/reports/view', [DashboardController::class, 'viewMonthlyReport'])->name('reports.view');
+
     });
 
 });

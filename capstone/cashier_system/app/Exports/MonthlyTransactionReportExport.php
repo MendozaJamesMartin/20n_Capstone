@@ -35,93 +35,121 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
         return 'A1';
     }
 
-    public function array(): array
-    {
-        $data = [];
-        $this->boldRows = [];
+public function array(): array
+{
+    $data = [];
+    $this->boldRows = [];
 
-        $data[] = ['DATE', 'OFFICIAL RECEIPT NUMBER', 'PAYOR NAME', 'FEES', 'COLLECTION'];
+    $data[] = ['DATE', 'OFFICIAL RECEIPT NUMBER', 'PAYOR NAME', 'FEES', 'COLLECTION'];
 
-        $transactions = DB::table('transactions as t')
-            ->join('receipts as r', 't.id', '=', 'r.transaction_id')
-            ->whereBetween('t.transaction_date', [$this->startDate, $this->endDate])
-            ->select('t.id', 't.transaction_date', 't.total_amount', 't.status as transaction_status', 'r.receipt_number', 'r.status as receipt_status')
-            ->orderBy('t.transaction_date')
-            ->orderBy('r.receipt_number')
-            ->get();
+    $transactions = DB::table('transactions as t')
+        ->join('receipts as r', 't.id', '=', 'r.transaction_id')
+        ->whereBetween('t.transaction_date', [$this->startDate, $this->endDate])
+        ->select('t.id', 't.transaction_date', 't.total_amount', 't.status as transaction_status', 'r.receipt_number', 'r.status as receipt_status')
+        ->orderBy('t.transaction_date')
+        ->orderBy('r.receipt_number')
+        ->get();
 
-        $currentDate = null;
-        $dailyGroup = [];
+    $currentDate = null;
+    $dailyGroup = [];
 
-        foreach ($transactions as $txn) {
-            $txnDate = Carbon::parse($txn->transaction_date)->format('Y-m-d');
-            $isCancelled = $txn->receipt_status === 'Cancelled' || $txn->transaction_status === 'Cancelled';
+    // Keep track of fees for summary
+    $feeSummary = [];
 
-            if ($isCancelled) {
-                $row = [$txnDate, $txn->receipt_number, 'CANCELLED', 'CANCELLED', 'CANCELLED'];
-            } else {
-                // Determine payor name (customer or concessionaire)
-                $payorName = DB::table('customers')
+    foreach ($transactions as $txn) {
+        $txnDate = Carbon::parse($txn->transaction_date)->format('Y-m-d');
+        $isCancelled = $txn->receipt_status === 'Cancelled' || $txn->transaction_status === 'Cancelled';
+
+        if ($isCancelled) {
+            $row = [$txnDate, $txn->receipt_number, 'CANCELLED', 'CANCELLED', 'CANCELLED'];
+        } else {
+            $payorName = DB::table('customers')
+                ->whereIn('id', function ($q) use ($txn) {
+                    $q->select('customer_id')
+                        ->from('customer_transaction_details')
+                        ->where('transaction_id', $txn->id);
+                })
+                ->value('customer_name');
+
+            if (!$payorName) {
+                $payorName = DB::table('concessionaires')
                     ->whereIn('id', function ($q) use ($txn) {
                         $q->select('customer_id')
                             ->from('customer_transaction_details')
                             ->where('transaction_id', $txn->id);
                     })
-                    ->value('customer_name');
-
-                if (!$payorName) {
-                    $payorName = DB::table('concessionaires')
-                        ->whereIn('id', function ($q) use ($txn) {
-                            $q->select('customer_id')
-                                ->from('customer_transaction_details')
-                                ->where('transaction_id', $txn->id);
-                        })
-                        ->value('name');
-                }
-
-                // Convert to uppercase if exists
-                $payorName = $payorName ? strtoupper($payorName) : '';
-
-                // Fetch fees for this transaction
-                $fees = DB::table('customer_transaction_details as ctd')
-                    ->join('fees as f', 'ctd.fee_id', '=', 'f.id')
-                    ->where('ctd.transaction_id', $txn->id)
-                    ->when(!empty($this->feeIds), fn($q) => $q->whereIn('f.id', $this->feeIds))
-                    ->select('ctd.fee_label', 'f.fee_name', 'ctd.quantity')
-                    ->get()
-                    ->map(function ($f) {
-                        $qtyText = ($f->quantity > 1) ? "({$f->quantity})" : '';
-                        return "{$f->fee_label}-{$f->fee_name}{$qtyText}";
-                    })
-                    ->implode(', ');
-
-                $row = [$txnDate, $txn->receipt_number, $payorName, $fees, $txn->total_amount];
+                    ->value('name');
             }
 
-            // Group by day
-            if ($txnDate !== $currentDate && $currentDate !== null) {
-                $data = array_merge($data, $dailyGroup);
-                $data[] = $this->dailyTotalRow($currentDate, $dailyGroup);
-                $this->boldRows[] = count($data);
-                $data[] = ['', '', '', '', ''];
-                $dailyGroup = [];
-            }
+            $payorName = $payorName ? strtoupper($payorName) : '';
 
-            $dailyGroup[] = $row;
-            $currentDate = $txnDate;
+            $fees = DB::table('customer_transaction_details as ctd')
+                ->join('fees as f', 'ctd.fee_id', '=', 'f.id')
+                ->where('ctd.transaction_id', $txn->id)
+                ->when(!empty($this->feeIds), fn($q) => $q->whereIn('f.id', $this->feeIds))
+                ->select('ctd.fee_label', 'f.fee_name', 'ctd.quantity')
+                ->get()
+                ->map(function ($f) use (&$feeSummary) {
+                    // Track summary counts
+                    $key = "{$f->fee_label}-{$f->fee_name}";
+                    if (!isset($feeSummary[$key])) {
+                        $feeSummary[$key] = ['count' => 0, 'quantity' => 0];
+                    }
+                    $feeSummary[$key]['count']++;
+                    $feeSummary[$key]['quantity'] += $f->quantity;
+
+                    $qtyText = ($f->quantity > 1) ? "({$f->quantity})" : '';
+                    return "{$f->fee_label}-{$f->fee_name}{$qtyText}";
+                })
+                ->implode(', ');
+
+            $row = [$txnDate, $txn->receipt_number, $payorName, $fees, $txn->total_amount];
         }
 
-        if (!empty($dailyGroup)) {
+        if ($txnDate !== $currentDate && $currentDate !== null) {
             $data = array_merge($data, $dailyGroup);
             $data[] = $this->dailyTotalRow($currentDate, $dailyGroup);
             $this->boldRows[] = count($data);
+            $data[] = ['', '', '', '', ''];
+            $dailyGroup = [];
         }
 
-        $data[] = ['', '', '', '', ''];
-        $data[] = [$this->buildFiltersSummary()];
-
-        return $data;
+        $dailyGroup[] = $row;
+        $currentDate = $txnDate;
     }
+
+    if (!empty($dailyGroup)) {
+        $data = array_merge($data, $dailyGroup);
+        $data[] = $this->dailyTotalRow($currentDate, $dailyGroup);
+        $this->boldRows[] = count($data);
+    }
+
+    // Filters summary
+    $data[] = ['', '', '', '', ''];
+    $data[] = [$this->buildFiltersSummary()];
+
+    // Fee summary
+    $data[] = ['', '', '', '', ''];
+    $data[] = ['FEE SUMMARY'];
+    $data = array_merge($data, $this->buildFeeSummary($feeSummary));
+
+    return $data;
+}
+
+/**
+ * Build fee summary table
+ */
+protected function buildFeeSummary(array $feeSummary): array
+{
+    $summary = [];
+    $summary[] = ['Fee', 'Times Paid', 'Total Quantity'];
+
+    foreach ($feeSummary as $feeName => $info) {
+        $summary[] = [$feeName, $info['count'], $info['quantity']];
+    }
+
+    return $summary;
+}
 
     protected function dailyTotalRow($date, $rows)
     {

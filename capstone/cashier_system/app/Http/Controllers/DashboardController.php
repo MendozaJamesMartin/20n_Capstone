@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\MonthlyTransactionReportExport;
 use App\Models\ConcessionaireBill;
 use App\Models\Receipt;
 use App\Models\ReceiptBatch;
@@ -9,6 +10,7 @@ use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Excel;
 
 class DashboardController extends Controller
 {
@@ -196,6 +198,29 @@ class DashboardController extends Controller
             'cancelledReceipts',
             'cancelledRevenue'
         ));
+    }
+
+    public function showReportPage()
+    {
+        $fees = DB::table('fees')->whereNull('deleted_at')->get();
+        return view('common.reports', compact('fees'));
+    }
+
+    public function viewMonthlyReport(Request $request)
+    {
+        $startDate = $request->input('start_date');
+        $endDate   = $request->input('end_date');
+        $feeIds    = $request->input('fees', []);
+
+        $export = new MonthlyTransactionReportExport($startDate, $endDate, $feeIds);
+        $reportData = $export->array();
+
+        // Remove the header row for the web table
+        array_shift($reportData);
+
+        return response()->json([
+            'data' => $reportData
+        ]);
     }
 
 }

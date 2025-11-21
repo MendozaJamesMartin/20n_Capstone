@@ -159,227 +159,166 @@
 </style>
 
 <script>
-    const feesData = @json($fees);
-    let rowCount = 0;
+const feesData = @json($fees);
+let rowCount = 0;
+const maxRows = 8;
 
-    function updateTotal() {
-        let total = 0;
-        document.querySelectorAll('.fee-row').forEach(row => {
-            const amount = parseFloat(row.querySelector('.fee-amount').value) || 0;
-            const quantity = parseInt(row.querySelector('.fee-quantity').value) || 0;
-            total += amount * quantity;
-        });
-        document.getElementById('total-amount').textContent = total.toFixed(2);
+function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.fee-row').forEach(row => {
+        const amount = parseFloat(row.querySelector('.fee-amount').value) || 0;
+        const quantity = parseInt(row.querySelector('.fee-quantity').value) || 0;
+        total += amount * quantity;
+    });
+    document.getElementById('total-amount').textContent = total.toFixed(2);
+}
+
+function createRow() {
+    if (rowCount >= maxRows) {
+        alert(`You can only add up to ${maxRows} fees.`);
+        return;
     }
 
-    function createRow() {
-        rowCount++;
-        const container = document.getElementById('feesContainer');
+    rowCount++;
+    const container = document.getElementById('feesContainer');
 
-        const row = document.createElement('div');
-        row.classList.add('fee-row', 'card', 'p-3', 'mb-3', 'shadow-sm');
-        row.innerHTML = `
-            <div class="row g-3 align-items-end">
-                <div class="col-lg-5 col-md-12">
-                    <label class="form-label fw-semibold">Fee Name</label>
-                    <input type="text" class="form-control fee-name" placeholder="Search fee..." autocomplete="off">
-                    <input type="hidden" class="fee-id" name="fee_ids[]">
-                </div>
-                <div class="col-lg-2 col-md-6">
-                    <label class="form-label fw-semibold">Amount</label>
-                    <input type="number" class="form-control fee-amount" step="0.01" readonly>
-                </div>
-                <div class="col-lg-2 col-md-4">
-                    <label class="form-label fw-semibold">Quantity</label>
-                    <input type="number" class="form-control fee-quantity" name="quantities_temp[]" value="1" min="1">
-                </div>
-                <div class="col-lg-2 col-md-6">
-                    <label class="form-label fw-semibold">Label</label>
-                    <select class="form-select fee-label" name="fee_labels_temp[]" required>
-                        <option value="None">None</option>
-                        <option value="Certification Fee">Certification Fee</option>
-                        <option value="Certified True Copy">Certified True Copy</option>
-                        <option value="Others">Others (specify)</option>
-                    </select>
-                    <input type="text" class="form-control mt-2 fee-label-other d-none" placeholder="Enter label">
-                </div>
-                <div class="col-lg-1 col-md-2 text-center">
-                    <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
-                </div>
+    const row = document.createElement('div');
+    row.classList.add('fee-row', 'card', 'p-3', 'mb-3', 'shadow-sm');
+    row.innerHTML = `
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-5 col-md-12">
+                <label class="form-label fw-semibold">Fee Name</label>
+                <input type="text" class="form-control fee-name" placeholder="Search fee..." autocomplete="off">
+                <input type="hidden" class="fee-id" name="fee_ids[]">
             </div>
-        `;
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label fw-semibold">Amount</label>
+                <input type="number" class="form-control fee-amount" name="amounts[]" step="0.01" readonly>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label fw-semibold">Quantity</label>
+                <input type="number" class="form-control fee-quantity" name="quantities[]" value="1" min="1">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label fw-semibold">Label</label>
+                <select class="form-select fee-label" name="labels[]" required>
+                    <option value="None">None</option>
+                    <option value="Certification Fee">Certification Fee</option>
+                    <option value="Certified True Copy">Certified True Copy</option>
+                    <option value="Others">Others (specify)</option>
+                </select>
+                <input type="text" class="form-control mt-2 fee-label-other d-none" name="labels_other[]">
+            </div>
+            <div class="col-lg-1 col-md-2 text-center">
+                <button type="button" class="btn btn-danger btn-sm remove-row">X</button>
+            </div>
+        </div>
+    `;
 
-        container.appendChild(row);
+    container.appendChild(row);
 
-        const feeNameInput = row.querySelector('.fee-name');
-        const amountInput = row.querySelector('.fee-amount');
-        const quantityInput = row.querySelector('.fee-quantity');
-        const feeIdInput = row.querySelector('.fee-id');
-        const labelSelect = row.querySelector('.fee-label');
-        const labelOther = row.querySelector('.fee-label-other');
+    const feeNameInput = row.querySelector('.fee-name');
+    const amountInput = row.querySelector('.fee-amount');
+    const quantityInput = row.querySelector('.fee-quantity');
+    const feeIdInput = row.querySelector('.fee-id');
+    const labelSelect = row.querySelector('.fee-label');
+    const labelOther = row.querySelector('.fee-label-other');
 
-        // Suggestion dropdown
-        let suggestionsList = document.createElement('div');
-        suggestionsList.classList.add('border', 'rounded', 'bg-white', 'position-absolute', 'shadow-sm');
-        suggestionsList.style.maxHeight = '150px';
-        suggestionsList.style.overflowY = 'auto';
-        suggestionsList.style.display = 'none';
-        suggestionsList.style.zIndex = '2000';
-        document.body.appendChild(suggestionsList);
+    // Suggestion dropdown
+    let suggestionsList = document.createElement('div');
+    suggestionsList.classList.add('border', 'rounded', 'bg-white', 'position-absolute', 'shadow-sm');
+    suggestionsList.style.maxHeight = '150px';
+    suggestionsList.style.overflowY = 'auto';
+    suggestionsList.style.display = 'none';
+    suggestionsList.style.zIndex = '2000';
+    document.body.appendChild(suggestionsList);
 
-        function positionSuggestions() {
-            const rect = feeNameInput.getBoundingClientRect();
-            suggestionsList.style.width = rect.width + 'px';
-            suggestionsList.style.left = rect.left + window.scrollX + 'px';
-            suggestionsList.style.top = rect.bottom + window.scrollY + 'px';
-        }
-
-        function renderSuggestions(filteredFees) {
-            suggestionsList.innerHTML = '';
-            filteredFees.forEach(fee => {
-                const div = document.createElement('div');
-                div.classList.add('suggestion-item', 'p-2');
-                div.textContent = `${fee.fee_name} — ₱${parseFloat(fee.amount).toFixed(2)}`;
-                div.style.cursor = 'pointer';
-                div.addEventListener('click', () => selectFee(fee));
-                suggestionsList.appendChild(div);
-            });
-            if (filteredFees.length) {
-                positionSuggestions();
-                suggestionsList.style.display = 'block';
-            } else {
-                suggestionsList.style.display = 'none';
-            }
-        }
-
-        function selectFee(fee) {
-            feeNameInput.value = fee.fee_name;
-            amountInput.value = parseFloat(fee.amount).toFixed(2);
-            amountInput.readOnly = !fee.is_variable;
-            feeIdInput.value = fee.id;
-            suggestionsList.style.display = 'none';
-            updateTotal();
-        }
-
-        feeNameInput.addEventListener('input', () => {
-            const query = feeNameInput.value.toLowerCase();
-            if (query.length < 1) return (suggestionsList.style.display = 'none');
-            const matches = feesData
-                .filter(f => f.fee_name.toLowerCase().includes(query))
-                .slice(0, 10);
-            renderSuggestions(matches);
-        });
-
-        feeNameInput.addEventListener('focus', () => {
-            const matches = feesData.slice(0, 10);
-            renderSuggestions(matches);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!suggestionsList.contains(e.target) && e.target !== feeNameInput) {
-                suggestionsList.style.display = 'none';
-            }
-        });
-
-        labelSelect.addEventListener('change', () => {
-            if (labelSelect.value === 'Others') {
-                labelOther.classList.remove('d-none');
-            } else {
-                labelOther.classList.add('d-none');
-                labelOther.value = '';
-            }
-        });
-
-        amountInput.addEventListener('input', updateTotal);
-        quantityInput.addEventListener('input', updateTotal);
-        row.querySelector('.remove-row').addEventListener('click', () => {
-            row.remove();
-            updateTotal();
-        });
+    function positionSuggestions() {
+        const rect = feeNameInput.getBoundingClientRect();
+        suggestionsList.style.width = rect.width + 'px';
+        suggestionsList.style.left = rect.left + window.scrollX + 'px';
+        suggestionsList.style.top = rect.bottom + window.scrollY + 'px';
     }
 
-    document.getElementById('addFeeRow').addEventListener('click', createRow);
-
-    document.getElementById('confirmPaymentButton').addEventListener('click', function(e) {
-        const inputs = document.querySelectorAll('.fee-name');
-        let hasInvalid = false;
-
-        inputs.forEach(input => {
-            const feeIdInput = input.closest('.fee-row').querySelector('.fee-id');
-            if (!feeIdInput.value) {
-                input.classList.add('is-invalid');
-                hasInvalid = true;
-            } else {
-                input.classList.remove('is-invalid');
-            }
+    function renderSuggestions(filteredFees) {
+        suggestionsList.innerHTML = '';
+        filteredFees.forEach(fee => {
+            const div = document.createElement('div');
+            div.classList.add('suggestion-item', 'p-2');
+            div.textContent = `${fee.fee_name} — ₱${parseFloat(fee.amount).toFixed(2)}`;
+            div.style.cursor = 'pointer';
+            div.addEventListener('click', () => selectFee(fee));
+            suggestionsList.appendChild(div);
         });
-
-        if (hasInvalid) {
-            e.preventDefault();
-            alert("Please select valid fees before submitting.");
-            return;
+        if (filteredFees.length) {
+            positionSuggestions();
+            suggestionsList.style.display = 'block';
+        } else {
+            suggestionsList.style.display = 'none';
         }
+    }
 
-        const form = document.getElementById('paymentForm');
-        document.querySelectorAll('.dynamic-quantity').forEach(e => e.remove());
+    function selectFee(fee) {
+        feeNameInput.value = fee.fee_name;
+        amountInput.value = parseFloat(fee.amount).toFixed(2);
+        amountInput.readOnly = !fee.is_variable;
+        feeIdInput.value = fee.id;
+        suggestionsList.style.display = 'none';
+        updateTotal();
+    }
 
-        const feeIds = form.querySelectorAll('.fee-id');
-        const quantities = form.querySelectorAll('.fee-quantity');
-        const amounts = form.querySelectorAll('.fee-amount');
-        const labelsSelect = form.querySelectorAll('.fee-label');
-        const labelsOther = form.querySelectorAll('.fee-label-other');
-
-        feeIds.forEach((idInput, i) => {
-            const feeId = idInput.value;
-            const quantity = quantities[i].value;
-            const amount = amounts[i].value;
-            let label = labelsSelect[i].value;
-            if (label === 'Others') label = labelsOther[i].value.trim();
-            if (label === 'None') label = '';
-
-            if (feeId && quantity > 0 && amount) {
-                const idHidden = document.createElement('input');
-                idHidden.type = 'hidden';
-                idHidden.name = 'fee_ids[]';
-                idHidden.value = feeId;
-                idHidden.classList.add('dynamic-quantity');
-                form.appendChild(idHidden);
-
-                const qtyHidden = document.createElement('input');
-                qtyHidden.type = 'hidden';
-                qtyHidden.name = 'quantities[]';
-                qtyHidden.value = quantity;
-                qtyHidden.classList.add('dynamic-quantity');
-                form.appendChild(qtyHidden);
-
-                const amtHidden = document.createElement('input');
-                amtHidden.type = 'hidden';
-                amtHidden.name = 'amounts[]';
-                amtHidden.value = amount;
-                amtHidden.classList.add('dynamic-quantity');
-                form.appendChild(amtHidden);
-
-                const lblHidden = document.createElement('input');
-                lblHidden.type = 'hidden';
-                lblHidden.name = 'labels[]';
-                lblHidden.value = label || '';
-                lblHidden.classList.add('dynamic-quantity');
-                form.appendChild(lblHidden);
-            }
-        });
+    feeNameInput.addEventListener('input', () => {
+        const query = feeNameInput.value.toLowerCase();
+        if (query.length < 1) return (suggestionsList.style.display = 'none');
+        const matches = feesData
+            .filter(f => f.fee_name.toLowerCase().includes(query))
+            .slice(0, 10);
+        renderSuggestions(matches);
     });
 
-    window.addEventListener('DOMContentLoaded', () => {
-        createRow();
-        if (!@json($hasActiveBatch)) {
-            document.querySelectorAll('#paymentForm input, #paymentForm button, #paymentForm select').forEach(el => el.disabled = true);
-            const form = document.getElementById('paymentForm');
-            const notice = document.createElement('p');
-            notice.className = 'text-danger mt-2 text-center';
-            notice.textContent = '🛑 Payment form is disabled due to no available receipt numbers.';
-            form.appendChild(notice);
+    feeNameInput.addEventListener('focus', () => {
+        const matches = feesData.slice(0, 10);
+        renderSuggestions(matches);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!suggestionsList.contains(e.target) && e.target !== feeNameInput) {
+            suggestionsList.style.display = 'none';
         }
     });
+
+    labelSelect.addEventListener('change', () => {
+        if (labelSelect.value === 'Others') {
+            labelOther.classList.remove('d-none');
+        } else {
+            labelOther.classList.add('d-none');
+            labelOther.value = '';
+        }
+    });
+
+    amountInput.addEventListener('input', updateTotal);
+    quantityInput.addEventListener('input', updateTotal);
+
+    row.querySelector('.remove-row').addEventListener('click', () => {
+        row.remove();
+        rowCount--;
+        updateTotal();
+        // Re-enable Add Fee button if we are below maxRows
+        document.getElementById('addFeeRow').disabled = false;
+    });
+
+    // Disable Add Fee button if max reached
+    document.getElementById('addFeeRow').disabled = rowCount >= maxRows;
+}
+
+const addFeeButton = document.getElementById('addFeeRow');
+addFeeButton.addEventListener('click', createRow);
+
+// Initial row
+window.addEventListener('DOMContentLoaded', () => {
+    createRow();
+});
+
 </script>
 
 @endsection

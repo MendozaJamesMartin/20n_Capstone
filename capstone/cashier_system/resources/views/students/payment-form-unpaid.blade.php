@@ -156,6 +156,8 @@
 <script>
     const feesData = @json($fees);
     let rowCount = 0;
+    const maxRows = 8;
+
 
     // ---------- Cooldown configuration ----------
     const COOLDOWN_MINUTES = 3; // change to desired minutes
@@ -294,7 +296,13 @@
     }
 
     function createRow() {
+        if (rowCount >= maxRows) {
+            alert(`You can only add up to ${maxRows} fees.`);
+            return;
+        }
+
         rowCount++;
+
         const container = document.getElementById('feesContainer');
 
         const row = document.createElement('div');
@@ -319,6 +327,8 @@
         `;
 
         container.appendChild(row);
+
+        document.getElementById('addFeeRow').disabled = rowCount >= maxRows;
 
         const feeNameInput = row.querySelector('.fee-name');
         const amountInput = row.querySelector('.fee-amount');
@@ -419,6 +429,11 @@
         quantityInput.addEventListener('input', updateTotal);
         row.querySelector('.remove-row').addEventListener('click', () => {
             row.remove();
+            rowCount--;
+
+            // re-enable Add Fee button if under limit
+            document.getElementById('addFeeRow').disabled = rowCount >= maxRows ? true : false;
+
             updateTotal();
         });
     }
