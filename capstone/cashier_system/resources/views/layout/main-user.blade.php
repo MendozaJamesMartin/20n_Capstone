@@ -25,11 +25,42 @@
 </head>
 
 <body style="min-height: 100vh; display: flex; flex-direction: column;">
-    <nav class="navbar navbar-expand-lg bg-danger bg-gradient">
-        <div class="container-fluid">
-            <a class="navbar-brand text-light" href=" ">PUPTeC</a>
-        </div>
-    </nav>
+    
+<nav class="navbar-login no-print">
+    <div class="container-fluid d-flex align-items-center">
+        <span class="navbar-brand-login">PUPTeC</span>
+    </div>
+</nav>
+
+<style>
+    /* -----------------------------
+        LOGIN NAVBAR (MODERN MAROON)
+    ------------------------------ */
+    .navbar-login {
+        background: #7a0a0a;
+        height: 65px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        position: relative;
+        z-index: 1050;
+    }
+
+    .navbar-brand-login {
+        font-size: 1.4rem;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+
 
     @yield('content')
     @extends('layout.footer')
