@@ -1,15 +1,18 @@
 @extends('layout.main-master')
 @section('content')
 
-<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size: cover; min-height: 100vh;">
-    <div class="flex-grow-1 p-4">
+<main style="min-height: 100vh;
+    background: linear-gradient(135deg, #eef2f7, #f8f9fc);">
+
+    <div class="container mt-4" style="animation: fadeIn 0.4s ease;">
 
         <!-- Hero Section -->
         <div class="hero text-white position-relative mb-5">
             <div class="overlay"></div>
             <div class="content position-relative">
-                <h1 class="fw-bold">Welcome to PUP-T Cashier System</h1>
-                <p class="lead">Secure, fast, and convenient payment solutions for students.</p>
+                <h1 class="fw-bold">Welcome to PUPTeC</h1>
+                <h3 class="fw-bold">PUP-Taguig Electronic Cashier System</h3>
+                <p class="lead">Secure, fast, and convenient payment solutions.</p>
                 <a href="#quick-actions" class="btn btn-lg btn-light shadow-sm mt-3">🚀 Get Started</a>
             </div>
         </div>
@@ -143,7 +146,7 @@
     .hero {
         background-image: url('/bgpup2.jpg');
         background-size: cover;
-        background-position: center;
+        background-position: top;
         padding: 100px 20px;
         border-radius: 12px;
         position: relative;

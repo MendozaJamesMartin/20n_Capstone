@@ -100,34 +100,32 @@
 document.getElementById('viewReport').addEventListener('click', function() {
     const startDate = document.getElementById('start_date').value;
     const endDate   = document.getElementById('end_date').value;
-    const fees      = Array.from(document.querySelectorAll('.fee-checkbox:checked')).map(cb => cb.value);
+    const feeIds    = Array.from(document.querySelectorAll('.fee-checkbox:checked')).map(cb => cb.value);
 
-    fetch("{{ route('reports.view') }}?start_date=" + startDate + "&end_date=" + endDate + "&fees[]=" + fees.join(','))
+    const params = new URLSearchParams();
+    params.append('start_date', startDate);
+    params.append('end_date', endDate);
+    feeIds.forEach(id => params.append('fees[]', id));
+
+    fetch("{{ route('reports.view') }}?" + params.toString())
         .then(res => res.json())
         .then(res => {
             const tableBody = document.querySelector('#reportsTable tbody');
-            tableBody.innerHTML = ''; // clear existing rows
+            tableBody.innerHTML = '';
 
             res.data.forEach(row => {
                 const tr = document.createElement('tr');
 
-                if(row.length === 1){
-                    // Single-column row (like filter summary or fee summary)
+                if (row.length === 1) {
                     const td = document.createElement('td');
                     td.colSpan = 5;
                     td.innerHTML = `<strong>${row[0]}</strong>`;
                     tr.appendChild(td);
                 } else {
-                    row.forEach((col, i) => {
+                    row.forEach(col => {
                         const td = document.createElement('td');
                         td.textContent = col;
-
-                        // Bold the TOTAL rows
-                        if(row[1] === 'TOTAL') td.style.fontWeight = 'bold';
-                        
-                        // Center alignment
                         td.style.textAlign = 'center';
-
                         tr.appendChild(td);
                     });
                 }
@@ -137,6 +135,7 @@ document.getElementById('viewReport').addEventListener('click', function() {
         })
         .catch(err => console.error(err));
 });
+
 </script>
 
 @endsection

@@ -91,6 +91,14 @@ class PaymentsController extends Controller
                     $amt = $validated['amounts'][$i] ?? 0;
                     $lbl = $validated['labels'][$i] ?? '';
 
+                    if ($lbl === 'Others') {
+                        // use the actual user-entered custom label
+                        $other = $request->labels_other[$i] ?? null;
+                        if (!empty($other)) {
+                            $lbl = $other;
+                        }
+                    }
+
                     if (!empty($feeId) && $qty > 0) {
                         $finalFeeIds[]   = $feeId;
                         $finalQuantities[] = $qty;
@@ -309,6 +317,14 @@ class PaymentsController extends Controller
                     $qty = $validated['quantities'][$i] ?? 0;
                     $amt = $validated['amounts'][$i] ?? null;
                     $lbl = $validated['labels'][$i] ?? '';
+
+                    if ($lbl === 'Others') {
+                        // use the actual user-entered custom label
+                        $other = $request->labels_other[$i] ?? null;
+                        if (!empty($other)) {
+                            $lbl = $other;
+                        }
+                    }
 
                     if ($qty > 0 && $amt !== null) {
                         $feeIds[] = $feeId;

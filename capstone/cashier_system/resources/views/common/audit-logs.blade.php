@@ -2,8 +2,10 @@
 
 @section('content')
 
-<main style="background-image: url('/bgpup3.jpg'); background-repeat: no-repeat; background-size:auto; background-position: right center; min-height: 85vh; padding: 2%;">
-    <div class="container">
+<main style="min-height: 85vh; padding: 3%;
+    background: linear-gradient(135deg, #eef2f7, #f8f9fc);">
+
+    <div class="container mt-4" style="animation: fadeIn 0.4s ease;">
 
         <!-- Header & Search -->
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
