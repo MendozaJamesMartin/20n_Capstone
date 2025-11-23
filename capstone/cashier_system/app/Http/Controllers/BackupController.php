@@ -20,13 +20,34 @@ class BackupController extends Controller
 
     private function runMysqldump($filePath)
     {
-        $db = env('DB_DATABASE');
-        $user = env('DB_USERNAME');
-        $pass = env('DB_PASSWORD');
-        $host = env('DB_HOST', '127.0.0.1');
+        $connection = config('database.connections.mysql');
+        $pdo = new \PDO(
+            "mysql:host={$connection['host']};dbname={$connection['database']}",
+            $connection['username'],
+            $connection['password'],
+            [\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"]
+        );
 
-        $command = "mysqldump -h {$host} -u {$user} --password=\"{$pass}\" {$db} > {$filePath}";
-        exec($command);
+        $tables = $pdo->query("SHOW TABLES")->fetchAll(\PDO::FETCH_COLUMN);
+
+        $out = "";
+
+        foreach ($tables as $table) {
+            $createRow = $pdo->query("SHOW CREATE TABLE `$table`")->fetch(\PDO::FETCH_NUM);
+            // $createRow[1] usually contains the CREATE TABLE statement
+            $createSql = $createRow[1] ?? $createRow[0];
+            $out .= $createSql . ";\n\n";
+
+            $rows = $pdo->query("SELECT * FROM `$table`")->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($rows as $row) {
+                $columns = implode('`,`', array_keys($row));
+                $values  = implode(',', array_map(fn($v) => $pdo->quote($v), $row));
+                $out .= "INSERT INTO `$table` (`$columns`) VALUES ($values);\n";
+            }
+            $out .= "\n";
+        }
+
+        file_put_contents($filePath, $out);
     }
 
     private function zipWithPassword($sourceSql, $zipPath)
@@ -89,7 +110,7 @@ class BackupController extends Controller
             'Backup',
             $backup->id,
             [],
-            ['message' => 'Database backup created and downloaded'],
+            ['message' => 'Database backup created'],
             'backup'
         );
 
