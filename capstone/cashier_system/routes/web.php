@@ -89,10 +89,10 @@ Route::group(['prefix' => 'cashier', 'middleware' => (['user.auth', 'verify'])],
         Route::get('/audit/logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
         //Backup and Restore
-        Route::get('/backups/manage', [BackupController::class, 'showManageView'])->name('backups.manage');
+        Route::get('/backups', [BackupController::class, 'showManageView'])->name('backups.manage');
         Route::post('/backups/export', [BackupController::class, 'exportDatabase'])->name('backups.export');
-        Route::post('/backups/restore/{id}', [BackupController::class, 'restoreBackup'])->name('backups.restore');
-        Route::delete('/backups/delete/{id}', [BackupController::class, 'deleteBackup'])->name('backups.delete');
+        Route::get('/backups/download/{id}', [BackupController::class, 'download'])->name('backups.download');
+        Route::delete('/backups/{file}', [BackupController::class, 'deleteBackup'])->name('backups.delete');
 
         //Transactions Monthly Report
         Route::get('/reports/monthly/export', [TransactionsController::class, 'exportMonthlyReport'])->name('reports.monthly.export');

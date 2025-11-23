@@ -4,273 +4,185 @@ namespace App\Http\Controllers;
 
 use App\Models\Backup;
 use App\Services\AuditLogger;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use ZipArchive;
 
 class BackupController extends Controller
 {
- 
-    public function showManageView() {
-        $backups = Backup::orderByDesc('created_at')->get();
-        return view('common.backup-manage', compact('backups'));
+    private function backupPath()
+    {
+        return storage_path('app/backups');
     }
 
-    // Save a backup to DB instead of download
-    public function exportDatabase(Request $request) {
-        // ✅ Step 1: Require password confirmation
+    private function runMysqldump($filePath)
+    {
+        $db = env('DB_DATABASE');
+        $user = env('DB_USERNAME');
+        $pass = env('DB_PASSWORD');
+        $host = env('DB_HOST', '127.0.0.1');
+
+        $command = "mysqldump -h {$host} -u {$user} --password=\"{$pass}\" {$db} > {$filePath}";
+        exec($command);
+    }
+
+    private function zipWithPassword($sourceSql, $zipPath)
+    {
+        $zip = new ZipArchive;
+        $pwd = env('BACKUP_DOWNLOAD_PASSWORD');
+
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+
+            $zip->addFile($sourceSql, basename($sourceSql));
+            $zip->setEncryptionName(basename($sourceSql), ZipArchive::EM_AES_256, $pwd);
+
+            $zip->close();
+        }
+    }
+
+    // ------------------------------------------------------------
+    //  DISPLAY MANAGEMENT PAGE
+    // ------------------------------------------------------------
+    public function showManageView()
+    {
+        $backups = Backup::orderByDesc('created_at')->get();
+
+        return view('common.backup-manage', ['backups' => $backups]);
+    }
+
+    // ------------------------------------------------------------
+    //  MANUAL BACKUP + DOWNLOAD
+    // ------------------------------------------------------------
+    public function exportDatabase(Request $request)
+    {
         $request->validate([
             'password' => 'required|string',
         ]);
 
         if (!Hash::check($request->password, Auth::user()->password)) {
-            return back()->withErrors(['password' => 'Invalid password.'], 'exportErrorBag');
+            return back()->withErrors(['password' => 'Invalid password.']);
         }
 
-        $database = env('DB_DATABASE');
-        $tables = DB::select("SHOW FULL TABLES WHERE Table_type IN ('BASE TABLE', 'VIEW')");
-        $tableKey = "Tables_in_{$database}";
-        $typeKey = "Table_type";
-
-        $pdo = DB::getPdo();
-
-        $sqlDump = "-- Database export for {$database}\n-- Generated at " . now() . "\n\n";
-        $sqlDump .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
-
-        foreach ($tables as $table) {
-            $tableName = $table->$tableKey;
-            $tableType = $table->$typeKey;
-
-            if ($tableName === 'audits' || $tableName === 'backups') {
-                continue; // skip sensitive/system tables
-            }
-
-            if ($tableType === 'VIEW') {
-                $sqlDump .= "DROP VIEW IF EXISTS `{$tableName}`;\n";
-                $createViewResult = DB::select("SHOW CREATE VIEW `{$tableName}`")[0];
-                $createView = array_values((array)$createViewResult)[1];
-                $sqlDump .= $createView . ";\n\n";
-            } else {
-                $sqlDump .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
-                $createTableResult = DB::select("SHOW CREATE TABLE `{$tableName}`")[0];
-                $createTable = array_values((array)$createTableResult)[1];
-                $sqlDump .= $createTable . ";\n\n";
-
-                $rows = DB::table($tableName)->get();
-                foreach ($rows as $row) {
-                    $columns = array_map(fn($col) => "`$col`", array_keys((array)$row));
-                    $values = array_map(function ($value) use ($pdo) {
-                        return is_null($value) ? "NULL" : $pdo->quote($value);
-                    }, (array)$row);
-
-                    $sqlDump .= "INSERT INTO `{$tableName}` (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $values) . ");\n";
-                }
-                $sqlDump .= "\n";
-            }
+        if (!is_dir($this->backupPath())) {
+            mkdir($this->backupPath(), 0777, true);
         }
 
-        $sqlDump .= "SET FOREIGN_KEY_CHECKS=1;\n";
+        $timestamp = now()->format('Y-m-d_H-i-s');
+        $sqlFile = "{$this->backupPath()}/backup-{$timestamp}.sql";
+        $zipFile = "{$this->backupPath()}/backup-{$timestamp}.zip";
 
-        $date = now()->format('Y-m-d');
-        $countToday = Backup::whereDate('created_at', now()->toDateString())->count() + 1;
+        $this->runMysqldump($sqlFile);
+        $this->zipWithPassword($sqlFile, $zipFile);
 
-        // ✅ Save backup in DB
+        unlink($sqlFile); // remove raw SQL file
+
         $backup = Backup::create([
-            'name' => "Backup_{$date}_#{$countToday}",
-            'sql_content' => encrypt($sqlDump),
+            'name' => basename($zipFile),
             'type' => 'Manual',
         ]);
 
-        // Cleanup old backups
-        $daysToKeep = config('backup.retention_days');
-        Backup::where('created_at', '<', now()->subDays($daysToKeep))->delete();
-
         AuditLogger::log(
-            event: 'backup_export',
-            auditableType: 'Backup',
-            auditableId: $backup->id,
-            oldValues: [],
-            newValues: [
-                    'message' => 'Database backup created & downloaded',
-                    'timestamp' => now()->toDateTimeString(),
-                    'type' => 'Manual'
-                ],
-            tags: 'backup'
+            'backup_export',
+            'Backup',
+            $backup->id,
+            [],
+            ['message' => 'Database backup created and downloaded'],
+            'backup'
         );
 
-        // ✅ Step 2: Create temporary password-protected ZIP with SQL
-        $filename = $backup->name . '.sql';
-        $zipFilename = $backup->name . '.zip';
-        $tempPath = storage_path("app/temp/{$zipFilename}");
-
-        if (!is_dir(storage_path("app/temp"))) {
-            mkdir(storage_path("app/temp"), 0777, true);
-        }
-
-        $zip = new ZipArchive;
-        if ($zip->open($tempPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            $zipPassword = env('BACKUP_DOWNLOAD_PASSWORD');
-
-            // Add file and encrypt it
-            $zip->addFromString($filename, $sqlDump);
-            $zip->setEncryptionName($filename, ZipArchive::EM_AES_256, $zipPassword);
-
-            $zip->close();
-        } else {
-            return back()->withErrors(['zip' => 'Failed to create ZIP archive.'], 'exportErrorBag');
-        }
-
-        // ✅ Step 3: Return ZIP download and delete after
-        return response()->download($tempPath, $zipFilename)->deleteFileAfterSend(true);
+        return back()->with('success', 'Backup created successfully.');
     }
 
-    // Save a backup automatically (for scheduler)
-    public function autoBackup() {
-        $database = env('DB_DATABASE');
-        $tables = DB::select("SHOW FULL TABLES WHERE Table_type IN ('BASE TABLE', 'VIEW')");
-        $tableKey = "Tables_in_{$database}";
-        $typeKey = "Table_type";
+    // ------------------------------------------------------------
+    //  DELETE BACKUP
+    // ------------------------------------------------------------
+    public function deleteBackup(Request $request, $fileName)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
 
-        $pdo = DB::getPdo();
-
-        $sqlDump = "-- Database export for {$database}\n-- Generated at " . now() . "\n\n";
-        $sqlDump .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
-
-        foreach ($tables as $table) {
-            $tableName = $table->$tableKey;
-            $tableType = $table->$typeKey;
-
-            if ($tableName === 'audits' || $tableName === 'backups') {
-                continue; // skip audit logs & backups table
-            }
-
-            if ($tableType === 'VIEW') {
-                $sqlDump .= "DROP VIEW IF EXISTS `{$tableName}`;\n";
-                $createViewResult = DB::select("SHOW CREATE VIEW `{$tableName}`")[0];
-                $createViewArray = (array) $createViewResult;
-                $createView = array_values($createViewArray)[1];
-                $sqlDump .= $createView . ";\n\n";
-            } else {
-                $sqlDump .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
-                $createTableResult = DB::select("SHOW CREATE TABLE `{$tableName}`")[0];
-                $createTableArray = (array) $createTableResult;
-                $createTable = array_values($createTableArray)[1];
-                $sqlDump .= $createTable . ";\n\n";
-
-                $rows = DB::table($tableName)->get();
-                foreach ($rows as $row) {
-                    $columns = array_map(fn($col) => "`$col`", array_keys((array)$row));
-                    $values = array_map(function ($value) use ($pdo) {
-                        return is_null($value) ? "NULL" : $pdo->quote($value);
-                    }, (array)$row);
-
-                    $sqlDump .= "INSERT INTO `{$tableName}` (" . implode(', ', $columns) . ") VALUES (" . implode(', ', $values) . ");\n";
-                }
-                $sqlDump .= "\n";
-            }
+        if (!Hash::check($request->password, Auth::user()->password)) {
+            return back()->withErrors(['password' => 'Invalid password.']);
         }
 
-        $sqlDump .= "SET FOREIGN_KEY_CHECKS=1;\n";
+        $path = $this->backupPath() . '/' . $fileName;
 
-        $date = now()->format('Y-m-d');
-        $countToday = Backup::whereDate('created_at', now()->toDateString())->count() + 1;
+        if (file_exists($path)) {
+            unlink($path);
+        }
+
+        $backup = Backup::where('name', $fileName)->first();
+
+        if ($backup) {
+            $backup->delete();
+        }
+
+        AuditLogger::log(
+            'backup_delete',
+            'Backup',
+            $backup?->id,
+            [],
+            ['message' => "Backup {$fileName} deleted"],
+            'backup'
+        );
+
+        return back()->with('success', 'Backup deleted.');
+    }
+
+    public function download($id)
+    {
+        $backup = Backup::findOrFail($id);
+        $filePath = $this->backupPath() . '/' . $backup->name;
+
+        if (!file_exists($filePath)) {
+            return back()->with('error', 'Backup file not found.');
+        }
+
+        return response()->download($filePath);
+    }
+
+    // ------------------------------------------------------------
+    //  AUTOMATIC BACKUP (for scheduler)
+    // ------------------------------------------------------------
+    public function autoBackup()
+    {
+        if (!is_dir($this->backupPath())) {
+            mkdir($this->backupPath(), 0777, true);
+        }
+
+        $timestamp = now()->format('Y-m-d_H-i-s');
+        $sqlFile = "{$this->backupPath()}/auto-{$timestamp}.sql";
+        $zipFile = "{$this->backupPath()}/auto-{$timestamp}.zip";
+
+        $this->runMysqldump($sqlFile);
+        $this->zipWithPassword($sqlFile, $zipFile);
+
+        unlink($sqlFile);
+
+        // cleanup
+        $keep = env('BACKUP_RETENTION_DAYS', 7);
+        foreach (glob($this->backupPath() . '/*.zip') as $file) {
+            if (filemtime($file) < now()->subDays($keep)->timestamp) {
+                unlink($file);
+            }
+        }
 
         $backup = Backup::create([
-            'name' => "AutoBackup_{$date}_#{$countToday}",
-            'sql_content' => encrypt($sqlDump),
-            'type' => 'Automatic',
+            'name' => basename($zipFile),
+            'type' => 'Auto',
         ]);
-
-        // Apply retention policy
-        $daysToKeep = config('backup.retention_days', 7);
-        Backup::where('created_at', '<', now()->subDays($daysToKeep))->delete();
 
         AuditLogger::log(
-            event: 'backup_export',
-            auditableType: 'Backup',
-            auditableId: $backup->id,
-            oldValues: [],
-            newValues: [
-                'message' => 'Database backup created automatically',
-                'timestamp' => now()->toDateTimeString(),
-                'type' => 'Automatic'
-            ],
-            tags: 'backup'
+            'backup_export',
+            'Backup',
+            $backup->id,
+            [],
+            ['message' => 'Automatic backup created'],
+            'backup'
         );
     }
-
-    // Restore backup by ID
-    public function restoreBackup(Request $request, $id) {
-
-        $request->validate([
-            'password' => 'required|string',
-        ]);
-
-        if (!Hash::check($request->password, Auth::user()->password)) {
-            return back()->withErrors(['password' => 'Invalid password.']);
-        }
-
-        $backup = Backup::findOrFail($id);
-        $sql = decrypt($backup->sql_content);
-
-        if ($backup->created_at->lt(now()->subDays(1))) {
-            return redirect()->back()->with('error', 'This backup is too old to restore.');
-        }
-
-        try {
-            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-            DB::unprepared($sql);
-            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-
-            AuditLogger::log(
-                event: 'backup_restore',
-                auditableType: 'Backup',
-                auditableId: $backup->id,
-                oldValues: [],
-                newValues: ['message' => 'Database restored from backup', 'timestamp' => now()->toDateTimeString()],
-                tags: 'backup'
-            );
-
-            return redirect()->route('backups.manage')->with('success', 'Database restored successfully!');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Restore failed: ' . $e->getMessage());
-        }
-    }
-
-    public function deleteBackup(Request $request, $id) {
-        $request->validate([
-            'password' => 'required|string',
-        ]);
-
-        if (!Hash::check($request->password, Auth::user()->password)) {
-            return back()->withErrors(['password' => 'Invalid password.']);
-        }
-
-        $backup = Backup::findOrFail($id);
-
-        try {
-            $backup->delete();
-
-            AuditLogger::log(
-                event: 'backup_delete',
-                auditableType: 'Backup',
-                auditableId: $id,
-                oldValues: ['name' => $backup->name, 'created_at' => $backup->created_at],
-                newValues: ['message' => 'Backup deleted', 'timestamp' => now()->toDateTimeString()],
-                tags: 'backup'
-            );
-
-            return redirect()->route('backups.manage')->with('success', 'Backup deleted successfully!');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to delete backup: ' . $e->getMessage());
-        }
-    }
-
 }

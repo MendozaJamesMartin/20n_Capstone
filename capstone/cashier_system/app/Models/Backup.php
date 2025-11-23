@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Backup extends Model
 {
-    protected $fillable = ['name', 'sql_content'];
+    protected $fillable = ['name', 'type'];
 }
