@@ -1,170 +1,146 @@
 @extends('layout.main-master')
 @section('content')
 
-<main style="min-height:85vh; padding:2%; background: linear-gradient(to bottom, #f5f7fa, #eef1f5);">
-    <div class="container" style="width:75%">
-        <div class="bg-light" style="padding:5%">
-            <div class="card modern-card p-4 mb-4">
-                <div class="card-header">
-                    <h1 class="card-title">Register</h1>
+<main style="min-height: 85vh; padding: 5%;
+    background: linear-gradient(135deg, #eef2f7, #f8f9fc);">
+
+    <div class="container" style="max-width:600px;">
+        <div class="shadow-lg rounded-4 p-4"
+             style="backdrop-filter: blur(10px); background: rgba(255,255,255,0.85);">
+
+            <h2 class="fw-bold text-center mb-4" style="color:#8b0000;">
+                Create Your Account
+            </h2>
+
+            {{-- FLASH MESSAGES --}}
+            @if(Session::has('success'))
+                <div class="alert alert-success rounded-3 text-center">
+                    {{ Session::get('success') }}
                 </div>
-                <div class="card-body">
+            @elseif(Session::has('error'))
+                <div class="alert alert-danger rounded-3 text-center">
+                    {{ Session::get('error') }}
+                </div>
+            @endif
 
-                    @if(Session::has('success'))
-                    <div class="alert alert-success" role="alert">
-                        {{ Session::get('success') }}
-                    </div>
-                    @elseif (Session::has('error'))
-                    <div class="alert alert-danger" role="alert">
-                        {{ Session::get('error') }}
-                    </div>
-                    @endif
-
-                    @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
+            @if ($errors->any())
+                <div class="alert alert-danger rounded-3">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-
-                    <form action="{{ route('register') }}" method="POST">
-                        @csrf
-                        <label for="full_name" class="form-label">Full Name:</label>
-                        <div class="mb-3 d-flex gap-2">
-                            <input type="text" class="form-control" id="first_name" name="first_name" placeholder="First Name">
-                            <input type="text" class="form-control" id="middle_name" name="middle_name" placeholder="Middle Name">
-                            <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Last Name">
-                            <input type="text" class="form-control" id="suffix" name="suffix" placeholder="Suffix">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email address</label>
-                            <input type="email" name="email" class="form-control" id="email" placeholder="name@example.com" required>
-                        </div>
-
-                        {{-- Password with toggle + live validation --}}
-                        <div class="mb-4 position-relative">
-                            <label for="password" class="form-label">Password</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="password" name="password" required>
-                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password" tabindex="-1">
-                                    <i class="bi bi-eye-slash"></i>
-                                </button>
-                            </div>
-                            <small class="text-muted">Password must meet all the rules below:</small>
-                            <ul class="list-unstyled small mt-2" id="passwordRules">
-                                <li id="rule-length" class="text-danger">❌ At least 8 characters</li>
-                                <li id="rule-upper" class="text-danger">❌ At least 1 uppercase letter</li>
-                                <li id="rule-lower" class="text-danger">❌ At least 1 lowercase letter</li>
-                                <li id="rule-number" class="text-danger">❌ At least 1 number</li>
-                                <li id="rule-special" class="text-danger">❌ At least 1 special character</li>
-                            </ul>
-                        </div>
-
-                        {{-- Confirm Password with toggle --}}
-                        <div class="mb-4 position-relative">
-                            <label for="password_confirmation" class="form-label">Confirm Password</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
-                                <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password_confirmation" tabindex="-1">
-                                    <i class="bi bi-eye-slash"></i>
-                                </button>
-                            </div>
-                            <small id="confirmMessage" class="text-danger d-none">❌ Passwords do not match</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="d-grid">
-                                <button class="btn btn-primary">Register</button>
-                            </div>
-                        </div>
-                    </form>
+                        @endforeach
+                    </ul>
                 </div>
-            </div>
+            @endif
+
+            {{-- REGISTRATION FORM --}}
+            <form action="{{ route('register') }}" method="POST">
+                @csrf
+
+                {{-- NAME FIELDS --}}
+                <label class="form-label fw-semibold">Full Name</label>
+                <div class="d-flex gap-2 mb-3">
+                    <input type="text" class="form-control p-3" name="first_name" placeholder="First" value="{{ old('first_name') }}">
+                    <input type="text" class="form-control p-3" name="middle_name" placeholder="Middle" value="{{ old('middle_name') }}">
+                </div>
+
+                <div class="d-flex gap-2 mb-3">
+                    <input type="text" class="form-control p-3" name="last_name" placeholder="Last" value="{{ old('last_name') }}">
+                    <input type="text" class="form-control p-3" name="suffix" placeholder="Suffix" value="{{ old('suffix') }}">
+                </div>
+
+                {{-- EMAIL --}}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Email Address</label>
+                    <input type="email" class="form-control p-3" name="email" placeholder="name@example.com" required>
+                </div>
+
+                {{-- PASSWORD --}}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control p-3" id="password" name="password" required>
+                        <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
+
+                    <small class="text-muted">Your password must meet all rules:</small>
+
+                    <ul class="list-unstyled small mt-2" id="passwordRules">
+                        <li id="rule-length" class="text-danger">❌ At least 8 characters</li>
+                        <li id="rule-upper" class="text-danger">❌ At least 1 uppercase letter</li>
+                        <li id="rule-lower" class="text-danger">❌ At least 1 lowercase letter</li>
+                        <li id="rule-number" class="text-danger">❌ At least 1 number</li>
+                        <li id="rule-special" class="text-danger">❌ At least 1 special character</li>
+                    </ul>
+                </div>
+
+                {{-- CONFIRM PASSWORD --}}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Confirm Password</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control p-3" id="password_confirmation" name="password_confirmation" required>
+                        <button type="button" class="btn btn-outline-secondary toggle-password" data-target="password_confirmation">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
+                    <small id="confirmMessage" class="text-danger d-none">❌ Passwords do not match</small>
+                </div>
+
+                {{-- REGISTER BUTTON --}}
+                <button id="registerBtn"
+                        type="submit"
+                        class="btn w-100 text-light fw-semibold rounded-3 py-2 shadow-sm"
+                        style="background:#8b0000;"
+                        disabled>
+                    Register
+                </button>
+
+            </form>
         </div>
     </div>
+
 </main>
 
 <style>
-    .modern-card {
-        background: #ffffff;
-        border-radius: 18px;
-        border: 1px solid #e7e7e7;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-        transition: box-shadow .2s ease-in-out;
+    .form-control {
+        border-radius: 12px;
+        border: 1px solid #ccc;
     }
-
-    .modern-card:hover {
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+    .form-control:focus {
+        border-color: #8b0000;
+        box-shadow: 0 0 0 0.15rem rgba(139,0,0,0.25);
     }
-
-    .form-label {
-        font-weight: 600;
-        color: #333;
+    .input-group .btn {
+        border-radius: 0 12px 12px 0;
     }
-
-    .form-control:disabled {
-        background: #f4f4f4;
-        border-radius: 10px;
-    }
-
-    .form-control,
-    .form-select {
-        border-radius: 10px;
-        border: 1px solid #dadada;
-    }
-
-    .btn-danger,
-    .btn-secondary {
-        border-radius: 10px;
-        padding: 8px 14px;
-        font-weight: 600;
-        transition: 0.2s;
-    }
-
-    .btn-danger:hover,
-    .btn-secondary:hover {
-        opacity: 0.9;
-    }
-
     .alert {
         border-radius: 12px;
-        padding: 14px 18px;
-        font-size: 15px;
-    }
-
-    .input-group .form-control {
-        border-radius: 10px 0 0 10px;
-    }
-
-    .input-group .btn {
-        border-radius: 0 10px 10px 0;
     }
 </style>
 
-{{-- Eye toggle script --}}
+{{-- PASSWORD TOGGLE --}}
 <script>
-    document.querySelectorAll('.toggle-password').forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const input = document.getElementById(targetId);
-            const icon = this.querySelector('i');
+document.querySelectorAll('.toggle-password').forEach(button => {
+    button.addEventListener('click', function () {
+        const targetId = this.getAttribute('data-target');
+        const input = document.getElementById(targetId);
+        const icon = this.querySelector('i');
 
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
-            }
-        });
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        }
     });
+});
+</script>
 
+{{-- PASSWORD LIVE VALIDATION --}}
+<script>
     const passwordInput = document.getElementById('password');
     const confirmInput = document.getElementById('password_confirmation');
     const registerBtn = document.getElementById('registerBtn');
@@ -182,7 +158,6 @@
         const value = passwordInput.value;
         let valid = true;
 
-        // Rules
         if (value.length >= 8) { rules.length.textContent = "✅ At least 8 characters"; rules.length.classList.replace('text-danger','text-success'); }
         else { rules.length.textContent = "❌ At least 8 characters"; rules.length.classList.replace('text-success','text-danger'); valid = false; }
 
@@ -198,7 +173,6 @@
         if (/[^A-Za-z0-9]/.test(value)) { rules.special.textContent = "✅ At least 1 special character"; rules.special.classList.replace('text-danger','text-success'); }
         else { rules.special.textContent = "❌ At least 1 special character"; rules.special.classList.replace('text-success','text-danger'); valid = false; }
 
-        // Confirm match
         if (value && confirmInput.value && value !== confirmInput.value) {
             confirmMessage.classList.remove('d-none');
             valid = false;
@@ -206,7 +180,6 @@
             confirmMessage.classList.add('d-none');
         }
 
-        // Enable button only if valid
         registerBtn.disabled = !valid;
     }
 
