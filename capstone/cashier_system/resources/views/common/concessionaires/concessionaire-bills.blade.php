@@ -23,21 +23,21 @@
             <!-- Electricity Bills -->
             <div class="tab-pane fade show active" id="electricity" role="tabpanel">
                 <div class="table-responsive">
-                    <table class="table table-striped align-middle text-center mb-0" id="billsTable">
+                    <table class="table table-striped align-middle text-center mb-0" id="electricityTable">
                         <thead class="table-dark">
                             <tr>
-                                <th onclick="sortTable(0)">Concessionaire</th>
-                                <th onclick="sortTable(1)">Billing Period</th>
-                                <th onclick="sortTable(2)">Previous Reading</th>
-                                <th onclick="sortTable(3)">Current Reading</th>
-                                <th onclick="sortTable(4)">kWh Used</th>
-                                <th onclick="sortTable(5)">₱/kWh</th>
-                                <th onclick="sortTable(6)">Current Charges</th>
-                                <th onclick="sortTable(7)">Previous Unpaid</th>
-                                <th onclick="sortTable(8)">Total</th>
-                                <th onclick="sortTable(9)">Amount Paid</th>
-                                <th onclick="sortTable(10)">Due Date</th>
-                                <th onclick="sortTable(11)">Status</th>
+                                <th onclick="sortTable('electricityTable', 0)">Concessionaire</th>
+                                <th onclick="sortTable('electricityTable', 1)">Billing Period</th>
+                                <th onclick="sortTable('electricityTable', 2)">Previous Reading</th>
+                                <th onclick="sortTable('electricityTable', 3)">Current Reading</th>
+                                <th onclick="sortTable('electricityTable', 4)">kWh Used</th>
+                                <th onclick="sortTable('electricityTable', 5)">₱/kWh</th>
+                                <th onclick="sortTable('electricityTable', 6)">Current Charges</th>
+                                <th onclick="sortTable('electricityTable', 7)">Previous Unpaid</th>
+                                <th onclick="sortTable('electricityTable', 8)">Total</th>
+                                <th onclick="sortTable('electricityTable', 9)">Amount Paid</th>
+                                <th onclick="sortTable('electricityTable', 10)">Due Date</th>
+                                <th onclick="sortTable('electricityTable', 11)">Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -71,17 +71,17 @@
             <!-- Water Bills -->
             <div class="tab-pane fade" id="water" role="tabpanel">
                 <div class="table-responsive">
-                    <table class="table table-striped align-middle text-center mb-0" id="billsTable">
+                    <table class="table table-striped align-middle text-center mb-0" id="waterTable">
                         <thead class="table-dark">
                             <tr>
-                                <th onclick="sortTable(0)">Concessionaire</th>
-                                <th onclick="sortTable(1)">Billing Period</th>
-                                <th onclick="sortTable(2)">Current Charges</th>
-                                <th onclick="sortTable(3)">Previous Unpaid</th>
-                                <th onclick="sortTable(4)">Total</th>
-                                <th onclick="sortTable(5)">Amount Paid</th>
-                                <th onclick="sortTable(6)">Due Date</th>
-                                <th onclick="sortTable(7)">Status</th>
+                                <th onclick="sortTable('waterTable', 0)">Concessionaire</th>
+                                <th onclick="sortTable('waterTable', 1)">Billing Period</th>
+                                <th onclick="sortTable('waterTable', 2)">Current Charges</th>
+                                <th onclick="sortTable('waterTable', 3)">Previous Unpaid</th>
+                                <th onclick="sortTable('waterTable', 4)">Total</th>
+                                <th onclick="sortTable('waterTable', 5)">Amount Paid</th>
+                                <th onclick="sortTable('waterTable', 6)">Due Date</th>
+                                <th onclick="sortTable('waterTable', 7)">Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -112,44 +112,61 @@
 </main>
 
 <script>
-    let table = document.getElementById("billsTable");
-    let originalRows = Array.from(table.tBodies[0].rows);
     let sortState = {}; // default, asc, desc
+    let originalRows = {}; // store original order per table
 
-    document.getElementById('searchInput').addEventListener('keyup', function () {
-        let filter = this.value.toLowerCase();
-        let rows = document.querySelectorAll("#billsTable tbody tr");
-        rows.forEach(row => {
-            let text = row.textContent.toLowerCase();
-            row.style.display = text.includes(filter) ? '' : 'none';
-        });
-    });
+    function sortTable(tableId, columnIndex) {
+        let table = document.getElementById(tableId);
+        let tbody = table.tBodies[0];
 
-    function sortTable(n) {
-        let rows = Array.from(table.tBodies[0].rows);
-        let state = sortState[n] || 'default';
+        // Store original rows ONCE
+        if (!originalRows[tableId]) {
+            originalRows[tableId] = Array.from(tbody.rows);
+        }
 
-        // Reset all header arrows
-        Array.from(table.tHead.rows[0].cells).forEach((cell, idx) => {
+        let rows = Array.from(tbody.rows);
+
+        let key = tableId + '_' + columnIndex;
+        let state = sortState[key] || 'default';
+
+        // Reset header arrows on THIS table
+        Array.from(table.tHead.rows[0].cells).forEach(cell => {
             cell.innerText = cell.innerText.replace(/ ↑| ↓/g, '');
         });
 
         if (state === 'default') {
-            rows.sort((a, b) => a.cells[n].innerText.localeCompare(b.cells[n].innerText, undefined, {numeric: true}));
-            sortState[n] = 'asc';
-            table.tHead.rows[0].cells[n].innerText += ' ↑';
+            rows.sort((a, b) =>
+                a.cells[columnIndex].innerText.localeCompare(
+                    b.cells[columnIndex].innerText,
+                    undefined,
+                    { numeric: true }
+                )
+            );
+            sortState[key] = 'asc';
+            table.tHead.rows[0].cells[columnIndex].innerText += ' ↑';
+
         } else if (state === 'asc') {
-            rows.sort((a, b) => b.cells[n].innerText.localeCompare(a.cells[n].innerText, undefined, {numeric: true}));
-            sortState[n] = 'desc';
-            table.tHead.rows[0].cells[n].innerText += ' ↓';
+            rows.sort((a, b) =>
+                b.cells[columnIndex].innerText.localeCompare(
+                    a.cells[columnIndex].innerText,
+                    undefined,
+                    { numeric: true }
+                )
+            );
+            sortState[key] = 'desc';
+            table.tHead.rows[0].cells[columnIndex].innerText += ' ↓';
+
         } else {
-            rows = [...originalRows];
-            sortState[n] = 'default';
+            // Restore original order (true default reset)
+            rows = [...originalRows[tableId]];
+            sortState[key] = 'default';
         }
 
-        table.tBodies[0].innerHTML = '';
-        rows.forEach(row => table.tBodies[0].appendChild(row));
+        // Re-render rows
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
     }
 </script>
+
 
 @endsection

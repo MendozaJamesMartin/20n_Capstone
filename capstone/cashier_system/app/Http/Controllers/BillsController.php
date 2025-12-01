@@ -16,8 +16,8 @@ class BillsController extends Controller
     public function GetBillingList(Request $request) {
         // Latest Electricity Bill per Concessionaire
         $electricityBills = DB::table('view_electricity_bills as eb1')
-            ->whereRaw('eb1.bill_date = (
-                SELECT MAX(eb2.bill_date)
+            ->whereRaw('eb1.bill_id = (
+                SELECT MAX(eb2.bill_id)
                 FROM view_electricity_bills eb2
                 WHERE eb2.concessionaire_name = eb1.concessionaire_name
             )')
@@ -26,8 +26,8 @@ class BillsController extends Controller
 
         // Latest Water Bill per Concessionaire
         $waterBills = DB::table('view_water_bills as wb1')
-            ->whereRaw('wb1.bill_date = (
-                SELECT MAX(wb2.bill_date)
+            ->whereRaw('wb1.bill_id = (
+                SELECT MAX(wb2.bill_id)
                 FROM view_water_bills wb2
                 WHERE wb2.concessionaire_name = wb1.concessionaire_name
             )')
@@ -76,6 +76,25 @@ class BillsController extends Controller
                         'water_previous_unpaid' => 'required|numeric|min:0',
                     ]);
 
+                    // SAFEGUARD: Water unpaid must equal remaining balance of last bill
+                    $lastWaterBill = DB::table('view_water_bills')
+                        ->where('concessionaire_name', $validated['concessionaire_name'])
+                        ->orderBy('billing_period', 'desc')
+                        ->first();
+
+                    // If NO last bill → this is first bill → skip safeguards
+                    if ($lastWaterBill) {
+
+                        $lastRemaining = $lastWaterBill->total_due - $lastWaterBill->amount_paid;
+                        $enteredPrevUnpaid = $request->input('water_previous_unpaid');
+
+                        if ((float)$enteredPrevUnpaid !== (float)$lastRemaining) {
+                            return back()
+                                ->withInput()
+                                ->with('error', "Previous Unpaid must match the last bill’s remaining balance (₱$lastRemaining).");
+                        }
+                    }
+
                     $results = DB::select('CALL CreateWaterBill(?, ?, ?, ?, ?)', [
                         $validated['concessionaire_name'],
                         $billingPeriodDate,
@@ -97,6 +116,36 @@ class BillsController extends Controller
                         'electricity_previous_unpaid' => 'required|numeric|min:0'
                     ];
                     $request->validate($rules);
+
+                    // Get last electricity bill once
+                    $lastBill = DB::table('view_electricity_bills')
+                        ->where('concessionaire_name', $validated['concessionaire_name'])
+                        ->orderBy('bill_end_date', 'desc')
+                        ->first();
+
+                    // If no last bill → first-ever bill → skip ALL safeguards
+                    if ($lastBill) {
+
+                        // SAFEGUARD 1: Previous reading must match last reading
+                        $lastReading = $lastBill->current_reading_kwh;
+                        $enteredPrevReading = $request->input('previous_reading');
+
+                        if ($enteredPrevReading != $lastReading) {
+                            return back()
+                                ->withInput()
+                                ->with('error', "Previous reading must match the last bill's current reading ($lastReading).");
+                        }
+
+                        // SAFEGUARD 2: Previous unpaid must match last remaining balance
+                        $lastRemaining = $lastBill->total_due - $lastBill->amount_paid;
+                        $enteredPrevUnpaid = $request->input('electricity_previous_unpaid');
+
+                        if ((float)$enteredPrevUnpaid !== (float)$lastRemaining) {
+                            return back()
+                                ->withInput()
+                                ->with('error', "Previous Unpaid must match the last bill’s remaining balance (₱$lastRemaining).");
+                        }
+                    }
 
                     $results = DB::select('CALL CreateElectricityBill(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                         $validated['concessionaire_name'],

@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: "Times New Roman", serif;
-            font-size: 12px;
+            font-size: 14px;
             padding: 40px;
         }
         .header {
@@ -135,6 +135,7 @@
     </div>
 
     <div class="section mt-5">
+        <p>&nbsp;</p>
         <p class="right">{{ auth()->check() ? auth()->user()->first_name . ' ' . auth()->user()->last_name : 'Collecting Officer' }}
         <br>Collecting Officer</p>
     </div>

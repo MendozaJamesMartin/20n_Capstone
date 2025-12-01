@@ -36,6 +36,10 @@
         <h4>Taguig Campus</h4>
     </div>
 
+    <div class="section mt-5">
+        <p>&nbsp;</p>
+    </div>
+    
     <div class="right">{{ \Carbon\Carbon::parse($bill->bill_date)->format('F d, Y') }}</div>
 
     <h3 class="text-center">MONTHLY STATEMENT OF ACCOUNT</h3>
@@ -47,19 +51,23 @@
         <p>Billing Period: {{ $bill->billing_period }}</p>
     </div>
 
+    <div class="section mt-5">
+        <p>&nbsp;</p>
+    </div>
+
     <div class="section" style="display: flex; flex-direction: column; align-items: center;">
         <table style="width: 70%; border-collapse: collapse; font-size: 14px;">
             <tr>
-                <td style="text-align: right; padding: 10px 2px;">Current Charges:</td>
-                <td style="text-align: left; padding: 10px 2px;">P {{ number_format($bill->current_charges, 2) }}</td>
+                <td style="text-align: right; padding: 10px 10px;">Current Charges:</td>
+                <td style="text-align: left; padding: 10px 10px;">P {{ number_format($bill->current_charges, 2) }}</td>
             </tr>
             <tr>
-                <td style="text-align: right; padding: 10px 2px;">Previous Unpaid Amount:</td>
-                <td style="text-align: left; padding: 10px 2px;">P {{ number_format($bill->previous_unpaid, 2) }}</td>
+                <td style="text-align: right; padding: 10px 10px;">Previous Unpaid Amount:</td>
+                <td style="text-align: left; padding: 10px 10px;">P {{ number_format($bill->previous_unpaid, 2) }}</td>
             </tr>
             <tr>
-                <td style="text-align: right; padding: 10px 2px; font-weight: bold;">Total Amount Due:</td>
-                <td style="text-align: left; padding: 10px 2px; font-weight: bold; text-decoration: underline;">
+                <td style="text-align: right; padding: 10px 10px; font-weight: bold;">Total Amount Due:</td>
+                <td style="text-align: left; padding: 10px 10px; font-weight: bold; text-decoration: underline;">
                     P {{ number_format($bill->total_due, 2) }}
                 </td>
             </tr>
@@ -74,6 +82,10 @@
         <p>
             Present this billing to the Cashier when paying. Disregard this notice if payment has been made.
         </p>
+    </div>
+
+    <div class="section mt-5">
+        <p>&nbsp;</p>
     </div>
 
     <div class="section mt-5">

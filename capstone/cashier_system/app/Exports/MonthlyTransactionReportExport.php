@@ -91,8 +91,12 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
                     ->select('ctd.fee_label', 'f.fee_name', 'ctd.quantity')
                     ->get()
                     ->map(function ($f) use (&$feeSummary) {
+                        // Normalize fee label: if empty or "none", treat as empty
+                        $label = trim(strtolower($f->fee_label));
+                        $labelText = ($label === '' || $label === 'none') ? '' : $f->fee_label . '-';
+
                         // Track summary counts
-                        $key = "{$f->fee_label}-{$f->fee_name}";
+                        $key = "{$labelText}{$f->fee_name}";
                         if (!isset($feeSummary[$key])) {
                             $feeSummary[$key] = ['count' => 0, 'quantity' => 0];
                         }
@@ -100,7 +104,7 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
                         $feeSummary[$key]['quantity'] += $f->quantity;
 
                         $qtyText = ($f->quantity > 1) ? "({$f->quantity})" : '';
-                        return "{$f->fee_label}-{$f->fee_name}{$qtyText}";
+                        return "{$labelText}{$f->fee_name}{$qtyText}";
                     })
                     ->implode(', ');
 
@@ -170,8 +174,18 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
         $rows[] = [""];
 
         foreach ($feeSummary as $feeName => $info) {
+            // Split feeName into label and fee (if present)
+            if (str_contains($feeName, '-')) {
+                [$label, $fee] = explode('-', $feeName, 2);
+                $label = trim(strtolower($label));
+                $labelText = ($label === '' || $label === 'none') ? '' : $label . '-';
+                $displayName = "{$labelText}{$fee}";
+            } else {
+                $displayName = $feeName;
+            }
+
             $qtyTxt = ($info['quantity'] > 1) ? "({$info['quantity']})" : '';
-            $rows[] = ["- {$feeName}{$qtyTxt}"];
+            $rows[] = ["- {$displayName}{$qtyTxt}"];
         }
 
         return $rows;

@@ -22,19 +22,11 @@
                     <input type="date" id="end_date" name="end_date" class="form-control shadow-sm" required>
                 </div>
 
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">Fees</label>
-                    <button type="button" class="btn btn-outline-secondary w-100 shadow-sm text-start" data-bs-toggle="modal" data-bs-target="#feesModal" disabled>
-                        Select Fees
-                    </button>
-                    <input type="hidden" id="fees" name="fees[]">
-                </div>
-
-                <div class="col-md-2 d-flex gap-2">
-                    <button type="button" id="viewReport" class="btn btn-primary w-100 shadow-sm">
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="button" id="viewReport" class="btn btn-primary shadow-sm">
                         <i class="fas fa-eye me-1"></i> View
                     </button>
-                    <button type="submit" class="btn btn-success w-100 shadow-sm">
+                    <button type="submit" class="btn btn-success shadow-sm">
                         <i class="fas fa-download me-1"></i> Download
                     </button>
                 </div>
@@ -68,30 +60,6 @@
 
         </div>
 
-    </div>
-
-    <!-- Fees Modal -->
-    <div class="modal fade" id="feesModal" tabindex="-1" aria-labelledby="feesModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="feesModalLabel">Select Fees</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    @foreach($fees as $fee)
-                    <div class="form-check">
-                        <input class="form-check-input fee-checkbox" type="checkbox" value="{{ $fee->id }}" id="fee{{ $fee->id }}">
-                        <label class="form-check-label" for="fee{{ $fee->id }}">{{ $fee->fee_name }}</label>
-                    </div>
-                    @endforeach
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary shadow-sm" id="saveFeesSelection">Save</button>
-                </div>
-            </div>
-        </div>
     </div>
 
 </main>
