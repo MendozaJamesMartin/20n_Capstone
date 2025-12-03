@@ -222,7 +222,7 @@ class LoginController extends Controller
     public function resendOtp(Request $request)
     {
         if (!session('otp_sent') || !session('otp_email')) {
-            return redirect()->route('forgot.password')->with('error', 'Please start the password reset process first.');
+            return redirect()->route('forgot.password.email')->with('error', 'Please start the password reset process first.');
         }
 
         // Optional: prevent spamming (30 seconds cooldown)
@@ -232,7 +232,7 @@ class LoginController extends Controller
 
         $user = User::where('email', session('otp_email'))->first();
         if (!$user) {
-            return redirect()->route('forgot.password')->with('error', 'User not found.');
+            return redirect()->route('forgot.password.email')->with('error', 'User not found.');
         }
 
         // Generate new OTP
