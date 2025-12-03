@@ -80,18 +80,24 @@ class ConcessionairesController extends Controller
     public function deleteConcessionaire($id) {
         $concessionaire = Concessionaire::findOrFail($id);
 
-        // Check for unpaid bills
-        $hasUnpaidBills = DB::table('concessionaire_bills')
+        // Get latest bill
+        $latestBill = DB::table('concessionaire_bills')
             ->where('concessionaire_id', $id)
-            ->where('status', '!=', 'Fully Paid')
-            ->exists();
+            ->orderBy('id', 'DESC')
+            ->first();
 
-        if ($hasUnpaidBills) {
-            return redirect()->route('concessionaires.list')
-                ->with('error', 'Cannot delete concessionaire with active unpaid bills.');
+        // If they have any bills at all
+        if ($latestBill) {
+            $hasRemainingBalance = $latestBill->amount_paid < $latestBill->total_due;
+
+            if ($hasRemainingBalance) {
+                return redirect()->route('concessionaires.list')
+                    ->with('error', 'Cannot delete concessionaire with unpaid balance.');
+            }
         }
 
-        $concessionaire->delete(); // Triggers audit
+        // Safe to delete
+        $concessionaire->delete();
         return redirect()->route('concessionaires.list')->with('success', 'Concessionaire removed successfully!');
     }
 

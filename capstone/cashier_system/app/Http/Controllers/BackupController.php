@@ -28,22 +28,30 @@ class BackupController extends Controller
             [\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"]
         );
 
-        $tables = $pdo->query("SHOW TABLES")->fetchAll(\PDO::FETCH_COLUMN);
+        // Tables you DO NOT want included in backups
+        $exclude = ['audits', 'backups'];
+
+        // Get tables except the excluded ones
+        $allTables = $pdo->query("SHOW TABLES")->fetchAll(\PDO::FETCH_COLUMN);
+        $tables = array_filter($allTables, fn($t) => !in_array($t, $exclude));
 
         $out = "";
 
         foreach ($tables as $table) {
+
+            // CREATE TABLE
             $createRow = $pdo->query("SHOW CREATE TABLE `$table`")->fetch(\PDO::FETCH_NUM);
-            // $createRow[1] usually contains the CREATE TABLE statement
             $createSql = $createRow[1] ?? $createRow[0];
             $out .= $createSql . ";\n\n";
 
+            // Insert each row
             $rows = $pdo->query("SELECT * FROM `$table`")->fetchAll(\PDO::FETCH_ASSOC);
             foreach ($rows as $row) {
                 $columns = implode('`,`', array_keys($row));
                 $values  = implode(',', array_map(fn($v) => $pdo->quote($v), $row));
                 $out .= "INSERT INTO `$table` (`$columns`) VALUES ($values);\n";
             }
+
             $out .= "\n";
         }
 
