@@ -138,6 +138,23 @@ class BackupController extends Controller
             return back()->withErrors(['password' => 'Invalid password.']);
         }
 
+        // Get all backups sorted by newest first
+        $allBackups = Backup::orderBy('created_at', 'desc')->get();
+
+        // If there is only one backup remaining, block deletion
+        if ($allBackups->count() <= 1) {
+            return back()->withErrors(['error' => 'At least one backup must remain at all times.']);
+        }
+
+        // Identify the most recent backup (the newest)
+        $latestBackup = $allBackups->first();
+
+        // Prevent deletion of the most recent backup
+        if ($latestBackup->name === $fileName) {
+            return back()->withErrors(['error' => 'You cannot delete the most recent backup.']);
+        }
+
+        // Continue with deletion
         $path = $this->backupPath() . '/' . $fileName;
 
         if (file_exists($path)) {
@@ -153,7 +170,7 @@ class BackupController extends Controller
         AuditLogger::log(
             'backup_delete',
             'Backup',
-            $backup?->id,
+            $backup->id,
             [],
             ['message' => "Backup {$fileName} deleted"],
             'backup'

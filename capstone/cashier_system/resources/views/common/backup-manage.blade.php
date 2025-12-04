@@ -15,18 +15,15 @@
             <div class="alert alert-danger rounded-3 shadow-sm p-3">{{ session('error') }}</div>
         @endif
 
-        {{-- Validation error bags --}}
-        @foreach (['restoreErrorBag', 'deleteErrorBag', 'downloadErrorBag'] as $bag)
-            @if ($errors->$bag->any())
-                <div class="alert alert-danger rounded-3 shadow-sm p-3 mb-3">
-                    <ul class="mb-0">
-                        @foreach ($errors->$bag->all() as $err)
-                            <li>{{ $err }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-        @endforeach
+        @if ($errors->any())
+        <div class="alert alert-danger rounded-3 shadow-sm p-3 mb-3">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
 
         {{-- Create Backup Button --}}
         <div class="mb-4">

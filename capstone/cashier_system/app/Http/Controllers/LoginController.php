@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -87,58 +88,98 @@ class LoginController extends Controller
             'password' => 'required|string|min:4',
         ]);
 
+        $user = User::where('email', $request->email)->first();
         $remember = $request->filled('remember');
-        $credentials = $request->only('email', 'password');
 
-        $key = Str::lower($request->email).'|'.$request->ip(); // unique key per email + IP
-
-        if (RateLimiter::tooManyAttempts($key, 3)) {
-            $seconds = RateLimiter::availableIn($key);
-
-            return back()->withErrors([
-                'email' => "Too many login attempts. Please try again in {$seconds} seconds or reset your password.",
-            ]);
+        // If no user exists → generic error
+        if (!$user) {
+            return back()->with('error', 'Invalid login credentials.');
         }
 
-        if (Auth::attempt($credentials, $remember)) {
-            // Clear attempts
-            RateLimiter::clear($key);
+        // ---------------------------------------------------
+        // 1. Check if account is permanently locked
+        // ---------------------------------------------------
+        if ($user->locked_at !== null) {
+            return redirect()->route('forgot.password.email')
+                ->with('error', 'Your account is locked. Please reset your password to regain access.');
+        }
 
-            /** @var \App\Models\User $user */
-            $user = Auth::user();
+        // ---------------------------------------------------
+        // 2. Attempt login
+        // ---------------------------------------------------
+        if (Auth::attempt($request->only('email', 'password'), $remember)) {
+
+            // SUCCESS → clear failed attempts
+            Cache::forget('login_failures_' . $user->email);
+
+            // normal login setup
             session()->put('user', $user);
             session()->put('loginId', $user->id);
 
+            // email verification flow
             if (is_null($user->email_verified_at)) {
                 return $this->sendVerificationOtp($user, 'Please verify your email via OTP.');
             }
 
             if ($user->email_verified_at->lt(now()->subMonth(1))) {
-                $user->email_verified_at = null; // reset
+                $user->email_verified_at = null;
                 $user->save();
 
                 return $this->sendVerificationOtp($user, 'Your verification has expired. A new OTP was sent.');
             }
 
-                // Audit log
-                AuditLogger::log(
-                    event: 'user_login',
-                    auditableType: 'App\\Models\\User',
-                    auditableId: $user->id,
-                    oldValues: [],
-                    newValues: [                
-                            'message' => 'User Login',
-                            'user' => $user->email,
-                            'timestamp' => now()->toDateTimeString(),
-                        ],
-                    tags: 'login'
-                );
+            // Audit log
+            AuditLogger::log(
+                event: 'user_login',
+                auditableType: 'App\\Models\\User',
+                auditableId: $user->id,
+                oldValues: [],
+                newValues: [
+                    'message' => 'User Login',
+                    'user' => $user->email,
+                    'timestamp' => now()->toDateTimeString(),
+                ],
+                tags: 'login'
+            );
 
             return redirect()->route('admin.dashboard');
         }
 
-        // Failed attempt → hit limiter
-        RateLimiter::hit($key, 300); // 300 seconds = 5 mins lockout after max attempts
+        // ---------------------------------------------------
+        // 3. FAILED LOGIN ATTEMPT
+        // ---------------------------------------------------
+
+        // Get current failures from cache (default: 0)
+        $failures = Cache::get('login_failures_' . $user->email, 0) + 1;
+
+        Cache::put('login_failures_' . $user->email, $failures, now()->addHours(12));
+
+        // If reached 3 incorrect attempts → lock account permanently
+        if ($failures >= 3) {
+
+            $user->locked_at = now();
+            $user->save();
+
+            // Audit log
+            AuditLogger::log(
+                event: 'user_locked',
+                auditableType: 'App\\Models\\User',
+                auditableId: $user->id,
+                oldValues: [],
+                newValues: [
+                    'message' => 'Account locked after multiple failed login attempts',
+                    'email' => $user->email,
+                    'timestamp' => now()->toDateTimeString(),
+                ],
+                tags: 'security'
+            );
+
+            // Notify user by email
+            Mail::to($user->email)->send(new \App\Mail\AccountLockedMail($user));
+
+            return redirect()->route('forgot.password.email')
+                ->with('error', 'Your account has been locked because of multiple failed login attempts. Please reset your password to regain access.');
+        }
 
         return back()->with('error', 'Invalid login credentials.');
     }
@@ -209,6 +250,25 @@ class LoginController extends Controller
         $user = User::where('email', session('otp_email'))->first();
         if (!$user) {
             return back()->withErrors(['email' => 'User not found.']);
+        }
+
+        // unlock only if previously locked
+        if ($user->locked_at) {
+            $user->locked_at = null;
+
+            // Audit log
+            AuditLogger::log(
+                event: 'user_unlocked',
+                auditableType: 'App\\Models\\User',
+                auditableId: $user->id,
+                oldValues: [],
+                newValues: [
+                    'message' => 'Account unlocked after password reset',
+                    'email' => $user->email,
+                    'timestamp' => now()->toDateTimeString(),
+                ],
+                tags: 'security'
+            );
         }
 
         $user->password = Hash::make($request->new_password);
