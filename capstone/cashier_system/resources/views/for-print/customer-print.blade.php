@@ -99,8 +99,8 @@
     <table class="section invisible-text">
         <tr>
             <td>
-                <strong>ACCOUNTABLE FORM N. 51-C <br><br>
-                    Revised January, 1992 (ORIGINAL)<br>
+                <strong>&nbsp; <br><br>
+                    &nbsp;<br>
                 </strong>
             </td>
         </tr>
@@ -112,12 +112,12 @@
             <td style="width: 25%;">&nbsp;</td>
             <td style="width: 50%;">
                 <div class="text-center">
-                    Official Receipt of the <br>
-                    Republic of the Philippines
+                    &nbsp; <br>
+                    &nbsp;
                 </div>
                 <hr style="border: none;">
                 <div class="text-center">
-                    <h2>No. {{ $TransactionDetails[0]->receipt_number }}</h2>
+                    <h2>&nbsp;</h2>
                 </div>
             </td>
             <td style="width: 25%;">&nbsp;</td>
@@ -131,17 +131,21 @@
     <table class="section">
         <tr><td>&nbsp;</td></tr>
         <tr>
-            <td style="width: 35%;" class="invisible-text">Fund</td>
+            <td style="width: 35%;" class="invisible-text">&nbsp;</td>
             <td style="width: 65%;" class="text-center ps-4">
                 {{ \Carbon\Carbon::parse($TransactionDetails[0]->transaction_date ?? now())->format('m-d-Y') }}
             </td>
         </tr>
     </table>
 
+    <table class="section">
+        <tr><td>&nbsp;</td></tr>
+    </table>
+
     {{-- Institution and Customer --}}
     <table class="section" style="position: relative; height: 40px;">
         <tr class="text-center invisible-text">
-            <td><strong>POLYTECHNIC UNIVERSITY OF THE PHILIPPINES</strong></td>
+            <td><strong>&nbsp;</strong></td>
         </tr>
         <tr style="position: absolute; top: 18px; left: 0; width: 100%;">
             <td class="text-center">
@@ -162,9 +166,9 @@
     <table class="section item-table">
         <thead class="invisible-text">
             <tr>
-                <th style="width: 60%;">Nature of Collection</th>
-                <th style="width: 20%;">Account Code</th>
-                <th style="width: 20%;">Amount</th>
+                <th style="width: 60%;">&nbsp;</th>
+                <th style="width: 20%;">&nbsp;</th>
+                <th style="width: 20%;">&nbsp;</th>
             </tr>
         </thead>
         <tbody>
@@ -212,13 +216,13 @@
 
             {{-- Blank filler rows --}}
             @for ($i = $itemCount; $i < $maxRows; $i++)
-                <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+                <tr><td>&nbsp;</td></tr>
             @endfor
 
             {{-- Static Total --}}
             <tr><td>&nbsp;</td></tr>
             <tr>
-                <td colspan="2" class="text-center invisible-text"><strong>TOTAL</strong></td>
+                <td colspan="2" class="text-center invisible-text"><strong>&nbsp;</strong></td>
                 <td class="text-center pe-3"><strong>{{ number_format($TransactionDetails->sum('subtotal'), 2) }}</strong></td>
             </tr>
         </tbody>
@@ -235,20 +239,17 @@
     {{-- Payment Method --}}
     <table class="section invisible-text">
         <tr>
-            <td style="width: 25%;">Cash</td>
-            <td style="width: 25%;" class="text-center">Drawee Bank</td>
-            <td style="width: 25%;" class="text-center">Number</td>
-            <td style="width: 25%;" class="text-center">Date</td>
+            <td style="width: 25%;">&nbsp;</td>
         </tr>
-        <tr><td>Check</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-        <tr><td>Money Order</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+        <tr><td>&nbsp;</td></tr>
+        <tr><td>&nbsp;</td></tr>
     </table>
 
     {{-- Signature --}}
     <table class="section" style="position: relative; height: 50px;">
         <tr>
             <td class="invisible-text">
-                <div class="text-left">Received the amount stated above.</div>
+                <div class="text-left">&nbsp;</div>
             </td>
         </tr>
         <tr style="position: absolute; bottom: 0; right: 0; width: 100%;">

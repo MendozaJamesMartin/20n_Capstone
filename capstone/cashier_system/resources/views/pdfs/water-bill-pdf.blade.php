@@ -39,15 +39,13 @@
     <div class="section mt-5">
         <p>&nbsp;</p>
     </div>
-    
-    <div class="right">{{ \Carbon\Carbon::parse($bill->bill_date)->format('F d, Y') }}</div>
 
     <h3 class="text-center">MONTHLY STATEMENT OF ACCOUNT</h3>
 
     <div class="section">
         <p>TO: {{ $bill->concessionaire_name }}</p>
         <p>RE: {{ $bill->utility_type }}</p>
-        <p>Bill Date: {{ $bill->bill_date }}</p>
+        <p>Bill Date: {{ \Carbon\Carbon::parse($bill->bill_date)->format('F d, Y') }}</p>
         <p>Billing Period: {{ $bill->billing_period }}</p>
     </div>
 
@@ -88,10 +86,11 @@
         <p>&nbsp;</p>
     </div>
 
-    <div class="section mt-5">
-        <p class="right">{{ auth()->check() ? auth()->user()->first_name . ' ' . auth()->user()->last_name : 'Collecting Officer' }}
-        <br>
-        Collecting Officer</p>
+    <div class="section mt-5" style="text-align: right;">
+        <p style="display: inline-block; text-align: left;">
+            {{ auth()->check() ? auth()->user()->first_name . ' ' . auth()->user()->last_name : 'Collecting Officer' }}<br>
+            Collecting Officer
+        </p>
     </div>
 
     <div class="section mt-5">

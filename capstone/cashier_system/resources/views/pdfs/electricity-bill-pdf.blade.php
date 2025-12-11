@@ -113,11 +113,11 @@
 <div class="center-table">
     <table>
         <tr><td>Total Bill (PUPT):</td><td>P {{ number_format($bill->university_total_bill, 2) }}</td></tr>
-        <tr><td>Total kWh Used:</td><td>{{ number_format($bill->university_total_kwh, 2) }} (using 120 multiplier)</td></tr>
-        <tr><td>Cost per kWh:</td><td>P {{ number_format($bill->cost_per_kwh, 4) }}</td></tr>
+        <tr><td>Total kWh Used:</td><td>{{ number_format($bill->university_total_kwh) }} (using 120 multiplier)</td></tr>
+        <tr><td>Cost per kWh:</td><td>P {{ number_format($bill->cost_per_kwh, 2) }}</td></tr>
                 <tr><td>&nbsp;</td></tr>
-        <tr><td>Concessionaire’s Consumption =</td><td>{{ number_format($bill->concessionaire_kwh_used, 2) }}</td></tr>
-        <tr><td>x Cost per kWh =</td><td>{{ number_format($bill->cost_per_kwh, 4) }}</td></tr>
+        <tr><td>Concessionaire’s Consumption =</td><td>{{ number_format($bill->concessionaire_kwh_used) }}</td></tr>
+        <tr><td>x Cost per kWh =</td><td>{{ number_format($bill->cost_per_kwh) }}</td></tr>
         <tr class="bold"><td>Total Amount:</td><td>P {{ number_format($bill->current_charges, 2) }}</td></tr>
                 <tr><td>&nbsp;</td></tr>
         <tr><td>Previous Unpaid Amount:</td><td>P {{ number_format($bill->previous_unpaid, 2) }}</td></tr>
@@ -134,10 +134,11 @@
         </p>
     </div>
 
-    <div class="section mt-5">
-        <p>&nbsp;</p>
-        <p class="right">{{ auth()->check() ? auth()->user()->first_name . ' ' . auth()->user()->last_name : 'Collecting Officer' }}
-        <br>Collecting Officer</p>
+    <div class="section mt-5" style="text-align: right;">
+        <p style="display: inline-block; text-align: left;">
+            {{ auth()->check() ? auth()->user()->first_name . ' ' . auth()->user()->last_name : 'Collecting Officer' }}<br>
+            Collecting Officer
+        </p>
     </div>
 
     <div class="section mt-5">
