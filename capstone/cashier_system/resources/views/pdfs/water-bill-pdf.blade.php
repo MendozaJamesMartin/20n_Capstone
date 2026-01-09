@@ -88,7 +88,16 @@
 
     <div class="section mt-5" style="text-align: right;">
         <p style="display: inline-block; text-align: left;">
-            {{ auth()->check() ? auth()->user()->first_name . ' ' . auth()->user()->last_name : 'Collecting Officer' }}<br>
+            @if(auth()->check())
+                {{ auth()->user()->first_name }}
+                @if(!empty(auth()->user()->middle_name))
+                    {{ ' ' . substr(auth()->user()->middle_name, 0, 1) . '.' }}
+                @endif
+                {{ ' ' . auth()->user()->last_name }}
+            @else
+                Collecting Officer
+            @endif
+            <br>
             Collecting Officer
         </p>
     </div>

@@ -29,11 +29,11 @@ class PaymentsController extends Controller
 
         // Apply timeframe filter
         if ($timeframe === 'today') {
-            $query->where('student_unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subDay());
+            $query->where('unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subDay());
         } elseif ($timeframe === 'this_week') {
-            $query->where('student_unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subWeek());
+            $query->where('unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subWeek());
         } elseif ($timeframe === 'this_month') {
-            $query->where('student_unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subMonth());
+            $query->where('unpaid_transactions_list.transaction_date', '>=', Carbon::now()->subMonth());
         }
 
         // Apply sorting method
