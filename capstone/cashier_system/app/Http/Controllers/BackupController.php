@@ -77,7 +77,7 @@ class BackupController extends Controller
     // ------------------------------------------------------------
     public function showManageView()
     {
-        $backups = Backup::orderByDesc('created_at')->get();
+        $backups = Backup::orderByDesc('created_at')->paginate(10);
 
         return view('common.backup-manage', ['backups' => $backups]);
     }

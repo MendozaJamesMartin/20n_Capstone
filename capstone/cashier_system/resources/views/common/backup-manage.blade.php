@@ -118,6 +118,47 @@
             </div>
         </div>
 
+        <!-- Pagination -->
+        <div class="d-flex justify-content-center align-items-center flex-wrap gap-2 mt-4">
+
+            @if ($backups->onFirstPage())
+                <button class="btn btn-outline-dark rounded-pill px-3" disabled>« First</button>
+                <button class="btn btn-outline-dark rounded-pill px-3" disabled>‹ Prev</button>
+            @else
+                <a href="{{ $backups->url(1) }}" class="btn btn-outline-dark rounded-pill px-3">« First</a>
+                <a href="{{ $backups->previousPageUrl() }}" class="btn btn-outline-dark rounded-pill px-3">‹ Prev</a>
+            @endif
+
+            <!-- Page input -->
+            <form action="{{ url()->current() }}" method="GET" class="d-flex align-items-center shadow-sm p-2 rounded-pill bg-white">
+                <span class="me-2">Page</span>
+                <input 
+                    type="number" 
+                    name="page" 
+                    value="{{ $backups->currentPage() }}" 
+                    min="1" 
+                    max="{{ $backups->lastPage() }}" 
+                    class="form-control form-control-sm text-center me-2"
+                    style="width:70px;"
+                    onkeydown="if(event.key === 'Enter') this.form.submit();"
+                >
+                <span class="me-3">of {{ $backups->lastPage() }}</span>
+
+                @foreach(request()->except('page') as $key => $value)
+                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                @endforeach
+            </form>
+
+            @if ($backups->hasMorePages())
+                <a href="{{ $backups->nextPageUrl() }}" class="btn btn-outline-dark rounded-pill px-3">Next ›</a>
+                <a href="{{ $backups->url($backups->lastPage()) }}" class="btn btn-outline-dark rounded-pill px-3">Last »</a>
+            @else
+                <button class="btn btn-outline-dark rounded-pill px-3" disabled>Next ›</button>
+                <button class="btn btn-outline-dark rounded-pill px-3" disabled>Last »</button>
+            @endif
+
+        </div>
+
         {{-- Create Backup Modal --}}
         <div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
