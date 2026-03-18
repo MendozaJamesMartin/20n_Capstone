@@ -138,10 +138,6 @@
         </tr>
     </table>
 
-    <table class="section">
-        <tr><td>&nbsp;</td></tr>
-    </table>
-
     {{-- Institution and Customer --}}
     <table class="section" style="position: relative; height: 40px;">
         <tr class="text-center invisible-text">
@@ -246,6 +242,7 @@
     </table>
 
     {{-- Signature --}}
+    <!--
     <table class="section" style="position: relative; height: 50px;">
         <tr>
             <td class="invisible-text">
@@ -264,6 +261,7 @@
             </td>
         </tr>
     </table>
+    -->
 
 </body>
 </html>

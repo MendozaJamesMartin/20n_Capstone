@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 
 class PaymentsController extends Controller
 {
@@ -195,6 +196,19 @@ class PaymentsController extends Controller
 
                 return view('students.payment-form-unpaid', compact('fees'), ['hasActiveBatch' => $currentBatch !== null]);
             } elseif ($request->isMethod('post')) {
+
+                $key = 'student-payment:' . md5(
+                    $request->ip() . '|' . $request->input('customer_name')
+                );
+
+                // allow 1 attempt every 3 minutes
+                if (RateLimiter::tooManyAttempts($key, 1)) {
+                    return back()->with('error', 'Please wait 3 minutes before submitting again.');
+                }
+
+                // hit AFTER passing the check
+                RateLimiter::hit($key, 180); // 180 seconds = 3 minutes
+
                 $validated = $request->validate([
                     'customer_name' => 'required|string',
                     'contact'       => 'nullable|string|email',
