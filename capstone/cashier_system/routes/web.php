@@ -47,7 +47,8 @@ Route::group(['prefix' => 'cashier', 'middleware' => (['user.auth', 'verify'])],
 
     //Concessionaire Bills Management
     Route::get('concessionaires/billing/list', [BillsController::class, 'GetBillingList'])->name('concessionaires.billing.list');
-    Route::match(['get', 'post'], 'concessionaires/billing/new', [BillsController::class, 'CreateNewBilling'])->name('concessionaires.billing.new');
+    Route::match(['get', 'post'], 'concessionaires/billing/electricity/new', [BillsController::class, 'CreateElectricityBill'])->name('concessionaires.billing.electricity.new');
+    Route::match(['get', 'post'], 'concessionaires/billing/water/new', [BillsController::class, 'CreateWaterBill'])->name('concessionaires.billing.water.new');
     Route::get('concessionaire/billing/electricity/{id}', [BillsController::class, 'electricityBillingStatement'])->name('concessionaire.bill.electricity.pdf');
     Route::get('concessionaire/billing/water/{id}', [BillsController::class, 'waterBillingStatement'])->name('concessionaire.bill.water.pdf');
 

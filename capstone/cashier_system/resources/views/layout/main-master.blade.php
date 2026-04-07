@@ -263,7 +263,8 @@
                 </a>
                 <div id="billingMenu" class="submenu" aria-hidden="true">
                     <a href="{{ route('concessionaires.billing.list') }}" class="nav-link">Concessionaire Billing List</a>
-                    <a href="{{ route('concessionaires.billing.new') }}" class="nav-link">Create Billing Statement</a>
+                    <a href="{{ route('concessionaires.billing.electricity.new') }}" class="nav-link">Create Electricity Billing</a>
+                    <a href="{{ route('concessionaires.billing.water.new') }}" class="nav-link">Create Water Billing</a>
                 </div>
             </li>
 

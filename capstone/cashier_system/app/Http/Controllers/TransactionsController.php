@@ -130,37 +130,6 @@ class TransactionsController extends Controller
         return $pdf->stream("Receipt_{$id}.pdf");
     }
 
-    public function concessionaireReceiptPDF($id) {
-        $TransactionDetails = DB::table('concessionaire_transaction_receipt')
-            ->where('transaction_id', $id)
-            ->get();
-
-        if ($TransactionDetails->isEmpty()) {
-            abort(404, 'Transaction not found');
-        }
-
-        // 🔹 Update receipt status from Pending → Issued
-        DB::table('receipts')
-            ->where('transaction_id', $id)
-            ->where('status', 'Pending')
-            ->update(['status' => 'Issued']);
-
-        $total = $TransactionDetails->first()->total_amount ?? 0;
-        $amountInWords = $this->numberToWords($total);
-
-        $Cashier = Auth::user();
-
-        $pdf = Pdf::loadView('for-print.concessionaire-print', [
-            'TransactionDetails' => $TransactionDetails,
-            'Cashier' => $Cashier,
-            'amountInWords' => $amountInWords,
-            'printMode' => false,
-        ])->setPaper([0, 0, 294.84, 612.36], 'portrait');
-
-        // Stream the PDF so it opens in the browser (not downloaded unless user chooses to)
-        return $pdf->stream("Receipt_{$id}.pdf");
-    }
-
     public function finalizeTransaction($transactionId) {
         Log::info("Finalize Transaction with ID: $transactionId");
         DB::beginTransaction();
