@@ -35,9 +35,13 @@
                                 <th onclick="sortTable('electricityTable', 6)">Current Charges</th>
                                 <th onclick="sortTable('electricityTable', 7)">Previous Unpaid</th>
                                 <th onclick="sortTable('electricityTable', 8)">Total</th>
+                                <!--
                                 <th onclick="sortTable('electricityTable', 9)">Amount Paid</th>
+                                -->
                                 <th onclick="sortTable('electricityTable', 10)">Due Date</th>
+                                <!--
                                 <th onclick="sortTable('electricityTable', 11)">Status</th>
+                                -->
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -53,9 +57,13 @@
                                 <td>₱{{ number_format($bill->current_charges, 2) }}</td>
                                 <td>₱{{ number_format($bill->previous_unpaid, 2) }}</td>
                                 <td>₱{{ number_format($bill->total_due, 2) }}</td>
+                                <!-- 
                                 <td>₱{{ number_format($bill->amount_paid, 2) }}</td>
+                                -->
                                 <td>{{ $bill->due_date }}</td>
+                                <!--
                                 <td><span class="badge bg-{{ $bill->status === 'Fully Paid' ? 'success' : ($bill->status === 'Partially Paid' ? 'warning' : 'danger') }}">{{ $bill->status }}</span></td>
+                                -->
                                 <td>
                                     <a href="{{ route('concessionaire.bill.electricity.pdf', ['id' => $bill->bill_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Billing Statement"><i class="fa-solid fa-receipt"></i></a>
                                 </td>
@@ -79,9 +87,13 @@
                                 <th onclick="sortTable('waterTable', 2)">Current Charges</th>
                                 <th onclick="sortTable('waterTable', 3)">Previous Unpaid</th>
                                 <th onclick="sortTable('waterTable', 4)">Total</th>
+                                <!--
                                 <th onclick="sortTable('waterTable', 5)">Amount Paid</th>
+                                -->
                                 <th onclick="sortTable('waterTable', 6)">Due Date</th>
+                                <!--
                                 <th onclick="sortTable('waterTable', 7)">Status</th>
+                                -->
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -93,9 +105,13 @@
                                 <td>₱{{ number_format($bill->current_charges, 2) }}</td>
                                 <td>₱{{ number_format($bill->previous_unpaid, 2) }}</td>
                                 <td>₱{{ number_format($bill->total_due, 2) }}</td>
+                                <!-- 
                                 <td>₱{{ number_format($bill->amount_paid, 2) }}</td>
+                                -->
                                 <td>{{ $bill->due_date }}</td>
+                                <!--
                                 <td><span class="badge bg-{{ $bill->status === 'Fully Paid' ? 'success' : ($bill->status === 'Partially Paid' ? 'warning' : 'danger') }}">{{ $bill->status }}</span></td>
+                                -->
                                 <td>
                                     <a href="{{ route('concessionaire.bill.water.pdf', ['id' => $bill->bill_id]) }}" target="_blank" class="btn btn-sm btn-outline-danger" title="Billing Statement"><i class="fa-solid fa-receipt"></i></a>
                                 </td>
