@@ -200,27 +200,4 @@ class DashboardController extends Controller
         ));
     }
 
-    public function showReportPage()
-    {
-        $fees = DB::table('fees')->whereNull('deleted_at')->get();
-        return view('common.reports', compact('fees'));
-    }
-
-    public function viewMonthlyReport(Request $request)
-    {
-        $startDate = $request->input('start_date');
-        $endDate   = $request->input('end_date');
-        $feeIds    = $request->input('fees', []);
-
-        $export = new MonthlyTransactionReportExport($startDate, $endDate, $feeIds);
-        $reportData = $export->array();
-
-        // Remove the header row for the web table
-        array_shift($reportData);
-
-        return response()->json([
-            'data' => $reportData
-        ]);
-    }
-
 }

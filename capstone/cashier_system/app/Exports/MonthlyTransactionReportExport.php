@@ -155,8 +155,6 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
         }
 
         return $clean;
-
-        return $data;
     }
 
     /**
@@ -164,7 +162,6 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
      */
     protected function buildFeeSummary(array $feeSummary): array
     {
-        $summary = [];
 
         // Build summary rows
         $rows = [];
@@ -234,7 +231,6 @@ class MonthlyTransactionReportExport implements FromArray, WithTitle, WithStyles
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet;
-                $highestRow = $sheet->getHighestRow();
 
                 foreach ($this->summaryRows as $row) {
                     $sheet->mergeCells("A{$row}:E{$row}");

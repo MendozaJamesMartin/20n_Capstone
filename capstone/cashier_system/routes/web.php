@@ -10,19 +10,16 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OtpController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\ReceiptsController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\TransactionsController;
 use App\Http\Controllers\UsersController;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Route;
-use Psy\Readline\Transient;
-
-use function Pest\Laravel\get;
 
 Route::group(['prefix' => 'cashier', 'middleware' => (['user.auth', 'verify'])], function () {
     
     //Admin Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/analytics', [DashboardController::class, 'analytics'])->name('data.analytics');
 
     //Customer Payments
     Route::match(['get', 'post'], '/payments/new', [PaymentsController::class, 'CustomerPayment'])->name('payments.customer.new');
@@ -96,10 +93,9 @@ Route::group(['prefix' => 'cashier', 'middleware' => (['user.auth', 'verify'])],
         Route::delete('/backups/{file}', [BackupController::class, 'deleteBackup'])->name('backups.delete');
 
         //Transactions Monthly Report
-        Route::get('/reports/monthly/export', [TransactionsController::class, 'exportMonthlyReport'])->name('reports.monthly.export');
-        Route::get('/analytics', [DashboardController::class, 'analytics'])->name('data.analytics');
-        Route::get('/reports', [DashboardController::class, 'showReportPage'])->name('reports.page');
-        Route::get('/reports/view', [DashboardController::class, 'viewMonthlyReport'])->name('reports.view');
+        Route::get('/reports/', [ReportsController::class,'showReportsPage'])->name('reports.page');
+        Route::get('/reports/view', [ReportsController::class, 'viewReport'])->name('reports.view');
+        Route::get('/reports/export', [ReportsController::class, 'exportReport'])->name('reports.export');
 
     });
 
@@ -139,6 +135,9 @@ Route::group(['middleware' => ['redirect.auth'], 'prefix' => '/customer'], funct
     });
     
 });
+
+
+
 /*
 Route::group(['middleware' => ['redirect.auth'], 'prefix' => '/'], function () {
 

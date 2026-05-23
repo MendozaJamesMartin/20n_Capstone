@@ -227,35 +227,6 @@ class TransactionsController extends Controller
         }
     }
 
-    public function exportMonthlyReport(Request $request)
-    {
-        $request->validate([
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'fee_ids' => 'array',
-            'fee_ids.*' => 'integer|exists:fees,id',
-            'include_bills' => 'nullable|boolean',
-            'utility_type' => 'nullable|string|in:All,Water,Electricity',
-        ]);
-
-        $start = $request->input('start_date');
-        $end = $request->input('end_date');
-        $feeIds = $request->input('fee_ids', []);
-        $includeBills = $request->boolean('include_bills', true);
-        $utilityType = $request->input('utility_type', 'All');
-
-        return Excel::download(
-            new MonthlyTransactionReportExport(
-                $start,
-                $end,
-                $feeIds,
-                $includeBills,
-                $utilityType,
-            ),
-            "Report_{$start}_to_{$end}.xlsx"
-        );
-    }
-
     private function numberToWords($number): string {
         $peso = floor($number);
         $centavos = round(($number - $peso) * 100);
