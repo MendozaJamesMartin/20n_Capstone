@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AccountabilityReport;
 use App\Exports\MonthlyTransactionReportExport;
 use App\Exports\CashReceiptsRecord;
 use Illuminate\Http\Request;
@@ -33,10 +34,7 @@ class ReportsController extends Controller
 
             case 'accountability':
 
-                return back()->with(
-                    'error',
-                    'Report not implemented'
-                );
+                return $this->exportAccountabilityReport($request);
 
             case 'collections':
 
@@ -96,4 +94,21 @@ class ReportsController extends Controller
         );
     }
 
+    public function exportAccountabilityReport(Request $request) {
+        $request->validate([
+            'start_date'=>'required|date',
+            'end_date'=>'required|date|after_or_equal:start_date'
+        ]);
+
+        $start=$request->start_date;
+        $end=$request->end_date;
+
+        return Excel::download(
+            new AccountabilityReport(
+                $start,
+                $end,
+            ),
+            "Accountability_{$start}_to_{$end}.xlsx"
+        );
+    }
 }
