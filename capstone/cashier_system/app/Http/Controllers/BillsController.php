@@ -64,6 +64,7 @@ class BillsController extends Controller
                     'utility_type' => 'required|in:Water,Electricity',
                     'billing_period' => 'required|integer|between:1,12',
                     'due_date' => "required|date|after_or_equal:$startOfYear|before_or_equal:$endOfYear",
+                    'noted_by' => 'required|string|max:100',
                 ]);
 
                 $billingMonth = $validated['billing_period'];
@@ -111,7 +112,7 @@ class BillsController extends Controller
                         }
                     }
 
-                    $results = DB::select('CALL CreateElectricityBill(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                    $results = DB::select('CALL CreateElectricityBill(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
                         $validated['concessionaire_name'],
                         $billingPeriodDate,
                         $validated['due_date'],
@@ -122,7 +123,8 @@ class BillsController extends Controller
                         $request->input('university_total_bill'),
                         $request->input('cost_per_kwh'),
                         $request->input('previous_reading'),
-                        $request->input('electricity_previous_unpaid')
+                        $request->input('electricity_previous_unpaid'),
+                        $request->input('noted_by')
                     ]);
                 }
 
@@ -184,6 +186,7 @@ class BillsController extends Controller
                     'utility_type' => 'required|in:Water,Electricity',
                     'billing_period' => 'required|integer|between:1,12',
                     'due_date' => "required|date|after_or_equal:$startOfYear|before_or_equal:$endOfYear",
+                    'noted_by' => 'required|string|max:100',
                 ]);
 
                 $billingMonth = $validated['billing_period'];
@@ -213,12 +216,13 @@ class BillsController extends Controller
                         }
                     }
 
-                    $results = DB::select('CALL CreateWaterBill(?, ?, ?, ?, ?)', [
+                    $results = DB::select('CALL CreateWaterBill(?, ?, ?, ?, ?, ?)', [
                         $validated['concessionaire_name'],
                         $billingPeriodDate,
                         $validated['due_date'],
                         $request->input('current_charges'),
-                        $request->input('water_previous_unpaid')
+                        $request->input('water_previous_unpaid'),
+                        $request->input('noted_by')
                     ]);
                 }
 

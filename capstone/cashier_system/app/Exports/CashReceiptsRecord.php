@@ -55,7 +55,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 't.transaction_date',
                 [
                     $this->startDate->copy()->subDay(),
-                    $this->endDate
+                    $this->endDate->copy()->subDay()
                 ]
             )
             ->select(

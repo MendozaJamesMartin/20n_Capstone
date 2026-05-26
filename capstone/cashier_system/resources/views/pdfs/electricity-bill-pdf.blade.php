@@ -152,7 +152,7 @@
 
     <div class="section mt-5">
         <p>Noted by:</p>
-        <p>Engr. Michael Zarco
+        <p>{{$bill->noted_by}}
         <br>Administrative Officer</p>
     </div>
 

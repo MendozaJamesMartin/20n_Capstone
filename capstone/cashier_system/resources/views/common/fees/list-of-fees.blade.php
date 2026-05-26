@@ -5,8 +5,8 @@
 <main style="min-height: 85vh; padding: 3%; 
     background: linear-gradient(135deg, #eef2f7, #f8f9fc);">
 
-    <div class="container mt-4" style="width: 65%;">
-        
+    <div class="container mt-4" style="width: 75%;">
+
         <!-- Alerts -->
         @if(session('success'))
         <div class="alert alert-success mt-3 shadow-sm" style="white-space: pre-line;">{{ session('success') }}</div>
@@ -25,7 +25,7 @@
         @endif
 
         <!-- Outer Card -->
-        <div class="bg-white rounded-4 shadow p-4" 
+        <div class="bg-white rounded-4 shadow p-4"
             style="border: 1px solid #e5e7eb; animation: fadeIn 0.4s ease;">
 
             <!-- Header -->
@@ -59,14 +59,15 @@
             </div>
 
             <!-- Table Wrapper -->
-            <div class="table-responsive shadow-sm rounded-3" 
+            <div class="table-responsive shadow-sm rounded-3"
                 style="border: 1px solid #e2e3e5; background: #ffffff;">
-                
+
                 <table class="table table-hover mb-0" id="feesTable">
                     <thead class="table-light">
                         <tr style="cursor: pointer;">
                             <th onclick="sortTable(0)">Fee Name</th>
-                            <th onclick="sortTable(1)">Amount</th>
+                            <th onclick="sortTable(1)">Classification</th>
+                            <th onclick="sortTable(2)">Amount</th>
                             <th style="cursor: default;">Actions</th>
                         </tr>
                     </thead>
@@ -74,7 +75,14 @@
                         @foreach($fees as $fee)
                         <tr class="align-middle">
                             <td>{{ $fee->fee_name }}</td>
-                            <td class="fw-semibold">₱{{ number_format($fee->amount, 2) }}</td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ $fee->classification }}
+                                </span>
+                            </td>
+                            <td class="fw-semibold">
+                                ₱{{ number_format($fee->amount,2) }}
+                            </td>
                             <td>
                                 @if($status === 'active')
                                 <button class="btn btn-sm btn-warning shadow-sm" data-bs-toggle="modal"
@@ -109,6 +117,16 @@
                                             <div class="mb-3">
                                                 <label>Fee Name</label>
                                                 <input type="text" name="fee_name" class="form-control" value="{{ $fee->fee_name }}" required>
+                                            </div>
+                                            <div class="mb-3 position-relative">
+                                                <label>Classification</label>
+                                                <input type="text"
+                                                    name="classification"
+                                                    class="form-control classification-input"
+                                                    value="{{ $fee->classification }}"
+                                                    placeholder="Search classification..."
+                                                    autocomplete="off"
+                                                    required>
                                             </div>
                                             <div class="mb-3">
                                                 <label>Amount</label>
@@ -190,11 +208,21 @@
 
                         <div id="fees-container">
                             <div class="row g-3 mb-3 fee-row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label>Fee Name</label>
                                     <input type="text" name="fees[0][fee_name]" class="form-control" required>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4 position-relative">
+                                    <label>Classification</label>
+
+                                    <input type="text"
+                                        name="fees[0][classification]"
+                                        class="form-control classification-input"
+                                        placeholder="Search classification..."
+                                        autocomplete="off"
+                                        required>
+                                </div>
+                                <div class="col-md-2">
                                     <label>Amount</label>
                                     <input type="number" step="0.01" name="fees[0][amount]" class="form-control" required>
                                 </div>
@@ -221,8 +249,15 @@
 <!-- Fade-in animation -->
 <style>
     @keyframes fadeIn {
-        from {opacity: 0; transform: translateY(10px);}
-        to {opacity: 1; transform: translateY(0);}
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .table-hover tbody tr:hover {
@@ -230,12 +265,13 @@
         transition: 0.2s;
     }
 
-    .btn, .form-control {
+    .btn,
+    .form-control {
         transition: 0.2s;
     }
 
     .form-control:focus {
-        box-shadow: 0 0 0 0.15rem rgba(13,110,253,0.25);
+        box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
     }
 
     .modal-content {
@@ -245,81 +281,399 @@
 
 
 <script>
+    const classificationsData = @json($classifications);
+
     let table = document.getElementById("feesTable");
     let originalRows = Array.from(table.tBodies[0].rows);
-    let sortState = {}; // default, asc, desc
+    let sortState = {};
 
     document.getElementById('searchInput').addEventListener('keyup', function() {
         let filter = this.value.toLowerCase();
-        let rows = document.querySelectorAll("#feesTable tbody tr");
+
+        let rows =
+            document.querySelectorAll(
+                "#feesTable tbody tr"
+            );
+
         rows.forEach(row => {
-            let text = row.textContent.toLowerCase();
-            row.style.display = text.includes(filter) ? '' : 'none';
-        });
-    });
 
-    document.addEventListener("DOMContentLoaded", function() {
-        let index = 1;
+            let text =
+                row.textContent.toLowerCase();
 
-        document.getElementById("add-row").addEventListener("click", function() {
-            const container = document.getElementById("fees-container");
+            row.style.display =
+                text.includes(filter)
+                ? ''
+                : '';
 
-            const newRow = document.createElement("div");
-            newRow.classList.add("row", "g-3", "mb-3", "fee-row");
-            newRow.innerHTML = `
-                <div class="col-md-6">
-                    <label>Fee Name</label>
-                    <input type="text" name="fees[${index}][fee_name]" class="form-control" required>
-                </div>
-                <div class="col-md-4">
-                    <label>Amount</label>
-                    <input type="number" step="0.01" name="fees[${index}][amount]" class="form-control" required>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger remove-row w-100">Remove</button>
-                </div>
-            `;
-            container.appendChild(newRow);
-            index++;
-        });
-
-        // Remove row handler
-        document.addEventListener("click", function(e) {
-            if (e.target.classList.contains("remove-row")) {
-                e.target.closest(".fee-row").remove();
+            if (!text.includes(filter)) {
+                row.style.display = 'none';
             }
+
         });
+
     });
+
+
+    function setupClassificationAutocomplete(input) {
+
+        let suggestionsList =
+            document.createElement('div');
+
+        suggestionsList.classList.add(
+            'border',
+            'rounded',
+            'bg-white',
+            'position-absolute',
+            'shadow-sm'
+        );
+
+        suggestionsList.style.maxHeight = '150px';
+        suggestionsList.style.overflowY = 'auto';
+        suggestionsList.style.display = 'none';
+        suggestionsList.style.zIndex = '2000';
+
+        document.body.appendChild(
+            suggestionsList
+        );
+
+        function positionSuggestions() {
+
+            const rect =
+                input.getBoundingClientRect();
+
+            suggestionsList.style.width =
+                rect.width + 'px';
+
+            suggestionsList.style.left =
+                rect.left + window.scrollX + 'px';
+
+            suggestionsList.style.top =
+                rect.bottom + window.scrollY + 'px';
+        }
+
+        function renderSuggestions(items) {
+
+            suggestionsList.innerHTML = '';
+
+            items.forEach(item => {
+
+                const div =
+                    document.createElement('div');
+
+                div.classList.add(
+                    'suggestion-item',
+                    'p-2'
+                );
+
+                div.textContent = item;
+                div.style.cursor = 'pointer';
+
+                div.addEventListener(
+                    'click',
+                    function() {
+
+                        input.value = item;
+                        suggestionsList.style.display =
+                            'none';
+
+                    }
+                );
+
+                suggestionsList.appendChild(div);
+
+            });
+
+            if (items.length) {
+
+                positionSuggestions();
+
+                suggestionsList.style.display =
+                    'block';
+
+            } else {
+
+                suggestionsList.style.display =
+                    'none';
+
+            }
+        }
+
+        input.addEventListener(
+            'input',
+            function() {
+
+                let query =
+                    this.value.toLowerCase();
+
+                if (query.length < 1) {
+
+                    suggestionsList.style.display =
+                        'none';
+
+                    return;
+                }
+
+                let matches =
+                    classificationsData
+                    .filter(c =>
+                        c.toLowerCase()
+                        .includes(query)
+                    )
+                    .slice(0,10);
+
+                renderSuggestions(matches);
+
+            }
+        );
+
+        input.addEventListener(
+            'focus',
+            function() {
+
+                renderSuggestions(
+                    classificationsData.slice(0,10)
+                );
+
+            }
+        );
+
+        document.addEventListener(
+            'click',
+            function(e){
+
+                if (
+                    !suggestionsList.contains(
+                        e.target
+                    )
+                    &&
+                    e.target !== input
+                ) {
+
+                    suggestionsList.style.display =
+                        'none';
+
+                }
+
+            }
+        );
+    }
+
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function() {
+
+            let index = 1;
+
+            document
+                .querySelectorAll(
+                    '.classification-input'
+                )
+                .forEach(input => {
+
+                    setupClassificationAutocomplete(
+                        input
+                    );
+
+                });
+
+            document
+                .getElementById("add-row")
+                .addEventListener(
+                    "click",
+                    function() {
+
+                        const container =
+                            document.getElementById(
+                                "fees-container"
+                            );
+
+                        const newRow =
+                            document.createElement(
+                                "div"
+                            );
+
+                        newRow.classList.add(
+                            "row",
+                            "g-3",
+                            "mb-3",
+                            "fee-row"
+                        );
+
+                        newRow.innerHTML = `
+
+                            <div class="col-md-4">
+                                <label>Fee Name</label>
+                                <input
+                                    type="text"
+                                    name="fees[${index}][fee_name]"
+                                    class="form-control"
+                                    required>
+                            </div>
+
+                            <div class="col-md-4 position-relative">
+                                <label>Classification</label>
+
+                                <input
+                                    type="text"
+                                    name="fees[${index}][classification]"
+                                    class="form-control classification-input"
+                                    placeholder="Search classification..."
+                                    autocomplete="off"
+                                    required>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label>Amount</label>
+
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    name="fees[${index}][amount]"
+                                    class="form-control"
+                                    required>
+                            </div>
+
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button
+                                    type="button"
+                                    class="btn btn-danger remove-row w-100">
+
+                                    Remove
+
+                                </button>
+                            </div>
+
+                        `;
+
+                        container.appendChild(
+                            newRow
+                        );
+
+                        setupClassificationAutocomplete(
+                            newRow.querySelector(
+                                '.classification-input'
+                            )
+                        );
+
+                        index++;
+
+                    }
+                );
+
+
+            document.addEventListener(
+                "click",
+                function(e) {
+
+                    if (
+                        e.target.classList.contains(
+                            "remove-row"
+                        )
+                    ) {
+
+                        e.target
+                            .closest(
+                                ".fee-row"
+                            )
+                            .remove();
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
 
     function sortTable(n) {
-        let rows = Array.from(table.tBodies[0].rows);
-        let state = sortState[n] || 'default';
 
-        // Reset all header arrows
-        Array.from(table.tHead.rows[0].cells).forEach((cell, idx) => {
-            cell.innerText = cell.innerText.replace(/ ↑| ↓/g, '');
+        let rows =
+            Array.from(
+                table.tBodies[0].rows
+            );
+
+        let state =
+            sortState[n]
+            ||
+            'default';
+
+        Array.from(
+            table.tHead.rows[0].cells
+        )
+        .forEach(cell => {
+
+            cell.innerText =
+                cell.innerText.replace(
+                    / ↑| ↓/g,
+                    ''
+                );
+
         });
 
         if (state === 'default') {
-            rows.sort((a, b) => a.cells[n].innerText.localeCompare(b.cells[n].innerText, undefined, {
-                numeric: true
-            }));
+
+            rows.sort(
+                (a,b) =>
+                a.cells[n]
+                .innerText
+                .localeCompare(
+                    b.cells[n].innerText,
+                    undefined,
+                    {numeric:true}
+                )
+            );
+
             sortState[n] = 'asc';
-            table.tHead.rows[0].cells[n].innerText += ' ↑';
-        } else if (state === 'asc') {
-            rows.sort((a, b) => b.cells[n].innerText.localeCompare(a.cells[n].innerText, undefined, {
-                numeric: true
-            }));
-            sortState[n] = 'desc';
-            table.tHead.rows[0].cells[n].innerText += ' ↓';
-        } else {
-            rows = [...originalRows];
-            sortState[n] = 'default';
+
+            table.tHead.rows[0]
+                .cells[n]
+                .innerText += ' ↑';
+
         }
 
-        table.tBodies[0].innerHTML = '';
-        rows.forEach(row => table.tBodies[0].appendChild(row));
+        else if (state === 'asc') {
+
+            rows.sort(
+                (a,b) =>
+                b.cells[n]
+                .innerText
+                .localeCompare(
+                    a.cells[n].innerText,
+                    undefined,
+                    {numeric:true}
+                )
+            );
+
+            sortState[n] = 'desc';
+
+            table.tHead.rows[0]
+                .cells[n]
+                .innerText += ' ↓';
+
+        }
+
+        else {
+
+            rows =
+                [...originalRows];
+
+            sortState[n] =
+                'default';
+
+        }
+
+        table.tBodies[0].innerHTML =
+            '';
+
+        rows.forEach(
+            row =>
+            table.tBodies[0]
+            .appendChild(row)
+        );
     }
+
 </script>
 
 @endsection

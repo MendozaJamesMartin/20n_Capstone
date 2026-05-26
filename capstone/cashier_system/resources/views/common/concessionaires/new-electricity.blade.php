@@ -168,7 +168,7 @@
             <!-- NOTED -->
             <div class="mt-5">
                 <p>Noted by:</p>
-                <p>Engr. Michael Zarco
+                <p><input type="text" id="noted_by" name="noted_by" class="form-control required">
                     <br>
                     Administrative Officer
                 </p>

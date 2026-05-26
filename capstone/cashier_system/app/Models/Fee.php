@@ -16,7 +16,7 @@ class Fee extends Model implements Auditable
 
     protected $table = 'fees';
     protected $primaryKey = 'id';
-    protected $fillable = ['fee_name','amount'];
+    protected $fillable = ['fee_name','amount', 'classification'];
 
     use SoftDeletes;
 }

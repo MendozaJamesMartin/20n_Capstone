@@ -21,7 +21,28 @@ class FeesController extends Controller
             $fees = Fee::orderBy('fee_name', 'asc')->get();
         }
 
-        return view('common.fees.list-of-fees', compact('fees', 'status'));
+        /*
+        Get ENUM values from fees.classification
+        */
+        $column = DB::select("
+            SHOW COLUMNS
+            FROM fees
+            LIKE 'classification'
+        ");
+
+        preg_match(
+            "/^enum\(\'(.*)\'\)$/",
+            $column[0]->Type,
+            $matches
+        );
+
+        $classifications =
+            explode(
+                "','",
+                $matches[1]
+            );
+
+        return view('common.fees.list-of-fees', compact('fees', 'status', 'classifications'));
     }
 
     public function AddFees(Request $request) {
@@ -30,6 +51,7 @@ class FeesController extends Controller
             $validated = $request->validate([
             'fees.*.fee_name' => 'required|string|max:100',
             'fees.*.amount' => 'required|numeric',
+            'fees.*.classification' => 'required|string'
         ]);
     
         foreach ($validated['fees'] as $fees) {
@@ -58,7 +80,8 @@ class FeesController extends Controller
         try {
             $validated = $request->validate([
             'fee_name' => 'required|string|max:100',
-            'amount' => 'required|numeric'
+            'amount' => 'required|numeric',
+            'classification' => 'required|string'
         ]);
     
         $existingFee = Fee::whereRaw('LOWER(fee_name) = ?', [strtolower($validated['fee_name'])])
@@ -74,6 +97,7 @@ class FeesController extends Controller
         $fees->update([
             'fee_name' => $validated['fee_name'],
             'amount' => $validated['amount'],
+            'classification' => $validated['classification']
         ]);
         
         DB::commit();
