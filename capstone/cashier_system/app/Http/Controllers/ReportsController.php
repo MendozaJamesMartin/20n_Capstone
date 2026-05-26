@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\AccountabilityReport;
 use App\Exports\MonthlyTransactionReportExport;
 use App\Exports\CashReceiptsRecord;
+use App\Exports\DepositReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -49,10 +50,7 @@ class ReportsController extends Controller
 
             case 'deposits':
 
-                return back()->with(
-                    'error',
-                    'Report not implemented'
-                );
+                return $this->exportDepositReport($request);
         }
     }
 
@@ -111,4 +109,23 @@ class ReportsController extends Controller
             "Accountability_{$start}_to_{$end}.xlsx"
         );
     }
+    
+    public function exportDepositReport(Request $request) {
+        $request->validate([
+            'start_date'=>'required|date',
+            'end_date'=>'required|date|after_or_equal:start_date'
+        ]);
+
+        $start=$request->start_date;
+        $end=$request->end_date;
+
+        return Excel::download(
+            new DepositReport(
+                $start,
+                $end,
+            ),
+            "Deposit_{$start}_to_{$end}.xlsx"
+        );
+    }
+
 }

@@ -27,8 +27,9 @@
                         <option value="transactions">Transactions Report</option>
                         <option value="cash_receipts">Cash Receipts Record</option>
                         <option value="accountability">Report of Accountability</option>
-                        <option value="collections">Report of Collections</option>
                         <option value="deposits">Deposits Report</option>
+                        <option value="collections" disabled>Report of Collections</option>
+                        <option value="register" disabled>Cash Receipts Register</option>
                     </select>
                 </div>
 

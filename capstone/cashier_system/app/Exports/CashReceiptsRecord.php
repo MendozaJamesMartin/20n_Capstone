@@ -53,7 +53,10 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
             )
             ->whereBetween(
                 't.transaction_date',
-                [$this->startDate,$this->endDate]
+                [
+                    $this->startDate->copy()->subDay(),
+                    $this->endDate
+                ]
             )
             ->select(
                 't.id',
@@ -67,70 +70,71 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
             ->orderBy('r.receipt_number')
             ->get();
 
-        $grouped = $transactions->groupBy(function($t){
+        $grouped = $transactions->groupBy(function ($t) {
             return Carbon::parse(
                 $t->transaction_date
             )->format('Y-m-d');
         });
 
-        foreach($grouped as $date=>$dayTransactions){
+        foreach ($grouped as $date => $dayTransactions) {
+
+            $currentDate = Carbon::parse($date);
 
             $dailyRows = [];
             $dailyTotal = 0;
             $runningTotal = 0;
 
-            foreach($dayTransactions as $index=>$txn){
+            foreach ($dayTransactions as $index => $txn) {
 
                 $isCancelled =
-                    $txn->receipt_status==='Cancelled'
+                    $txn->receipt_status === 'Cancelled'
                     ||
-                    $txn->transaction_status==='Cancelled';
+                    $txn->transaction_status === 'Cancelled';
 
-                $payor='CANCELLED';
-                $fees='CANCELLED';
-                $amount='CANCELLED';
+                $payor = 'CANCELLED';
+                $fees = 'CANCELLED';
+                $amount = 'CANCELLED';
 
-                if(!$isCancelled){
+                if (!$isCancelled) {
 
                     $payor = DB::table('customers')
                         ->whereIn(
                             'id',
-                            function($q) use($txn){
+                            function ($q) use ($txn) {
                                 $q->select('customer_id')
-                                ->from(
-                                    'customer_transaction_details'
-                                )
-                                ->where(
-                                    'transaction_id',
-                                    $txn->id
-                                );
+                                    ->from(
+                                        'customer_transaction_details'
+                                    )
+                                    ->where(
+                                        'transaction_id',
+                                        $txn->id
+                                    );
                             }
                         )
                         ->value('customer_name');
 
-                    if(!$payor){
+                    if (!$payor) {
 
                         $payor = DB::table(
                             'concessionaires'
                         )
-                        ->whereIn(
-                            'id',
-                            function($q) use($txn){
+                            ->whereIn(
+                                'id',
+                                function ($q) use ($txn) {
 
-                                $q->select(
-                                    'customer_id'
-                                )
-                                ->from(
-                                    'customer_transaction_details'
-                                )
-                                ->where(
-                                    'transaction_id',
-                                    $txn->id
-                                );
-
-                            }
-                        )
-                        ->value('name');
+                                    $q->select(
+                                        'customer_id'
+                                    )
+                                        ->from(
+                                            'customer_transaction_details'
+                                        )
+                                        ->where(
+                                            'transaction_id',
+                                            $txn->id
+                                        );
+                                }
+                            )
+                            ->value('name');
                     }
 
                     $payor = strtoupper(
@@ -140,122 +144,147 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                     $fees = DB::table(
                         'customer_transaction_details as ctd'
                     )
-                    ->join(
-                        'fees as f',
-                        'ctd.fee_id',
-                        '=',
-                        'f.id'
-                    )
-                    ->where(
-                        'ctd.transaction_id',
-                        $txn->id
-                    )
-                    ->select(
-                        'ctd.fee_label',
-                        'f.fee_name',
-                        'ctd.quantity'
-                    )
-                    ->get()
-                    ->map(function($f){
+                        ->join(
+                            'fees as f',
+                            'ctd.fee_id',
+                            '=',
+                            'f.id'
+                        )
+                        ->where(
+                            'ctd.transaction_id',
+                            $txn->id
+                        )
+                        ->select(
+                            'ctd.fee_label',
+                            'f.fee_name',
+                            'ctd.quantity'
+                        )
+                        ->get()
+                        ->map(function ($f) {
 
-                        $label=
-                        trim(
-                            strtolower(
-                                $f->fee_label
-                            )
-                        );
+                            $label =
+                                trim(
+                                    strtolower(
+                                        $f->fee_label
+                                    )
+                                );
 
-                        $labelText=
-                        ($label===''||$label==='none')
-                        ?''
-                        :$f->fee_label.'-';
+                            $labelText =
+                                ($label === '' || $label === 'none')
+                                ? ''
+                                : $f->fee_label . '-';
 
-                        return
-                        "{$labelText}{$f->fee_name}";
-                    })
-                    ->implode(', ');
+                            return
+                                "{$labelText}{$f->fee_name}";
+                        })
+                        ->implode(', ');
 
                     $amount = $txn->total_amount;
 
                     $dailyTotal += $amount;
-
                     $runningTotal += $amount;
-
                     $grandTotal += $amount;
                 }
 
-                $showDate='';
+                $showDate = '';
 
-                if(
-                    $index===0
+                if (
+                    $index === 0
                     ||
-                    $index===count(
-                        $dayTransactions
-                    )-1
-                ){
-                    $showDate=
-                    Carbon::parse(
-                        $date
-                    )->format('d/m/Y');
+                    $index === count($dayTransactions) - 1
+                ) {
+                    $showDate =
+                        $currentDate->format('d/m/Y');
                 }
 
-                $dailyRows[]=[
+                $dailyRows[] = [
 
-                    $showDate,              //A
-                    $txn->receipt_number,   //B
-                    $payor,                 //C
-                    '',                     //D
-                    '',                     //E
-                    $fees,                  //F
-                    $amount,                //G
-                    '',                     //H
-                    $runningTotal           //I
-
+                    $showDate,
+                    $txn->receipt_number,
+                    $payor,
+                    '',
+                    '',
+                    $fees,
+                    $amount,
+                    '',
+                    $runningTotal
                 ];
             }
 
-            $data=array_merge(
-                $data,
-                $dailyRows
-            );
+            if (
+                !$currentDate->isSameDay(
+                    $this->endDate
+                )
+            ) {
+
+                $data = array_merge(
+                    $data,
+                    $dailyRows
+                );
+            }
 
             /*
-            Daily total row
+            Generate next-day total only if
+            it stays inside report period
             */
 
-            $tomorrow=
-            Carbon::parse($date)
-            ->addDay()
-            ->format('d/m/Y');
+            $tomorrow =
+                $currentDate
+                ->copy()
+                ->addDay();
 
-            $data[]=[
+            if (
+                $tomorrow->between(
+                    $this->startDate,
+                    $this->endDate
+                )
+            ) {
 
-                $tomorrow,
-                '##-###',
-                '####-####-##',
-                '',
-                '',
-                '',
-                '',
-                $dailyTotal,
-                ''
+                $data[] = [
 
-            ];
+                    $tomorrow->format('d/m/Y'),
+                    '##-###',
+                    '####-####-##',
+                    '',
+                    '',
+                    '',
+                    '',
+                    $dailyTotal,
+                    ''
 
-            $this->dailyTotalRows[] = count($data);
+                ];
 
+                $this->dailyTotalRows[] =
+                    count($data);
+            }
         }
 
         $data[] = [
-            '', '', '', '', '', '', '', '', '-'
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '-'
         ];
 
         /*
         Final total row
         */
 
-        $data[]=[
-            'TOTAL', '', '', '', '', '', $grandTotal, $grandTotal, '-'
+        $data[] = [
+            'TOTAL',
+            '',
+            '',
+            '',
+            '',
+            '',
+            $grandTotal,
+            $grandTotal,
+            '-'
         ];
 
         $this->finalTotalRow = count($data);
@@ -282,9 +311,9 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 'vertical' => Alignment::VERTICAL_CENTER,
                 'wrapText' => true,
             ],
-            'borders'=>[
-                'allBorders'=>[
-                'borderStyle'=>Border::BORDER_THIN
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN
                 ]
             ]
         ];
@@ -305,9 +334,9 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
         return [
 
             'B' => NumberFormat::FORMAT_TEXT,
-            'G'=>NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
-            'H'=>NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
-            'I'=>NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
+            'G' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
+            'H' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
+            'I' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1,
 
         ];
     }
@@ -317,26 +346,26 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
         return [
             AfterSheet::class => function (AfterSheet $event) {
 
-            $user = Auth::user();
+                $user = Auth::user();
 
-            $parts = explode(' ', trim($user->name));
+                $parts = explode(' ', trim($user->name));
 
-            $firstName = $parts[0] ?? '';
-            $lastName = count($parts) > 1 ? end($parts) : '';
-            $middleInitial = '';
+                $firstName = $parts[0] ?? '';
+                $lastName = count($parts) > 1 ? end($parts) : '';
+                $middleInitial = '';
 
-            $start = $this->startDate->format('F d, Y');
-            $end = $this->endDate->format('F d, Y');
-            $range = "{$start} to {$end}";
+                $start = $this->startDate->format('F d, Y');
+                $end = $this->endDate->format('F d, Y');
+                $range = "{$start} to {$end}";
 
-            if(count($parts) > 2){
-                $middleInitial = strtoupper(substr($parts[1],0,1)) . '.';
-            }
+                if (count($parts) > 2) {
+                    $middleInitial = strtoupper(substr($parts[1], 0, 1)) . '.';
+                }
 
-            $preparedBy =
-                trim(
-                    "{$firstName} {$middleInitial} {$lastName}"
-                );
+                $preparedBy =
+                    trim(
+                        "{$firstName} {$middleInitial} {$lastName}"
+                    );
 
                 $sheet = $event->sheet->getDelegate();
 
@@ -405,7 +434,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 $sheet->mergeCells('F8:G8');
                 $sheet->mergeCells('H8:I8');
 
-                $sheet->setCellValue('A8',$preparedBy);
+                $sheet->setCellValue('A8', $preparedBy);
 
                 $sheet->setCellValue(
                     'F8',
@@ -523,34 +552,34 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 | Styling
                 |--------------------------------------------------------------------------
                 */
-                
+
                 // Title
                 $sheet->getStyle('A1')->applyFromArray([
-                    'font'=>[
-                        'bold'=>true,
-                        'size'=>14
+                    'font' => [
+                        'bold' => true,
+                        'size' => 14
                     ],
-                    'alignment'=>[
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER
                     ]
                 ]);
 
                 // Institution
                 $sheet->getStyle('A2:I6')->applyFromArray([
-                    'font'=>[
-                        'bold'=>false,
-                        'italic'=>true,
-                        'size'=>11
+                    'font' => [
+                        'bold' => false,
+                        'italic' => true,
+                        'size' => 11
                     ],
-                    'alignment'=>[
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER
                     ]
                 ]);
 
                 $sheet->getStyle('H6')
                     ->getNumberFormat()
                     ->setFormatCode(NumberFormat::FORMAT_TEXT);
-                    
+
                 /*
                 |--------------------------------------------------------------------------
                 | Row 8 styling
@@ -559,13 +588,13 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
                 $sheet->getStyle('A8:I8')
                     ->applyFromArray([
-                        'font'=>[
-                            'bold'=>true,
-                            'underline'=>true
+                        'font' => [
+                            'bold' => true,
+                            'underline' => true
                         ],
-                        'alignment'=>[
-                            'horizontal'=>Alignment::HORIZONTAL_CENTER,
-                            'vertical'=>Alignment::VERTICAL_CENTER
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER,
+                            'vertical' => Alignment::VERTICAL_CENTER
                         ]
                     ]);
 
@@ -578,13 +607,13 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
                 $sheet->getStyle('A9:I9')
                     ->applyFromArray([
-                        'font'=>[
-                            'italic'=>true,
-                            'bold'=>false
+                        'font' => [
+                            'italic' => true,
+                            'bold' => false
                         ],
-                        'alignment'=>[
-                            'horizontal'=>Alignment::HORIZONTAL_CENTER,
-                            'vertical'=>Alignment::VERTICAL_CENTER
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER,
+                            'vertical' => Alignment::VERTICAL_CENTER
                         ]
                     ]);
 
@@ -597,19 +626,19 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 $sheet->getStyle('A10:I11')
                     ->applyFromArray([
 
-                        'font'=>[
-                            'bold'=>true
+                        'font' => [
+                            'bold' => true
                         ],
 
-                        'alignment'=>[
-                            'horizontal'=>Alignment::HORIZONTAL_CENTER,
-                            'vertical'=>Alignment::VERTICAL_CENTER,
-                            'wrapText'=>true
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER,
+                            'vertical' => Alignment::VERTICAL_CENTER,
+                            'wrapText' => true
                         ],
 
-                        'borders'=>[
-                            'allBorders'=>[
-                                'borderStyle'=>Border::BORDER_THIN
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_THIN
                             ]
                         ]
                     ]);
@@ -639,9 +668,9 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 $sheet->getStyle('D10:E10')
                     ->applyFromArray([
 
-                        'font'=>[
-                            'italic'=>true,
-                            'bold'=>false
+                        'font' => [
+                            'italic' => true,
+                            'bold' => false
                         ]
 
                     ]);
@@ -693,13 +722,13 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                     'A10:I11'
                 ];
 
-                foreach($boxes as $range){
+                foreach ($boxes as $range) {
 
                     $sheet->getStyle($range)
                         ->applyFromArray([
-                            'borders'=>[
-                                'outline'=>[
-                                    'borderStyle'=>Border::BORDER_MEDIUM
+                            'borders' => [
+                                'outline' => [
+                                    'borderStyle' => Border::BORDER_MEDIUM
                                 ]
                             ]
                         ]);
@@ -723,14 +752,14 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 |--------------------------------------------------------------------------
                 */
 
-                foreach($this->dailyTotalRows as $row){
+                foreach ($this->dailyTotalRows as $row) {
 
                     $actualRow = $row + 12;
 
                     $sheet->getStyle("A{$actualRow}:I{$actualRow}")
                         ->applyFromArray([
-                            'font'=>[
-                                'bold'=>true
+                            'font' => [
+                                'bold' => true
                             ]
                         ]);
                 }
@@ -741,15 +770,15 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 |--------------------------------------------------------------------------
                 */
 
-                if($this->finalTotalRow){
+                if ($this->finalTotalRow) {
 
                     $actualRow = $this->finalTotalRow + 12;
 
                     $sheet->getStyle("A{$actualRow}:I{$actualRow}")
                         ->applyFromArray([
-                            'font'=>[
-                                'bold'=>true,
-                                'italic'=>true
+                            'font' => [
+                                'bold' => true,
+                                'italic' => true
                             ]
                         ]);
 
@@ -780,11 +809,11 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
                 $sheet->getStyle("A{$currentRow}")
                     ->applyFromArray([
-                        'font'=>[
-                            'bold'=>true
+                        'font' => [
+                            'bold' => true
                         ],
-                        'alignment'=>[
-                            'horizontal'=>Alignment::HORIZONTAL_CENTER
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER
                         ]
                     ]);
 
@@ -793,7 +822,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 /*
                 4 text rows
                 */
-                
+
                 $footerText = [
 
                     'I hereby certify on my official oath that the foregoing is a correct and complete',
@@ -803,9 +832,9 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
                 ];
 
-                foreach($footerText as $text){
+                foreach ($footerText as $text) {
                     $sheet->mergeCells("A{$currentRow}:I{$currentRow}");
-                    
+
                     $sheet->setCellValue(
                         "A{$currentRow}",
                         $text
@@ -813,8 +842,8 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
                     $sheet->getStyle("A{$currentRow}")
                         ->applyFromArray([
-                            'alignment'=>[
-                                'horizontal'=>Alignment::HORIZONTAL_CENTER
+                            'alignment' => [
+                                'horizontal' => Alignment::HORIZONTAL_CENTER
                             ]
                         ]);
 
@@ -843,22 +872,22 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 $sheet->getStyle(
                     "F{$currentRow}:G{$currentRow}"
                 )
-                ->applyFromArray([
+                    ->applyFromArray([
 
-                    'font'=>[
-                        'italic'=>true
-                    ],
+                        'font' => [
+                            'italic' => true
+                        ],
 
-                    'borders'=>[
-                        'bottom'=>[
-                            'borderStyle'=>Border::BORDER_THIN
+                        'borders' => [
+                            'bottom' => [
+                                'borderStyle' => Border::BORDER_THIN
+                            ]
+                        ],
+
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER
                         ]
-                    ],
-
-                    'alignment'=>[
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER
-                    ]
-                ]);
+                    ]);
 
                 $currentRow++;
 
@@ -876,8 +905,8 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 );
                 $sheet->getStyle("F{$currentRow}")
                     ->applyFromArray([
-                        'alignment'=>[
-                           'horizontal'=>Alignment::HORIZONTAL_CENTER
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER
                         ]
                     ]);
 
@@ -899,22 +928,22 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 $sheet->getStyle(
                     "F{$currentRow}:G{$currentRow}"
                 )
-                ->applyFromArray([
+                    ->applyFromArray([
 
-                    'font'=>[
-                        'italic'=>true
-                    ],
+                        'font' => [
+                            'italic' => true
+                        ],
 
-                    'borders'=>[
-                        'bottom'=>[
-                            'borderStyle'=>Border::BORDER_THIN
+                        'borders' => [
+                            'bottom' => [
+                                'borderStyle' => Border::BORDER_THIN
+                            ]
+                        ],
+
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER
                         ]
-                    ],
-
-                    'alignment'=>[
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER
-                    ]
-                ]);
+                    ]);
 
                 $currentRow++;
 
@@ -934,16 +963,16 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 $sheet->getStyle(
                     "F{$currentRow}:G{$currentRow}"
                 )
-                ->applyFromArray([
+                    ->applyFromArray([
 
-                    'font'=>[
-                        'italic'=>true
-                    ],
+                        'font' => [
+                            'italic' => true
+                        ],
 
-                    'alignment'=>[
-                        'horizontal'=>Alignment::HORIZONTAL_CENTER
-                    ]
-                ]);
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER
+                        ]
+                    ]);
 
                 // Freeze below report headers
                 $sheet->freezePane('A12');
