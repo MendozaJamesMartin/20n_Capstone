@@ -39,10 +39,7 @@ class ReportsController extends Controller
 
             case 'collections':
 
-                return back()->with(
-                    'error',
-                    'Report not implemented'
-                );
+                return $this->exportCollectionsReport($request);
 
             case 'cash_receipts':
 
@@ -51,6 +48,10 @@ class ReportsController extends Controller
             case 'deposits':
 
                 return $this->exportDepositReport($request);
+
+            case 'cash_receipts_register':
+
+                return $this->exportCashReceiptsRegister($request);
         }
     }
 
@@ -126,6 +127,14 @@ class ReportsController extends Controller
             ),
             "Deposit_{$start}_to_{$end}.xlsx"
         );
+    }
+
+    public function exportCollectionsReport(Request $request) {
+
+    }
+
+    public function exportCashReceiptsRegister(Request $request) {
+
     }
 
 }

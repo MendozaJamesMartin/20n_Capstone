@@ -29,7 +29,7 @@
                         <option value="accountability">Report of Accountability</option>
                         <option value="deposits">Deposits Report</option>
                         <option value="collections" disabled>Report of Collections</option>
-                        <option value="register" disabled>Cash Receipts Register</option>
+                        <option value="cash_receipts_register" disabled>Cash Receipts Register</option>
                     </select>
                 </div>
 

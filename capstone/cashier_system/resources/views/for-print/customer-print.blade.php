@@ -9,7 +9,7 @@
         html, body {
             margin: 1;
             padding: 1;
-            font-family: Arial, sans-serif;
+            font-family: 'Times New Roman', Times, serif;
             font-size: 14px;
             width: 99%;
             height: 99%;
