@@ -97,46 +97,38 @@ class DepositReport implements FromArray, WithEvents
 
                 $reportDates = [];
 
-                $currentDate = $this->startDate->copy();
+                foreach ($dailyCollections as $collection) {
 
-                while (
-                    $currentDate->lte(
-                        $this->endDate->copy()->startOfDay()
-                    )
-                ) {
+                    $reportDates[] = [
 
-                    $transactionDate =
-                        $currentDate
-                        ->copy()
-                        ->subDay();
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Deposit date intentionally blank
+                        |--------------------------------------------------------------------------
+                        |
+                        | Deposits may occur on a later working day.
+                        | We only guarantee that each day's collections
+                        | are totaled here.
+                        |
+                        */
 
-                    $total = DB::table('transactions')
-                        ->whereDate(
-                            'transaction_date',
-                            $transactionDate
-                        )
-                        ->where(
-                            'status',
-                            'Completed'
-                        )
-                        ->sum(
-                            'total_amount'
-                        );
+                        'collection_date' => '',
 
-                    if ($total > 0) {
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Optional: keep original transaction date separately
+                        |--------------------------------------------------------------------------
+                        */
 
-                        $reportDates[] = [
+                        'transaction_date' =>
+                            Carbon::parse(
+                                $collection->txn_date
+                            ),
 
-                            'collection_date' =>
-                            $currentDate->copy(),
+                        'amount' =>
+                            $collection->total
 
-                            'amount' =>
-                            $total
-
-                        ];
-                    }
-
-                    $currentDate->addDay();
+                    ];
                 }
 
                 /*
@@ -160,22 +152,13 @@ class DepositReport implements FromArray, WithEvents
                 */
                 $overallTotal = $totalCollected = 0;
 
-                /*
-                Receipt range:
-                Use actual transaction period
-                (startDate-1 to endDate-1)
-                because May 1 total = Apr 30 transactions
-                */
-
                 $receiptRangeStart =
                     $this->startDate
-                    ->copy()
-                    ->subDay();
+                    ->copy();
 
                 $receiptRangeEnd =
                     $this->endDate
-                    ->copy()
-                    ->subDay();
+                    ->copy();
 
                 $receiptNumbers = DB::table('receipts as r')
                     ->join(
@@ -242,8 +225,7 @@ class DepositReport implements FromArray, WithEvents
 
                     $sheet->setCellValue(
                         "A{$currentRow}",
-                        $day['collection_date']
-                            ->format('M d, Y')
+                        'Deposit Date'
                     );
 
                     $sheet->setCellValue(

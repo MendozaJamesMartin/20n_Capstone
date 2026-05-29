@@ -54,8 +54,8 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
             ->whereBetween(
                 't.transaction_date',
                 [
-                    $this->startDate->copy()->subDay(),
-                    $this->endDate->copy()->subDay()
+                    $this->startDate,
+                    $this->endDate
                 ]
             )
             ->select(
@@ -211,52 +211,39 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 ];
             }
 
-            if (
-                !$currentDate->isSameDay(
-                    $this->endDate
-                )
-            ) {
+            $currentDate = Carbon::parse($date);
 
-                $data = array_merge(
-                    $data,
-                    $dailyRows
-                );
-            }
+            $data = array_merge(
+                $data,
+                $dailyRows
+            );
 
             /*
-            Generate next-day total only if
-            it stays inside report period
+            |--------------------------------------------------------------------------
+            | Daily total row
+            |--------------------------------------------------------------------------
+            |
+            | No deposit date anymore.
+            | Just show total collections for the transaction date.
+            |
             */
 
-            $tomorrow =
-                $currentDate
-                ->copy()
-                ->addDay();
+            $data[] = [
 
-            if (
-                $tomorrow->between(
-                    $this->startDate,
-                    $this->endDate
-                )
-            ) {
+                'Date',
+                '##-###',
+                '####-####-##',
+                '',
+                '',
+                '',
+                '',
+                $dailyTotal,
+                ''
 
-                $data[] = [
+            ];
 
-                    $tomorrow->format('d/m/Y'),
-                    '##-###',
-                    '####-####-##',
-                    '',
-                    '',
-                    '',
-                    '',
-                    $dailyTotal,
-                    ''
-
-                ];
-
-                $this->dailyTotalRows[] =
-                    count($data);
-            }
+            $this->dailyTotalRows[] =
+                count($data);
         }
 
         $data[] = [
