@@ -241,22 +241,22 @@ class AccountabilityReport implements FromArray, WithEvents
 
                 $sheet->setCellValue(
                     'D23',
-                    $totalD
+                    '=SUM(D15:D22)'
                 );
 
                 $sheet->setCellValue(
                     'G23',
-                    $totalG
+                    '=SUM(G15:G22)'
                 );
 
                 $sheet->setCellValue(
                     'J23',
-                    $totalJ
+                    '=SUM(J15:J22)'
                 );
 
                 $sheet->setCellValue(
                     'M23',
-                    $totalM
+                    '=SUM(M15:M22)'
                 );
 
                 /*

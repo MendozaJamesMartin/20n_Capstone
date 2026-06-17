@@ -194,7 +194,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                     $index === count($dayTransactions) - 1
                 ) {
                     $showDate =
-                        $currentDate->format('d/m/Y');
+                        $currentDate->format('m/d/Y');
                 }
 
                 $dailyRows[] = [

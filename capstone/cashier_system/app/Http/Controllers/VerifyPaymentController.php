@@ -64,7 +64,8 @@ class VerifyPaymentController extends Controller
                         )
                             ? $item->fee_label . ' - ' . $item->fee_name
                             : $item->fee_name,
-                        'amount' => $item->subtotal
+                        'amount' => $item->subtotal,
+                        'quantity' => $item->quantity
                     ];
                 })
             ]

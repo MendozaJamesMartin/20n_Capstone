@@ -83,6 +83,11 @@ Route::group(['prefix' => 'cashier', 'middleware' => (['user.auth', 'verify'])],
         Route::put('/manage/receipts/edit-batch/{id}', [ReceiptsController::class, 'editBatch'])->name('receipts.editBatch');
         Route::delete('/manage/receipts/delete-batch/{id}', [ReceiptsController::class, 'deleteBatch'])->name('receipts.deleteBatch');
 
+        //Proposed Deposit Management
+        Route::get('/deposit', function () {
+            return view('common.reports.deposit');
+        })->name('deposit');
+
         //Audit logs
         Route::get('/audit/logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
