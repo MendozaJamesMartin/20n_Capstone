@@ -278,6 +278,7 @@
                 <div id="maintenanceMenu" class="submenu" aria-hidden="true">
                     <a href="{{ route('fees.list') }}" class="nav-link">Manage Fees</a>
                     <a href="{{ route('receipts.manage') }}" class="nav-link">Manage Receipts</a>
+                    <a href="{{ route('deposits.manage') }}" class="nav-link">Manage Deposits</a>
                     <a href="{{ route('concessionaires.list') }}" class="nav-link">Manage Concessionaires</a>
                     <a href="{{ route('users.list') }}" class="nav-link">Manage Users</a>
                 </div>

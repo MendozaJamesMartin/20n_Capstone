@@ -5,6 +5,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BillsController;
 use App\Http\Controllers\ConcessionairesController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepositsController;
 use App\Http\Controllers\FeesController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OtpController;
@@ -83,10 +84,11 @@ Route::group(['prefix' => 'cashier', 'middleware' => (['user.auth', 'verify'])],
         Route::put('/manage/receipts/edit-batch/{id}', [ReceiptsController::class, 'editBatch'])->name('receipts.editBatch');
         Route::delete('/manage/receipts/delete-batch/{id}', [ReceiptsController::class, 'deleteBatch'])->name('receipts.deleteBatch');
 
-        //Proposed Deposit Management
-        Route::get('/deposit', function () {
-            return view('common.reports.deposit');
-        })->name('deposit');
+        //Deposit Management
+        Route::get('/manage/deposits', [DepositsController::class, 'manage'])->name('deposits.manage');
+        Route::post('/manage/deposits/add', [DepositsController::class, 'addDeposit'])->name('deposits.add');
+        Route::put('/manage/deposits/edit/{id}', [DepositsController::class, 'editDeposit'])->name('deposits.edit');
+        Route::delete('/manage/deposits/delete/{id}', [DepositsController::class, 'deleteDeposit'])->name('deposits.delete');
 
         //Audit logs
         Route::get('/audit/logs', [AuditLogController::class, 'index'])->name('audit.logs');

@@ -143,6 +143,7 @@
         <tr class="text-center invisible-text">
             <td><strong>&nbsp;</strong></td>
         </tr>
+        <tr><td>&nbsp;</td></tr>
         <tr style="position: absolute; top: 18px; left: 0; width: 100%;">
             <td class="text-center">
                 <strong style="text-transform: uppercase;">
