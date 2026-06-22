@@ -16,6 +16,6 @@ class Deposit extends Model implements Auditable
 
     protected $table = 'deposits';
     protected $primaryKey = 'id';
-    protected $fillable = ['deposit_date', 'reference_number', 'account_number', 'amount'];
+    protected $fillable = ['deposit_date', 'reference_number', 'bank_name', 'account_number', 'amount'];
 
 }

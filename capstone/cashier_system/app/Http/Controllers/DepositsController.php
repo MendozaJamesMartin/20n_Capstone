@@ -22,6 +22,7 @@ class DepositsController extends Controller
             $validated = $request->validate([
                 'deposit_date' => 'required|date',
                 'reference_number' => 'required|string|unique:deposits,reference_number',
+                'bank_name' => 'required|string',
                 'account_number' => 'required|string',
                 'amount' => 'required|numeric'
             ]);
@@ -29,6 +30,7 @@ class DepositsController extends Controller
             Deposit::create([
                 'deposit_date' => $validated['deposit_date'],
                 'reference_number' => $validated['reference_number'],
+                'bank_name' => $validated['bank_name'],
                 'account_number' => $validated['account_number'],
                 'amount' => $validated['amount'],
             ]);
@@ -49,6 +51,7 @@ class DepositsController extends Controller
             $validated = $request->validate([
                 'deposit_date' => 'required|date',
                 'reference_number' => 'required|string',
+                'bank_name' => 'required|string',
                 'account_number' => 'required|string',
                 'amount' => 'required|numeric'
             ]);
@@ -58,6 +61,7 @@ class DepositsController extends Controller
             $deposit->update([
                 'deposit_date' => $validated['deposit_date'],
                 'reference_number' => $validated['reference_number'],
+                'bank_name' => $validated['bank_name'],
                 'account_number' => $validated['account_number'],
                 'amount' => $validated['amount'],
             ]);

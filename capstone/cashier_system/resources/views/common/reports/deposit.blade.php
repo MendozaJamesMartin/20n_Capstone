@@ -54,8 +54,9 @@
                         <tr style="cursor: pointer;">
                             <th onclick="sortTable(0)">Deposit Date</th>
                             <th onclick="sortTable(1)">Reference No.</th>
-                            <th onclick="sortTable(2)">Account No.</th>
-                            <th onclick="sortTable(3)">Amount</th>
+                            <th onclick="sortTable(2)">Bank</th>
+                            <th onclick="sortTable(3)">Account No.</th>
+                            <th onclick="sortTable(4)">Amount</th>
                             <th style="cursor: default;">Actions</th>
                         </tr>
                     </thead>
@@ -64,6 +65,7 @@
                         <tr class="align-middle">
                             <td>{{ \Carbon\Carbon::parse($deposit->deposit_date)->format('Y-m-d') }}</td>
                             <td>{{ $deposit->reference_number }}</td>
+                            <td>{{ $deposit->bank_name }}</td>
                             <td>{{ $deposit->account_number }}</td>
                             <td class="fw-semibold">
                                 ₱{{ number_format($deposit->amount,2) }}
@@ -99,6 +101,15 @@
                                             <div class="mb-3 position-relative">
                                                 <label>Reference Number</label>
                                                 <input type="text" name="reference_number" class="form-control" value="{{ $deposit->reference_number }}" required>
+                                            </div>
+                                            <div class="mb-3 position-relative">
+                                                <label>Bank</label>
+                                                <select class="form-select" name="bank_name" aria-label="Default select example">
+                                                    <option value="Land Bank of the Philippines">Land Bank of the Philippines</option>
+                                                    <option value="BDO">BDO Unibank, Inc</option>
+                                                    <option value="Metrobank">Metrobank</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
                                             </div>
                                             <div class="mb-3 position-relative">
                                                 <label>Account Number</label>
@@ -167,6 +178,16 @@
                             <label>Reference Number</label>
                             <input type="text" name="reference_number" class="form-control" required>
                         </div>
+                        <div class="mb-3 position-relative">
+                            <label>Bank</label>
+                            <select class="form-select" name="bank_name" aria-label="Default select example">
+                                <option value="Land Bank of the Philippines">Land Bank of the Philippines</option>
+                                <option value="BDO">BDO Unibank, Inc</option>
+                                <option value="Metrobank">Metrobank</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
                         <div class="mb-3 position-relative">
                             <label>Account Number</label>
                             <input type="text" name="account_number" class="form-control" required>
