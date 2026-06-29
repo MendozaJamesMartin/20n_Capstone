@@ -68,18 +68,13 @@ class DepositReport implements FromArray, WithEvents
 
                 $sheet = $event->sheet->getDelegate();
 
-                $dailyCollections = DB::table('transactions')
-                    ->selectRaw('
-                        DATE(transaction_date) as txn_date,
-                        SUM(total_amount) as total
-                    ')
+                $deposits = DB::table('deposits')
+                    ->whereNull('deleted_at')
                     ->whereBetween(
-                        'transaction_date',
+                        'deposit_date',
                         [$this->startDate, $this->endDate]
                     )
-                    ->where('status', 'Completed')
-                    ->groupBy(DB::raw('DATE(transaction_date)'))
-                    ->orderBy('txn_date')
+                    ->orderBy('deposit_date')
                     ->get();
 
                 /*
@@ -97,38 +92,79 @@ class DepositReport implements FromArray, WithEvents
 
                 $reportDates = [];
 
-                foreach ($dailyCollections as $collection) {
+                foreach ($deposits as $deposit) {
 
                     $reportDates[] = [
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Deposit date intentionally blank
-                        |--------------------------------------------------------------------------
-                        |
-                        | Deposits may occur on a later working day.
-                        | We only guarantee that each day's collections
-                        | are totaled here.
-                        |
-                        */
+                        'deposit_date' =>
+                            Carbon::parse($deposit->deposit_date),
 
-                        'collection_date' => '',
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Optional: keep original transaction date separately
-                        |--------------------------------------------------------------------------
-                        */
-
-                        'transaction_date' =>
-                            Carbon::parse(
-                                $collection->txn_date
-                            ),
+                        'reference_number' =>
+                            $deposit->reference_number,
 
                         'amount' =>
-                            $collection->total
-
+                            $deposit->amount,
                     ];
+                }
+
+                $beginningBalance = 0;
+
+                $firstDeposit = $deposits->first();
+
+                if ($firstDeposit) {
+
+                    $previousDeposit = DB::table('deposits')
+                        ->where(
+                            'deposit_date',
+                            '<',
+                            $firstDeposit->deposit_date
+                        )
+                        ->orderByDesc('deposit_date')
+                        ->first();
+
+                    if ($previousDeposit) {
+
+                        $beginningBalance = DB::table('transactions')
+                            ->where(
+                                'status',
+                                'Completed'
+                            )
+                            ->where(
+                                'transaction_date',
+                                '>',
+                                $previousDeposit->deposit_date
+                            )
+                            ->where(
+                                'transaction_date',
+                                '<=',
+                                $firstDeposit->deposit_date
+                            )
+                            ->sum('total_amount');
+                    }
+                }
+
+                $endingBalance = 0;
+
+                $lastDeposit = $deposits->last();
+
+                if ($lastDeposit) {
+
+                    $endingBalance = DB::table('transactions')
+                        ->where(
+                            'status',
+                            'Completed'
+                        )
+                        ->where(
+                            'transaction_date',
+                            '>',
+                            $lastDeposit->deposit_date
+                        )
+                        ->where(
+                            'transaction_date',
+                            '<=',
+                            $this->endDate
+                        )
+                        ->sum('total_amount');
                 }
 
                 /*
@@ -150,7 +186,20 @@ class DepositReport implements FromArray, WithEvents
                 /*
                 Total collections in dynamic rows
                 */
-                $overallTotal = $totalCollected = 0;
+                $totalCollections = DB::table('transactions')
+                    ->where('status', 'Completed')
+                    ->whereBetween(
+                        'transaction_date',
+                        [
+                            $this->startDate,
+                            $this->endDate
+                        ]
+                    )
+                    ->sum('total_amount');
+
+                $totalDeposits = $deposits->sum('amount');
+
+                $grandTotal = $beginningBalance + $totalDeposits + $endingBalance;
 
                 $receiptRangeStart =
                     $this->startDate
@@ -207,8 +256,6 @@ class DepositReport implements FromArray, WithEvents
                 $startDynamicRow = 13;
                 $currentRow = $startDynamicRow;
 
-                $totalCollected = 0;
-
                 foreach ($reportDates as $day) {
 
                     $sheet->mergeCells(
@@ -225,12 +272,12 @@ class DepositReport implements FromArray, WithEvents
 
                     $sheet->setCellValue(
                         "A{$currentRow}",
-                        'Deposit Date'
+                        $day['deposit_date']->format('m/d/Y')
                     );
 
                     $sheet->setCellValue(
                         "C{$currentRow}",
-                        '## ####-###'
+                        $day['reference_number']
                     );
 
                     $sheet->setCellValue(
@@ -285,9 +332,6 @@ class DepositReport implements FromArray, WithEvents
                         ->setHorizontal(
                             Alignment::HORIZONTAL_RIGHT
                         );
-
-                    $totalCollected += $day['amount'];
-                    $overallTotal = $totalCollected;
 
                     $currentRow++;
                 }
@@ -376,14 +420,14 @@ class DepositReport implements FromArray, WithEvents
                 $sheet->setCellValue('A3', ' COLLECTIONS');
                 $sheet->setCellValue('A4', ' Balance Beginning');
                 $sheet->setCellValue('E4', $reportStartDate);
-                $sheet->setCellValue('I4', '0.00');
+                $sheet->setCellValue('I4', $beginningBalance);
                 $sheet->setCellValue('E5', 'Date');
 
                 $sheet->setCellValue('A6', ' Collections per this report');
-                $sheet->setCellValue('I6', $overallTotal);
+                $sheet->setCellValue('I6', $totalCollections);
 
                 $sheet->setCellValue('A8', ' Total…………………………………..');
-                $sheet->setCellValue('I8', $overallTotal); //as it says
+                $sheet->setCellValue('I8', $grandTotal); //as it says
 
                 $sheet->setCellValue('A9', ' DEPOSITS');
                 $sheet->setCellValue('A10', ' To authorized government depository bank:');
@@ -393,14 +437,14 @@ class DepositReport implements FromArray, WithEvents
                 $sheet->setCellValue('E11', 'Amount');
 
                 $sheet->setCellValue("B" . (15 + $offset), 'Total………………….');
-                $sheet->setCellValue("E" . (15 + $offset), $overallTotal); //Total amount
+                $sheet->setCellValue("E" . (15 + $offset), $totalDeposits); //Total amount
                 $sheet->setCellValue("A" . (17 + $offset), ' Total Deposits…………………………..');
-                $sheet->setCellValue("I" . (17 + $offset), $overallTotal); //Total amount
+                $sheet->setCellValue("I" . (17 + $offset), $totalDeposits); //Total amount
                 $sheet->setCellValue("A" . (18 + $offset), ' Balance, End');
                 $sheet->setCellValue("E" . (18 + $offset), $reportEndDate); //End Date
-                $sheet->setCellValue("I" . (18 + $offset), '0.00');
+                $sheet->setCellValue("I" . (18 + $offset), $endingBalance);
                 $sheet->setCellValue("A" . (19 + $offset), ' TOTAL……………………………………');
-                $sheet->setCellValue("I" . (19 + $offset), $overallTotal); //Total Sum of I17 and I18
+                $sheet->setCellValue("I" . (19 + $offset), $grandTotal); //Total Sum of I17 and I18
 
                 $sheet->setCellValue("E" . (21 + $offset), 'CERTIFICATION');
 

@@ -60,19 +60,14 @@
                                id="password"
                                name="password"
                                class="form-control rounded-start-3 p-3 shadow-sm">
-                        <button type="button"
-                                class="btn btn-outline-secondary rounded-end-3 toggle-password px-3"
-                                tabindex="-1">
-                            <i class="bi bi-eye-slash" id="togglePasswordIcon"></i>
-                        </button>
                     </div>
                 </div>
 
                 {{-- Remember Me --}}
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <input type="checkbox" id="remember" name="remember" class="form-check-input">
-                        <label for="remember" class="ms-1">Remember me</label>
+                        <input type="checkbox" id="showPassword" class="form-check-input">
+                        <label for="showPassword" class="ms-1">Show Password</label>
                     </div>
                     <a href="{{ route('forgot.password.email') }}" class="text-decoration-none"
                        style="color:#8b0000; font-weight:600;">
@@ -96,15 +91,9 @@
 
 {{-- Password Toggle Script --}}
 <script>
-    document.querySelector('.toggle-password').addEventListener('click', function() {
+    document.getElementById('showPassword').addEventListener('change', function () {
         const password = document.getElementById('password');
-        const icon = document.getElementById('togglePasswordIcon');
-
-        const isHidden = password.type === 'password';
-        password.type = isHidden ? 'text' : 'password';
-
-        icon.classList.toggle('bi-eye', isHidden);
-        icon.classList.toggle('bi-eye-slash', !isHidden);
+        password.type = this.checked ? 'text' : 'password';
     });
 </script>
 

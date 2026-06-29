@@ -23,6 +23,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
     protected $endDate;
     protected $feeIds;
     protected $dailyTotalRows = [];
+    protected $depositRows = [];
     protected $finalTotalRow = null;
 
     public function __construct(string $startDate, string $endDate, array $feeIds = [])
@@ -34,15 +35,71 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
     public function startCell(): string
     {
-        return 'A13';
+        return 'A12';
     }
 
     public function array(): array
     {
         $data = [];
-
         $runningTotal = 0;
         $grandTotal = 0;
+        $currentTransactionDay = null;
+
+        $lastDepositAfterRange = DB::table('deposits')
+            ->whereNull('deleted_at')
+            ->where('deposit_date', '>', $this->endDate)
+            ->orderBy('deposit_date')
+            ->first();
+
+        $depositEndDate = $lastDepositAfterRange
+            ? $lastDepositAfterRange->deposit_date
+            : $this->endDate;
+
+        $deposits = DB::table('deposits')
+            ->whereNull('deleted_at')
+            ->whereBetween(
+                'deposit_date',
+                [$this->startDate, $depositEndDate]
+            )
+            ->orderBy('deposit_date')
+            ->get();
+
+        $beginningBalance = 0;
+        $previousDeposit = null;
+
+        $firstDeposit = DB::table('deposits')
+            ->whereNull('deleted_at')
+            ->whereBetween(
+                'deposit_date',
+                [
+                    $this->startDate,
+                    $this->endDate
+                ]
+            )
+            ->orderBy('deposit_date')
+            ->first();
+
+        if ($firstDeposit) {
+
+            $previousDeposit = DB::table('deposits')
+                ->whereNull('deleted_at')
+                ->where(
+                    'deposit_date',
+                    '<',
+                    $firstDeposit->deposit_date
+                )
+                ->orderByDesc('deposit_date')
+                ->first();
+
+            if ($previousDeposit) {
+
+                $beginningBalance = DB::table('transactions')
+                    ->where('status', 'Completed')
+                    ->where('transaction_date', '>', $previousDeposit->deposit_date)
+                    ->where('transaction_date', '<=', $firstDeposit->deposit_date)
+                    ->sum('total_amount');
+            }
+        }
 
         $transactions = DB::table('transactions as t')
             ->join(
@@ -70,61 +127,156 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
             ->orderBy('r.receipt_number')
             ->get();
 
-        $grouped = $transactions->groupBy(function ($t) {
-            return Carbon::parse(
-                $t->transaction_date
-            )->format('Y-m-d');
+        $dailyCounts = $transactions
+            ->groupBy(fn($t) => Carbon::parse($t->transaction_date)->format('Y-m-d'))
+            ->map->count()
+            ->toArray();
+
+        $dailyIndex = [];
+
+        $timeline = [];
+
+        $timeline[] = [
+            'type' => 'beginning_balance',
+            'date' => $previousDeposit
+                ? Carbon::parse($previousDeposit->deposit_date)
+                : null
+        ];
+
+        foreach ($deposits as $deposit) {
+
+            $timeline[] = [
+
+                'type' => 'deposit',
+
+                'date' => Carbon::parse($deposit->deposit_date),
+
+                'deposit' => $deposit
+
+            ];
+        }
+
+        foreach ($transactions as $txn) {
+
+            $timeline[] = [
+
+                'type' => 'transaction',
+
+                'date' => Carbon::parse($txn->transaction_date),
+
+                'transaction' => $txn
+
+            ];
+        }
+
+        usort($timeline, function ($a, $b) {
+
+            $cmp = $a['date']->timestamp <=> $b['date']->timestamp;
+
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            $priority = [
+
+                'beginning_balance' => 0,
+                'deposit' => 1,
+                'transaction' => 2
+
+            ];
+
+            return $priority[$a['type']]
+                <=>
+                $priority[$b['type']];
         });
 
-        foreach ($grouped as $date => $dayTransactions) {
+        foreach ($timeline as $event) {
 
-            $currentDate = Carbon::parse($date);
+            switch ($event['type']) {
 
-            $dailyRows = [];
-            $dailyTotal = 0;
-            $runningTotal = 0;
+                case 'beginning_balance':
+                    $data[] = [
 
-            foreach ($dayTransactions as $index => $txn) {
+                        '',
+                        '',
+                        'Balance Beg. (' . Carbon::parse($previousDeposit->deposit_date)->format('m/d/Y') . ')',
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        $beginningBalance,
+                    ];
 
-                $isCancelled =
-                    $txn->receipt_status === 'Cancelled'
-                    ||
-                    $txn->transaction_status === 'Cancelled';
+                    $this->depositRows[] = count($data);
 
-                $payor = 'CANCELLED';
-                $fees = 'CANCELLED';
-                $amount = 'CANCELLED';
+                    break;
 
-                if (!$isCancelled) {
+                case 'deposit':
 
-                    $payor = DB::table('customers')
-                        ->whereIn(
-                            'id',
-                            function ($q) use ($txn) {
-                                $q->select('customer_id')
-                                    ->from(
-                                        'customer_transaction_details'
-                                    )
-                                    ->where(
-                                        'transaction_id',
-                                        $txn->id
-                                    );
-                            }
-                        )
-                        ->value('customer_name');
+                    $deposit = $event['deposit'];
 
-                    if (!$payor) {
+                    if ($deposit->amount <= 0) {
+                        break;
+                    }
 
-                        $payor = DB::table(
-                            'concessionaires'
-                        )
+                    $data[] = [
+
+                        Carbon::parse($deposit->deposit_date)->format('m/d/Y'),
+
+                        $deposit->reference_number,
+                        $deposit->account_number,
+                        '',
+                        '',
+                        '',
+                        '',
+                        $deposit->amount,
+                        '-'
+                    ];
+
+                    $this->depositRows[] = count($data);
+
+                    break;
+
+                case 'transaction':
+
+                    $txn = $event['transaction'];
+
+                    $day = Carbon::parse($txn->transaction_date)->format('Y-m-d');
+
+                    if ($currentTransactionDay !== $day) {
+                        $currentTransactionDay = $day;
+                        $runningTotal = 0;
+                    }
+
+                    $dailyIndex[$day] = ($dailyIndex[$day] ?? 0) + 1;
+
+                    $showDate = '';
+
+                    if (
+                        $dailyIndex[$day] == 1 ||
+                        $dailyIndex[$day] == $dailyCounts[$day]
+                    ) {
+                        $showDate = Carbon::parse($txn->transaction_date)
+                            ->format('m/d/Y');
+                    }
+
+                    $isCancelled =
+                        $txn->receipt_status === 'Cancelled'
+                        ||
+                        $txn->transaction_status === 'Cancelled';
+
+                    $payor = 'CANCELLED';
+                    $fees = 'CANCELLED';
+                    $amount = 'CANCELLED';
+
+                    if (!$isCancelled) {
+
+                        $payor = DB::table('customers')
                             ->whereIn(
                                 'id',
                                 function ($q) use ($txn) {
-
-                                    $q->select(
-                                        'customer_id'
-                                    )
+                                    $q->select('customer_id')
                                         ->from(
                                             'customer_transaction_details'
                                         )
@@ -134,129 +286,95 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                                         );
                                 }
                             )
-                            ->value('name');
+                            ->value('customer_name');
+
+                        if (!$payor) {
+
+                            $payor = DB::table(
+                                'concessionaires'
+                            )
+                                ->whereIn(
+                                    'id',
+                                    function ($q) use ($txn) {
+
+                                        $q->select(
+                                            'customer_id'
+                                        )
+                                            ->from(
+                                                'customer_transaction_details'
+                                            )
+                                            ->where(
+                                                'transaction_id',
+                                                $txn->id
+                                            );
+                                    }
+                                )
+                                ->value('name');
+                        }
+
+                        $payor = strtoupper(
+                            $payor ?? ''
+                        );
+
+                        $fees = DB::table(
+                            'customer_transaction_details as ctd'
+                        )
+                            ->join(
+                                'fees as f',
+                                'ctd.fee_id',
+                                '=',
+                                'f.id'
+                            )
+                            ->where(
+                                'ctd.transaction_id',
+                                $txn->id
+                            )
+                            ->select(
+                                'ctd.fee_label',
+                                'f.fee_name',
+                                'ctd.quantity'
+                            )
+                            ->get()
+                            ->map(function ($f) {
+
+                                $label =
+                                    trim(
+                                        strtolower(
+                                            $f->fee_label
+                                        )
+                                    );
+
+                                $labelText =
+                                    ($label === '' || $label === 'none')
+                                    ? ''
+                                    : $f->fee_label . '-';
+
+                                return
+                                    "{$labelText}{$f->fee_name}";
+                            })
+                            ->implode(', ');
+
+                        $amount = $txn->total_amount;
+
+                        $runningTotal += $amount;
+                        $grandTotal += $amount;
                     }
 
-                    $payor = strtoupper(
-                        $payor ?? ''
-                    );
+                    $data[] = [
+                        $showDate,
+                        $txn->receipt_number,
+                        $payor,
+                        '',
+                        '',
+                        $fees,
+                        $amount,
+                        '',
+                        $runningTotal
+                    ];
 
-                    $fees = DB::table(
-                        'customer_transaction_details as ctd'
-                    )
-                        ->join(
-                            'fees as f',
-                            'ctd.fee_id',
-                            '=',
-                            'f.id'
-                        )
-                        ->where(
-                            'ctd.transaction_id',
-                            $txn->id
-                        )
-                        ->select(
-                            'ctd.fee_label',
-                            'f.fee_name',
-                            'ctd.quantity'
-                        )
-                        ->get()
-                        ->map(function ($f) {
-
-                            $label =
-                                trim(
-                                    strtolower(
-                                        $f->fee_label
-                                    )
-                                );
-
-                            $labelText =
-                                ($label === '' || $label === 'none')
-                                ? ''
-                                : $f->fee_label . '-';
-
-                            return
-                                "{$labelText}{$f->fee_name}";
-                        })
-                        ->implode(', ');
-
-                    $amount = $txn->total_amount;
-
-                    $dailyTotal += $amount;
-                    $runningTotal += $amount;
-                    $grandTotal += $amount;
-                }
-
-                $showDate = '';
-
-                if (
-                    $index === 0
-                    ||
-                    $index === count($dayTransactions) - 1
-                ) {
-                    $showDate =
-                        $currentDate->format('m/d/Y');
-                }
-
-                $dailyRows[] = [
-
-                    $showDate,
-                    $txn->receipt_number,
-                    $payor,
-                    '',
-                    '',
-                    $fees,
-                    $amount,
-                    '',
-                    $runningTotal
-                ];
+                    break;
             }
-
-            $currentDate = Carbon::parse($date);
-
-            $data = array_merge(
-                $data,
-                $dailyRows
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | Daily total row
-            |--------------------------------------------------------------------------
-            |
-            | No deposit date anymore.
-            | Just show total collections for the transaction date.
-            |
-            */
-
-            $data[] = [
-
-                'Date',
-                '##-###',
-                '####-####-##',
-                '',
-                '',
-                '',
-                '',
-                $dailyTotal,
-                ''
-
-            ];
-
-            $this->dailyTotalRows[] =
-                count($data);
         }
-
-        $data[] = [
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '-'
-        ];
 
         /*
         Final total row
@@ -279,12 +397,6 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
         return $data;
     }
 
-    protected function dailyTotalRow($date, $rows)
-    {
-        $total = collect($rows)->sum(fn($r) => is_numeric($r[4]) ? (float) $r[4] : 0);
-        return [$date, 'TOTAL', '', '', number_format($total, 2, '.', '')];
-    }
-
     public function styles(Worksheet $sheet)
     {
         $styles = [];
@@ -305,7 +417,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
             ]
         ];
 
-        $styles["A13:A{$highestRow}"] = [
+        $styles["A12:A{$highestRow}"] = [
             'font' => ['bold' => true],
         ];
 
@@ -741,7 +853,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
                 foreach ($this->dailyTotalRows as $row) {
 
-                    $actualRow = $row + 12;
+                    $actualRow = $row + 11;
 
                     $sheet->getStyle("A{$actualRow}:I{$actualRow}")
                         ->applyFromArray([
@@ -749,6 +861,15 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                                 'bold' => true
                             ]
                         ]);
+                }
+
+                foreach ($this->depositRows as $row) {
+
+                    $actualRow = $row + 11;
+
+                    $sheet->getStyle("A{$actualRow}:I{$actualRow}")
+                        ->getFont()
+                        ->setBold(true);
                 }
 
                 /*
@@ -759,7 +880,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
                 if ($this->finalTotalRow) {
 
-                    $actualRow = $this->finalTotalRow + 12;
+                    $actualRow = $this->finalTotalRow + 11;
 
                     $sheet->getStyle("A{$actualRow}:I{$actualRow}")
                         ->applyFromArray([
@@ -782,7 +903,6 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 empty row after total
                 */
                 $currentRow = $highestRow + 2;
-
 
                 /*
                 Merged title row
