@@ -12,7 +12,7 @@ class DepositsController extends Controller
 {
     
     public function manage() {
-        $deposits = Deposit::all();
+        $deposits = Deposit::orderBy('deposit_date', 'desc')->get();
         return view('common.reports.deposit', compact('deposits'));
     }
 
