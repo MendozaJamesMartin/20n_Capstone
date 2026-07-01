@@ -134,14 +134,39 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
         $dailyIndex = [];
 
-        $timeline = [];
+        if ($previousDeposit) {
 
-        $timeline[] = [
-            'type' => 'beginning_balance',
-            'date' => $previousDeposit
-                ? Carbon::parse($previousDeposit->deposit_date)
-                : null
-        ];
+            $data[] = [
+                '',
+                '',
+                'Balance Beg. (' .
+                    Carbon::parse($previousDeposit->deposit_date)->format('m/d/Y') .
+                    ')',
+                '',
+                '',
+                '',
+                '',
+                '',
+                $beginningBalance,
+            ];
+
+        } else {
+
+            $data[] = [
+                '',
+                '',
+                'Balance Beg. (N/A)',
+                '',
+                '',
+                '',
+                '',
+                '',
+                0,
+            ];
+
+        }
+
+        $timeline = [];
 
         foreach ($deposits as $deposit) {
 
@@ -179,9 +204,8 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
 
             $priority = [
 
-                'beginning_balance' => 0,
-                'deposit' => 1,
-                'transaction' => 2
+                'deposit' => 0,
+                'transaction' => 1
 
             ];
 
@@ -193,24 +217,6 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
         foreach ($timeline as $event) {
 
             switch ($event['type']) {
-
-                case 'beginning_balance':
-                    $data[] = [
-
-                        '',
-                        '',
-                        'Balance Beg. (' . Carbon::parse($previousDeposit->deposit_date)->format('m/d/Y') . ')',
-                        '',
-                        '',
-                        '',
-                        '',
-                        '',
-                        $beginningBalance,
-                    ];
-
-                    $this->depositRows[] = count($data);
-
-                    break;
 
                 case 'deposit':
 
