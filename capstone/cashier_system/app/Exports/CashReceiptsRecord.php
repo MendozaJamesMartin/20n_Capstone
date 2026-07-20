@@ -42,7 +42,6 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
     {
         $data = [];
         $runningTotal = 0;
-        $grandTotal = 0;
         $currentTransactionDay = null;
 
         $lastDepositAfterRange = DB::table('deposits')
@@ -135,7 +134,6 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
         $dailyIndex = [];
 
         if ($previousDeposit) {
-
             $data[] = [
                 '',
                 '',
@@ -149,7 +147,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 '',
                 $beginningBalance,
             ];
-
+        $this->depositRows[] = count($data);
         } else {
 
             $data[] = [
@@ -163,7 +161,7 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                 '',
                 0,
             ];
-
+        $this->depositRows[] = count($data);
         }
 
         $timeline = [];
@@ -363,7 +361,6 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
                         $amount = $txn->total_amount;
 
                         $runningTotal += $amount;
-                        $grandTotal += $amount;
                     }
 
                     $data[] = [
@@ -386,6 +383,9 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
         Final total row
         */
 
+        $firstDataRow = 12;
+        $lastDataRow = $firstDataRow + count($data) - 1;
+
         $data[] = [
             'TOTAL',
             '',
@@ -393,8 +393,8 @@ class CashReceiptsRecord implements FromArray, WithTitle, WithStyles, WithColumn
             '',
             '',
             '',
-            $grandTotal,
-            $grandTotal,
+            "=SUM(G{$firstDataRow}:G{$lastDataRow})",
+            "=SUM(H{$firstDataRow}:H{$lastDataRow})",
             '-'
         ];
 

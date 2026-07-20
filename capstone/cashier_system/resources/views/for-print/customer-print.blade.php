@@ -9,8 +9,8 @@
         html, body {
             margin: 1;
             padding: 1;
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 14px;
+            font-family: 'Calibri', 'Calibri', sans-serif;
+            font-size: 16px;
             width: 99%;
             height: 99%;
             line-height: 0.86; /* keeps overall height same as 12px text */
@@ -222,16 +222,11 @@
                 <td colspan="2" class="text-center invisible-text"><strong>&nbsp;</strong></td>
                 <td class="text-center pe-3"><strong>{{ number_format($TransactionDetails->sum('subtotal'), 2) }}</strong></td>
             </tr>
+            <tr>
+                <td colspan="3" class="pe-4 text-right"><strong>{{ $amountInWords }}</strong></td>
+            </tr>
         </tbody>
     </table>
-
-    {{-- Amount in Words --}}
-    <table class="section">
-        <td colspan="2"></td>
-        <td class="pe-4 text-right"><strong>{{ $amountInWords }}</strong></td>
-    </table>
-
-    <table class="section"><tr><td>&nbsp;</td></tr></table>
 
     {{-- Payment Method --}}
     <table class="section invisible-text">
